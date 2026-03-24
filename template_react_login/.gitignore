@@ -34,3 +34,6 @@ dist-ssr
 *.cert
 *.sqlite
 *.sqlite3
+
+# Documentos
+*.md
