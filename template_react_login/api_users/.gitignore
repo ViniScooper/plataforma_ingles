@@ -1,0 +1,17 @@
+node_modules
+# Keep environment variables out of version control
+.env
+
+/generated/prisma
+
+# Other sensitive files
+*.pem
+*.key
+*.cert
+*.sqlite
+*.sqlite3
+.env.*.local
+anotacoes.txt
+
+# Documentos
+*.md

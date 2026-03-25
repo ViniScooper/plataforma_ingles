@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id               Int                @id(map: "User_pkey") @default(autoincrement())
+  email            String             @unique(map: "User_email_key")
+  password         String
+  name             String?
+  age              String?
+  username         String             @unique(map: "c_username") @default("S/N") @db.VarChar(30)
+  role             String             @default("student")
+  enrollments      enrollment[]
+  studentExercises student_exercise[]
+  attendances      attendance[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model plan {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  level       String
+  price       Float
+  hours       Int?
+  enrollments enrollment[]
+  exercises   exercise[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model exercise {
+  id               Int                @id @default(autoincrement())
+  type             String             @default("gap-fill") // gap-fill, text, quiz
+  level            String
+  title            String             @default("New Exercise")
+  content          Json?              // Store text, quiz questions, etc.
+  sentence         String?            // Keeping for backward compatibility or gap-fill
+  gaps             Json?              // Keeping for backward compatibility or gap-fill
+  planId           Int
+  plan             plan               @relation(fields: [planId], references: [id], onDelete: Cascade)
+  studentExercises student_exercise[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model enrollment {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  user              user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId            Int
+  plan              plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  classesPerWeek    Int      @default(1)
+  pricePerClass     Float    @default(0)
+  studentLevel      String   @default("Beginner")
+  lessonDescription String?
+  startDate         DateTime @default(now())
+  status            String   @default("active")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, planId])
+}
+
+model student_exercise {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId  Int
+  exercise    exercise  @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  status      String    @default("assigned") // assigned, completed
+  result      Json?
+  score       Int?      // How many correct answers
+  totalQuestions Int?   // Total questions
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, exerciseId])
+}
+
+model attendance {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  time      String   // Using string for HH:mm or similar
+  createdAt DateTime @default(now())
+}
