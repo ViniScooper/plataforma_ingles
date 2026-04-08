@@ -329,6 +329,29 @@ export const createExercise = async (req, res) => {
   }
 };
 
+export const updateExercise = async (req, res) => {
+  const { id } = req.params;
+  const { type, title, level, content } = req.body;
+
+  try {
+    const data = {};
+    if (type) data.type = type;
+    if (title) data.title = title;
+    if (level) data.level = level;
+    if (content) data.content = (typeof content === 'string' ? JSON.parse(content) : content);
+
+    const exercise = await prisma.exercise.update({
+      where: { id: parseInt(id) },
+      data,
+    });
+
+    return res.status(200).json({ message: 'Exercise updated successfully', exercise });
+  } catch (error) {
+    console.error('Error updating exercise:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 export const deleteExercise = async (req, res) => {
   const { id } = req.params;
 
@@ -345,30 +368,90 @@ export const deleteExercise = async (req, res) => {
 };
 
 export const importExercises = async (req, res) => {
-  const { exercises, planId, level } = req.body; // Can be a single object or array
+  const { exercises, planId, level } = req.body; 
+
+  console.log('📥 Incoming Import Request:', { 
+    exercisesCount: Array.isArray(exercises) ? exercises.length : 1, 
+    planId,
+    sampleType: Array.isArray(exercises) ? exercises[0]?.type : exercises?.type
+  });
 
   if (!exercises) {
     return res.status(400).json({ error: 'Exercises data is required' });
   }
 
   const dataArray = Array.isArray(exercises) ? exercises : [exercises];
+  console.log(`📦 Importing ${dataArray.length} exercises...`);
 
   try {
     const created = await Promise.all(
-      dataArray.map((ex) =>
-        prisma.exercise.create({
+      dataArray.map((ex, exIdx) => {
+        // Build content: if ex.content exists, use it. 
+        // Otherwise, use the root object but remove metadata fields.
+        let exContent;
+        if (ex.content && typeof ex.content === 'object') {
+          exContent = ex.content;
+        } else {
+          // Extract everything EXCEPT metadata fields to be part of content
+          const { title, level, type, planId, ...rest } = ex;
+          exContent = rest;
+        }
+
+        // Determine type: 
+        // Priority 1: explicit type field (with Portuguese mapping)
+        // Priority 2: smart detection from content fields
+        let exType = ex.type;
+        
+        // Map friendly labels to internal slugs
+        const typeMap = {
+          'escrita': 'writing',
+          'Escrita': 'writing',
+          'writing': 'writing',
+          'v-ou-f': 'true-false',
+          'v ou f': 'true-false',
+          'true-false': 'true-false',
+          'Quiz': 'quiz',
+          'quiz': 'quiz',
+          'leitura': 'text',
+          'texto': 'text',
+          'text': 'text',
+          'gap-fill': 'gap-fill',
+          'matching': 'matching',
+          'Relacionar': 'matching',
+          'sentence-order': 'sentence-order',
+          'Frases': 'sentence-order'
+        };
+
+        if (exType && typeMap[exType]) {
+          exType = typeMap[exType];
+        }
+
+        if (!exType) {
+          if (exContent.prompt) exType = 'writing';
+          else if (exContent.statements) exType = 'true-false';
+          else if (exContent.sentences) exType = 'sentence-order';
+          else if (exContent.pairs) exType = 'matching';
+          else if (exContent.questions || ex.questions) exType = 'quiz';
+          else exType = 'text';
+        }
+
+        console.log(`✅ Exercise #${exIdx}: Processed as "${exType}" (Title: ${ex.title})`);
+
+        // Final safety: if it's quiz but questions are outside content, move them in
+        if (exType === 'quiz' && !exContent.questions && ex.questions) {
+          exContent.questions = ex.questions;
+        }
+
+        return prisma.exercise.create({
           data: {
             level: ex.level || level || 'Beginner',
-            type: ex.questions ? 'quiz' : 'text',
+            type: exType,
             title: ex.title || 'Imported Activity',
-            content: {
-                text: ex.text || ex.content?.text || '',
-                questions: ex.questions || ex.content?.questions || []
-            },
+            content: exContent,
             planId: parseInt(ex.planId || planId)
           }
-        })
-      )
+        });
+      })
     );
 
     return res.status(201).json({

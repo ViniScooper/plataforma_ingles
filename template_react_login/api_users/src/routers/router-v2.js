@@ -21,6 +21,7 @@ router.delete('/plans/:id', verifyToken, verifyAdmin, handlers.deletePlan);
 // Exercises
 router.get('/exercises', handlers.getExercises);
 router.post('/exercises', verifyToken, verifyAdmin, handlers.createExercise);
+router.patch('/exercises/:id', verifyToken, verifyAdmin, handlers.updateExercise);
 router.delete('/exercises/:id', verifyToken, verifyAdmin, handlers.deleteExercise);
 router.post('/exercises/import', verifyToken, verifyAdmin, handlers.importExercises);
 

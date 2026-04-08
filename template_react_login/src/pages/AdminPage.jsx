@@ -108,6 +108,7 @@ export default function AdminPage() {
   const [allExercises, setAllExercises] = useState([]);
   // Exercise import/manual state
   const [importJson, setImportJson] = useState('');
+  const [importTab, setImportTab] = useState(0);
   const [openImportDialog, setOpenImportDialog] = useState(false);
   const [openManualExerciseDialog, setOpenManualExerciseDialog] = useState(false);
   const [manualExercise, setManualExercise] = useState({
@@ -115,7 +116,14 @@ export default function AdminPage() {
     type: 'text',
     level: 'Beginner',
     text: '',
-    questions: Array(7).fill({ question: '', options: ['', '', '', ''], correct: '' })
+    questions: Array(5).fill(null).map(() => ({ question: '', options: ['', '', '', ''], correct: '' })),
+    writingPrompt: '',
+    writingMinWords: 30,
+    writingTips: '',
+    tfStatements: Array(4).fill(null).map(() => ({ statement: '', correct: true })),
+    soSentences: Array(3).fill(null).map(() => ({ words: '', correct: '' })),
+    matchingPairs: Array(4).fill(null).map(() => ({ left: '', right: '' })),
+    matchingInstructions: 'Match the word to its meaning.',
   });
 
   const [selectedExerciseToAssign, setSelectedExerciseToAssign] = useState('');
@@ -438,11 +446,31 @@ export default function AdminPage() {
   const handleImportExercises = async () => {
     try {
       const data = JSON.parse(importJson);
+      
+      // Determine type based on active tab as a fallback
+      const tabTypeMap = {
+        0: 'quiz',
+        1: 'writing',
+        2: 'true-false',
+        3: 'sentence-order',
+        4: 'matching'
+      };
+      const fallbackType = tabTypeMap[importTab];
+
+      // Process exercises: if it's an array, force the type for all; if single object, force for it.
+      // This ensures that the active tab ALWAYS overrides whatever is inside the JSON.
+      const exercisesArray = Array.isArray(data) ? data : [data];
+      const processedExercises = exercisesArray.map(ex => ({
+        ...ex,
+        type: fallbackType || 'text' // Força o tipo baseado na aba escolhida
+      }));
+
       let selectedPlanId = plans.length > 0 ? plans[0].id : 1;
-      await apiClient.post('/exercises/import', { exercises: data, planId: selectedPlanId });
+      await apiClient.post('/exercises/import', { exercises: processedExercises, planId: selectedPlanId });
+      
       setImportJson('');
       setOpenImportDialog(false);
-      alert('Exercises imported successfully!');
+      alert('Atividades importadas com sucesso!');
       loadAllExercises();
     } catch (err) {
       setError('Failed to import exercises: ' + err.message);
@@ -452,28 +480,31 @@ export default function AdminPage() {
   const handleCreateManualExercise = async () => {
     try {
       let selectedPlanId = plans.length > 0 ? plans[0].id : 1;
-      const payload = {
-        title: manualExercise.title,
-        type: manualExercise.type,
-        level: manualExercise.level,
-        planId: selectedPlanId,
-        content: {
-          text: manualExercise.text
-        }
-      };
+      const payload = { title: manualExercise.title, type: manualExercise.type, level: manualExercise.level, planId: selectedPlanId, content: {} };
 
-      if (manualExercise.type === 'quiz') {
-        payload.content.questions = manualExercise.questions;
+      if (manualExercise.type === 'text') {
+        payload.content = { text: manualExercise.text };
+      } else if (manualExercise.type === 'quiz') {
+        payload.content = { text: manualExercise.text, questions: manualExercise.questions.filter(q => q.question) };
+      } else if (manualExercise.type === 'writing') {
+        payload.content = { prompt: manualExercise.writingPrompt, minWords: parseInt(manualExercise.writingMinWords) || 30, tips: manualExercise.writingTips.split('\n').filter(Boolean) };
+      } else if (manualExercise.type === 'true-false') {
+        payload.content = { text: manualExercise.text, statements: manualExercise.tfStatements.filter(s => s.statement) };
+      } else if (manualExercise.type === 'sentence-order') {
+        payload.content = { instructions: 'Organize as palavras para formar a frase correta.', sentences: manualExercise.soSentences.filter(s => s.correct).map(s => ({ words: s.words.split(',').map(w => w.trim()).filter(Boolean), correct: s.correct })) };
+      } else if (manualExercise.type === 'matching') {
+        payload.content = { instructions: manualExercise.matchingInstructions, pairs: manualExercise.matchingPairs.filter(p => p.left && p.right) };
       }
 
       await apiClient.post('/exercises', payload);
-
       setManualExercise({
-        title: '',
-        type: 'text',
-        level: 'Beginner',
-        text: '',
-        questions: Array(7).fill({ question: '', options: ['', '', '', ''], correct: '' })
+        title: '', type: 'text', level: 'Beginner', text: '',
+        questions: Array(5).fill(null).map(() => ({ question: '', options: ['', '', '', ''], correct: '' })),
+        writingPrompt: '', writingMinWords: 30, writingTips: '',
+        tfStatements: Array(4).fill(null).map(() => ({ statement: '', correct: true })),
+        soSentences: Array(3).fill(null).map(() => ({ words: '', correct: '' })),
+        matchingPairs: Array(4).fill(null).map(() => ({ left: '', right: '' })),
+        matchingInstructions: 'Match the word to its meaning.',
       });
       setOpenManualExerciseDialog(false);
       loadAllExercises();
@@ -806,10 +837,55 @@ export default function AdminPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-                {allExercises.map((ex) => (
+              {allExercises.map((ex) => {
+                const typeColors = { quiz: '#1976d2', text: '#43a047', writing: '#9c27b0', 'gap-fill': '#f57c00', 'true-false': '#2e7d32', 'sentence-order': '#f9a825', matching: '#0288d1' };
+                const typeColor = typeColors[ex.type] || '#666';
+                return (
                 <TableRow key={ex.id}>
-                  <TableCell>{ex.title}</TableCell>
-                  <TableCell>{ex.type}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={700}>{ex.title}</Typography>
+                    <Typography variant="caption" color="text.secondary">ID: {ex.id}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Chip
+                        label={
+                          {
+                            text: '📖 Leitura',
+                            quiz: '🧠 Quiz',
+                            writing: '✍️ Escrita',
+                            'true-false': '✅ V ou F',
+                            'sentence-order': '🧩 Frases',
+                            matching: '🔗 Relacionar',
+                            'gap-fill': '✏️ Lacunas'
+                          }[ex.type] || ex.type
+                        }
+                        size="small"
+                        sx={{ bgcolor: `${typeColor}22`, color: typeColor, fontWeight: 700, fontSize: '0.72rem' }}
+                      />
+                      {/* Quick fix type selector */}
+                      <Select
+                        size="small"
+                        value={ex.type}
+                        onChange={async (e) => {
+                          try {
+                            await apiClient.patch(`/exercises/${ex.id}`, { type: e.target.value });
+                            loadAllExercises();
+                          } catch (err) { setError('Erro ao atualizar tipo: ' + err.message); }
+                        }}
+                        sx={{ fontSize: '0.72rem', height: 26, '& .MuiSelect-select': { py: 0.3, px: 1 } }}
+                        variant="outlined"
+                      >
+                        <MenuItem value="text" sx={{ fontSize: '0.8rem' }}>📖 Leitura</MenuItem>
+                        <MenuItem value="quiz" sx={{ fontSize: '0.8rem' }}>🧠 Quiz</MenuItem>
+                        <MenuItem value="writing" sx={{ fontSize: '0.8rem' }}>✍️ Escrita</MenuItem>
+                        <MenuItem value="true-false" sx={{ fontSize: '0.8rem' }}>✅ V ou F</MenuItem>
+                        <MenuItem value="sentence-order" sx={{ fontSize: '0.8rem' }}>🧩 Frases</MenuItem>
+                        <MenuItem value="matching" sx={{ fontSize: '0.8rem' }}>🔗 Relacionar</MenuItem>
+                        <MenuItem value="gap-fill" sx={{ fontSize: '0.8rem' }}>✏️ Lacunas</MenuItem>
+                      </Select>
+                    </Box>
+                  </TableCell>
                   <TableCell>{ex.level}</TableCell>
                   <TableCell sx={{ display: 'flex', gap: 1 }}>
                     <Button size="small" variant="outlined" color="info" onClick={() => { setSelectedExerciseJson(ex); setOpenJsonDialog(true); }}>
@@ -820,7 +896,8 @@ export default function AdminPage() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </TableContainer>
@@ -862,30 +939,107 @@ export default function AdminPage() {
         </Dialog>
 
         {/* Import Activities Dialog */}
-        <Dialog open={openImportDialog} onClose={() => setOpenImportDialog(false)}>
-          <DialogTitle>Importar Atividades via JSON</DialogTitle>
-          <DialogContent sx={{ minWidth: 500, mt: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Modelo de Exemplo:</Typography>
-            <Box component="pre" sx={{ p: 2, bgcolor: '#f0f0f0', borderRadius: 1, mb: 2, fontSize: '0.8rem' }}>
+        <Dialog open={openImportDialog} onClose={() => setOpenImportDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Importar Atividade via JSON</DialogTitle>
+          <DialogContent sx={{ mt: 1 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Exemplos por tipo — copie e adapte:</Typography>
+            <Tabs value={importTab} onChange={(_, v) => setImportTab(v)} variant="scrollable" scrollButtons="auto"
+              sx={{ minHeight: 36, mb: 1, '& .MuiTab-root': { minHeight: 36, py: 0.5, fontSize: '0.75rem', textTransform: 'none' } }}>
+              <Tab label="🧠 Quiz" />
+              <Tab label="✍️ Escrita" />
+              <Tab label="✅ V ou F" />
+              <Tab label="🧩 Frases" />
+              <Tab label="🔗 Relacionar" />
+            </Tabs>
+            {importTab === 0 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
 {`{
-  "title": "Texto sobre inglês",
-  "text": "Aqui vai um texto em inglês para o aluno ler.",
-  "questions": [
-    {
-      "question": "Pergunta 1?",
-      "options": ["A", "B", "C", "D"],
-      "correct": "A"
-    }
-  ]
+  "title": "Quiz: Present Simple",
+  "type": "quiz",
+  "level": "Beginner",
+  "content": {
+    "text": "Texto de apoio opcional...",
+    "questions": [
+      {
+        "question": "She ___ coffee every day.",
+        "options": ["drink","drinks","drinking","drank"],
+        "correct": "drinks"
+      }
+    ]
+  }
 }`}
-            </Box>
+              </Box>
+            )}
+            {importTab === 1 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "Write about your routine",
+  "type": "writing",
+  "level": "Intermediate",
+  "content": {
+    "prompt": "Write 5-8 sentences about your daily routine.",
+    "minWords": 30,
+    "tips": ["Use Present Simple", "Include time expressions"]
+  }
+}`}
+              </Box>
+            )}
+            {importTab === 2 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "True or False: London Life",
+  "type": "true-false",
+  "level": "Beginner",
+  "content": {
+    "text": "John lives in London and takes the subway...",
+    "statements": [
+      { "statement": "John lives in New York.", "correct": false },
+      { "statement": "He uses public transport.", "correct": true }
+    ]
+  }
+}`}
+              </Box>
+            )}
+            {importTab === 3 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "Sentence Builder",
+  "type": "sentence-order",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Put the words in the correct order.",
+    "sentences": [
+      {
+        "words": ["She","every","morning","coffee","drinks"],
+        "correct": "She drinks coffee every morning"
+      }
+    ]
+  }
+}`}
+              </Box>
+            )}
+            {importTab === 4 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "Vocabulary Match",
+  "type": "matching",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Match the word to its meaning.",
+    "pairs": [
+      { "left": "Dog", "right": "Animal que late" },
+      { "left": "Cat", "right": "Animal que mia" }
+    ]
+  }
+}`}
+              </Box>
+            )}
             <TextField
               label="Cole o JSON aqui"
-              multiline
-              rows={8}
-              fullWidth
+              multiline rows={7} fullWidth
               value={importJson}
               onChange={(e) => setImportJson(e.target.value)}
+              sx={{ fontFamily: 'monospace' }}
             />
           </DialogContent>
           <DialogActions>
@@ -917,42 +1071,45 @@ export default function AdminPage() {
                   <MenuItem value="Advanced">Advanced</MenuItem>
                 </Select>
               </FormControl>
-              <FormControl sx={{ minWidth: 150 }}>
+              <FormControl sx={{ minWidth: 180 }}>
                 <InputLabel>Tipo</InputLabel>
-                <Select 
+                <Select
                   value={manualExercise.type}
                   onChange={(e) => setManualExercise({...manualExercise, type: e.target.value})}
                 >
-                  <MenuItem value="text">Texto (Leitura)</MenuItem>
-                  <MenuItem value="quiz">Quiz (7 Questões)</MenuItem>
+                  <MenuItem value="text">📖 Texto (Leitura)</MenuItem>
+                  <MenuItem value="quiz">🧠 Quiz (Múltipla Escolha)</MenuItem>
+                  <MenuItem value="writing">✍️ Resposta Escrita</MenuItem>
+                  <MenuItem value="true-false">✅ Verdadeiro ou Falso</MenuItem>
+                  <MenuItem value="sentence-order">🧩 Montar a Frase</MenuItem>
+                  <MenuItem value="matching">🔗 Relacionar Colunas</MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
-            <TextField 
-              label="Texto Base / Conteúdo"
-              multiline
-              rows={4}
-              fullWidth
-              value={manualExercise.text}
-              onChange={(e) => setManualExercise({...manualExercise, text: e.target.value})}
-              sx={{ mb: 3 }}
-              required={manualExercise.type === 'text'}
-            />
+            {/* Base text for text/quiz/true-false */}
+            {['text', 'quiz', 'true-false'].includes(manualExercise.type) && (
+              <TextField
+                label={manualExercise.type === 'true-false' ? 'Texto Base (opcional)' : 'Texto Base / Conteúdo'}
+                multiline rows={4} fullWidth
+                value={manualExercise.text}
+                onChange={(e) => setManualExercise({...manualExercise, text: e.target.value})}
+                sx={{ mb: 3 }}
+              />
+            )}
 
+            {/* QUIZ */}
             {manualExercise.type === 'quiz' && (
               <Box>
-                <Typography variant="h6" sx={{ mb: 2 }}>Questões do Quiz (7 Obrigatórias)</Typography>
+                <Typography variant="h6" sx={{ mb: 2 }}>Questões do Quiz</Typography>
                 {manualExercise.questions.map((q, idx) => (
                   <Card key={idx} sx={{ p: 2, mb: 2, backgroundColor: '#f9f9f9' }}>
                     <Typography variant="subtitle2" sx={{ mb: 1 }}>Questão {idx + 1}</Typography>
-                    <TextField 
-                      label="Pergunta" 
-                      fullWidth 
+                    <TextField
+                      label="Pergunta" fullWidth
                       value={q.question}
                       onChange={(e) => {
-                        const newQ = [...manualExercise.questions];
-                        newQ[idx].question = e.target.value;
+                        const newQ = manualExercise.questions.map((qi, i) => i === idx ? {...qi, question: e.target.value} : qi);
                         setManualExercise({...manualExercise, questions: newQ});
                       }}
                       sx={{ mb: 2 }}
@@ -960,14 +1117,17 @@ export default function AdminPage() {
                     <Grid container spacing={2}>
                       {[0, 1, 2, 3].map(optIdx => (
                         <Grid item xs={12} sm={6} key={optIdx}>
-                          <TextField 
-                            label={`Alternativa ${String.fromCharCode(65 + optIdx)}`} 
-                            fullWidth
-                            size="small"
+                          <TextField
+                            label={`Alternativa ${String.fromCharCode(65 + optIdx)}`}
+                            fullWidth size="small"
                             value={q.options[optIdx]}
                             onChange={(e) => {
-                              const newQ = [...manualExercise.questions];
-                              newQ[idx].options[optIdx] = e.target.value;
+                              const newQ = manualExercise.questions.map((qi, i) => {
+                                if (i !== idx) return qi;
+                                const newOpts = [...qi.options];
+                                newOpts[optIdx] = e.target.value;
+                                return {...qi, options: newOpts};
+                              });
                               setManualExercise({...manualExercise, questions: newQ});
                             }}
                           />
@@ -979,14 +1139,148 @@ export default function AdminPage() {
                       <Select
                         value={q.correct}
                         onChange={(e) => {
-                          const newQ = [...manualExercise.questions];
-                          newQ[idx].correct = e.target.value;
+                          const newQ = manualExercise.questions.map((qi, i) => i === idx ? {...qi, correct: e.target.value} : qi);
                           setManualExercise({...manualExercise, questions: newQ});
                         }}
                       >
                         {q.options.map((opt, i) => opt ? <MenuItem key={i} value={opt}>{opt}</MenuItem> : null)}
                       </Select>
                     </FormControl>
+                  </Card>
+                ))}
+              </Box>
+            )}
+
+            {/* WRITING */}
+            {manualExercise.type === 'writing' && (
+              <Box>
+                <TextField
+                  label="Instrução / Prompt (o que o aluno deve escrever)"
+                  multiline rows={3} fullWidth
+                  value={manualExercise.writingPrompt}
+                  onChange={(e) => setManualExercise({...manualExercise, writingPrompt: e.target.value})}
+                  sx={{ mb: 2 }}
+                  placeholder="Ex: Write a paragraph about your daily routine using Present Simple..."
+                />
+                <TextField
+                  label="Mínimo de palavras"
+                  type="number" size="small"
+                  value={manualExercise.writingMinWords}
+                  onChange={(e) => setManualExercise({...manualExercise, writingMinWords: e.target.value})}
+                  sx={{ mb: 2, width: 200 }}
+                />
+                <TextField
+                  label="Dicas (uma por linha)"
+                  multiline rows={3} fullWidth
+                  value={manualExercise.writingTips}
+                  onChange={(e) => setManualExercise({...manualExercise, writingTips: e.target.value})}
+                  placeholder="Use: wake up, have breakfast..."
+                />
+              </Box>
+            )}
+
+            {/* TRUE / FALSE */}
+            {manualExercise.type === 'true-false' && (
+              <Box>
+                <Typography variant="h6" sx={{ mb: 2 }}>Afirmações</Typography>
+                {manualExercise.tfStatements.map((st, idx) => (
+                  <Card key={idx} sx={{ p: 2, mb: 2, bgcolor: '#f9f9f9' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Afirmação {idx + 1}</Typography>
+                    <TextField
+                      label="Afirmação" fullWidth
+                      value={st.statement}
+                      onChange={(e) => {
+                        const newS = manualExercise.tfStatements.map((s, i) => i === idx ? {...s, statement: e.target.value} : s);
+                        setManualExercise({...manualExercise, tfStatements: newS});
+                      }}
+                      sx={{ mb: 1 }}
+                    />
+                    <FormControl size="small">
+                      <InputLabel>Resposta</InputLabel>
+                      <Select
+                        value={String(st.correct)}
+                        onChange={(e) => {
+                          const newS = manualExercise.tfStatements.map((s, i) => i === idx ? {...s, correct: e.target.value === 'true'} : s);
+                          setManualExercise({...manualExercise, tfStatements: newS});
+                        }}
+                        sx={{ minWidth: 160 }}
+                      >
+                        <MenuItem value="true">✅ Verdadeiro</MenuItem>
+                        <MenuItem value="false">❌ Falso</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Card>
+                ))}
+              </Box>
+            )}
+
+            {/* SENTENCE ORDER */}
+            {manualExercise.type === 'sentence-order' && (
+              <Box>
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Escreva a frase correta e as palavras separadas por vírgula. As palavras serão embaralhadas automaticamente para o aluno.
+                </Alert>
+                {manualExercise.soSentences.map((s, idx) => (
+                  <Card key={idx} sx={{ p: 2, mb: 2, bgcolor: '#f9f9f9' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Frase {idx + 1}</Typography>
+                    <TextField
+                      label="Frase correta" fullWidth
+                      value={s.correct}
+                      onChange={(e) => {
+                        const newS = manualExercise.soSentences.map((si, i) => i === idx ? {...si, correct: e.target.value} : si);
+                        setManualExercise({...manualExercise, soSentences: newS});
+                      }}
+                      sx={{ mb: 1 }}
+                      placeholder="Ex: She drinks coffee every morning"
+                    />
+                    <TextField
+                      label="Palavras embaralhadas (separadas por vírgula)"
+                      fullWidth
+                      value={s.words}
+                      onChange={(e) => {
+                        const newS = manualExercise.soSentences.map((si, i) => i === idx ? {...si, words: e.target.value} : si);
+                        setManualExercise({...manualExercise, soSentences: newS});
+                      }}
+                      placeholder="Ex: She, every, morning, coffee, drinks"
+                    />
+                  </Card>
+                ))}
+              </Box>
+            )}
+
+            {/* MATCHING */}
+            {manualExercise.type === 'matching' && (
+              <Box>
+                <TextField
+                  label="Instrução"
+                  fullWidth value={manualExercise.matchingInstructions}
+                  onChange={(e) => setManualExercise({...manualExercise, matchingInstructions: e.target.value})}
+                  sx={{ mb: 2 }}
+                />
+                <Typography variant="h6" sx={{ mb: 2 }}>Pares</Typography>
+                {manualExercise.matchingPairs.map((pair, idx) => (
+                  <Card key={idx} sx={{ p: 2, mb: 2, bgcolor: '#f9f9f9' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>Par {idx + 1}</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                      <TextField
+                        label="Coluna A" size="small"
+                        value={pair.left}
+                        onChange={(e) => {
+                          const newP = manualExercise.matchingPairs.map((p, i) => i === idx ? {...p, left: e.target.value} : p);
+                          setManualExercise({...manualExercise, matchingPairs: newP});
+                        }}
+                        placeholder="Ex: Dog"
+                      />
+                      <TextField
+                        label="Coluna B" size="small"
+                        value={pair.right}
+                        onChange={(e) => {
+                          const newP = manualExercise.matchingPairs.map((p, i) => i === idx ? {...p, right: e.target.value} : p);
+                          setManualExercise({...manualExercise, matchingPairs: newP});
+                        }}
+                        placeholder="Ex: Animal que late"
+                      />
+                    </Box>
                   </Card>
                 ))}
               </Box>
@@ -1282,7 +1576,77 @@ export default function AdminPage() {
               const studentAnswers = result?.answers || {};
               const questions = exercise?.content?.questions;
 
-              if (!questions || !Array.isArray(questions)) {
+              const effectiveType = (exercise?.type === 'text' && exercise?.content?.prompt)
+                ? 'writing' : exercise?.type;
+
+              // ── Writing: show submitted text ────────────────────────────────
+              if (effectiveType === 'writing') {
+                const writingText = studentAnswers[0] || result?.writingAnswer || '';
+                return (
+                  <Box>
+                    <Box sx={{ p: 2.5, bgcolor: '#f9f4ff', border: '1px solid #ce93d8', borderRadius: 2, mb: 2 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#7b1fa2', textTransform: 'uppercase', display: 'block', mb: 1 }}>
+                        ✍️ Prompt (tema da atividade):
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">{exercise?.content?.prompt}</Typography>
+                    </Box>
+                    <Box sx={{ p: 2.5, bgcolor: '#fafffa', border: '1px solid #a5d6a7', borderRadius: 2 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#2e7d32', textTransform: 'uppercase', display: 'block', mb: 1 }}>
+                        📝 Texto enviado pela aluna:
+                      </Typography>
+                      {writingText ? (
+                        <Typography variant="body1" sx={{ fontFamily: 'Georgia, serif', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>
+                          {writingText}
+                        </Typography>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" fontStyle="italic">Nenhum texto foi enviado.</Typography>
+                      )}
+                    </Box>
+                    {exercise?.content?.minWords > 0 && (
+                      <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                        Mínimo exigido: {exercise.content.minWords} palavras · Enviado: {writingText.trim().split(/\s+/).filter(Boolean).length} palavras
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              }
+
+              // ── True/False: show statements with answers ────────────────────
+              if (effectiveType === 'true-false' && Array.isArray(result?.validation)) {
+                return (
+                  <Box>
+                    {result.validation.map((r, i) => (
+                      <Card key={i} sx={{ p: 2, mb: 1.5, borderLeft: `4px solid ${r.isCorrect ? '#4caf50' : '#f44336'}` }}>
+                        <Typography variant="body2" fontWeight={700}>{r.isCorrect ? '✅' : '❌'} {r.statement}</Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          Aluna respondeu: <strong>{r.userAnswer ? 'Verdadeiro' : 'Falso'}</strong>
+                          {!r.isCorrect && ` · Correto: ${r.correctAnswer ? 'Verdadeiro' : 'Falso'}`}
+                        </Typography>
+                      </Card>
+                    ))}
+                  </Box>
+                );
+              }
+
+              // ── Sentence Order ──────────────────────────────────────────────
+              if (effectiveType === 'sentence-order' && Array.isArray(result?.validation)) {
+                return (
+                  <Box>
+                    {result.validation.map((r, i) => (
+                      <Card key={i} sx={{ p: 2, mb: 1.5, borderLeft: `4px solid ${r.isCorrect ? '#4caf50' : '#f44336'}` }}>
+                        <Typography variant="caption" fontWeight={700} color={r.isCorrect ? 'success.main' : 'error'}>
+                          {r.isCorrect ? '✅ Correto' : '❌ Errado'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5 }}>Aluna: <em>{r.userAnswer}</em></Typography>
+                        {!r.isCorrect && <Typography variant="body2" color="success.main">Correto: <strong>{r.sentence}</strong></Typography>}
+                      </Card>
+                    ))}
+                  </Box>
+                );
+              }
+
+              // ── Text / Reading ──────────────────────────────────────────────
+              if (effectiveType === 'text' || !questions || !Array.isArray(questions)) {
                 return (
                   <Box sx={{ p: 2, bgcolor: '#f0f0f0', borderRadius: 1 }}>
                     <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
