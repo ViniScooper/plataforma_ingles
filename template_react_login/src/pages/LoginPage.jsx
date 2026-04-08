@@ -155,7 +155,7 @@ export default function LoginPage() {
 
         {mode === 'login' && (
           <Typography sx={{ mt: 3, fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
-            Demo: admin@test.com / admin123 (after seeding)
+            
           </Typography>
         )}
       </Card>
