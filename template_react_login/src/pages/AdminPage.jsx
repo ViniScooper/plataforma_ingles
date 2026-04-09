@@ -124,6 +124,8 @@ export default function AdminPage() {
     soSentences: Array(3).fill(null).map(() => ({ words: '', correct: '' })),
     matchingPairs: Array(4).fill(null).map(() => ({ left: '', right: '' })),
     matchingInstructions: 'Match the word to its meaning.',
+    flashCards: Array(5).fill(null).map(() => ({ front: '', back: '', example: '' })),
+    flashInstructions: 'Click on the card to see the translation.',
   });
 
   const [selectedExerciseToAssign, setSelectedExerciseToAssign] = useState('');
@@ -453,7 +455,8 @@ export default function AdminPage() {
         1: 'writing',
         2: 'true-false',
         3: 'sentence-order',
-        4: 'matching'
+        4: 'matching',
+        5: 'flashcards'
       };
       const fallbackType = tabTypeMap[importTab];
 
@@ -494,6 +497,15 @@ export default function AdminPage() {
         payload.content = { instructions: 'Organize as palavras para formar a frase correta.', sentences: manualExercise.soSentences.filter(s => s.correct).map(s => ({ words: s.words.split(',').map(w => w.trim()).filter(Boolean), correct: s.correct })) };
       } else if (manualExercise.type === 'matching') {
         payload.content = { instructions: manualExercise.matchingInstructions, pairs: manualExercise.matchingPairs.filter(p => p.left && p.right) };
+      } else if (manualExercise.type === 'flashcards') {
+        payload.content = {
+          instructions: manualExercise.flashInstructions,
+          cards: manualExercise.flashCards.filter(c => c.front && c.back).map(c => ({
+            front: c.front,
+            back: c.back,
+            ...(c.example ? { example: c.example } : {})
+          }))
+        };
       }
 
       await apiClient.post('/exercises', payload);
@@ -505,6 +517,8 @@ export default function AdminPage() {
         soSentences: Array(3).fill(null).map(() => ({ words: '', correct: '' })),
         matchingPairs: Array(4).fill(null).map(() => ({ left: '', right: '' })),
         matchingInstructions: 'Match the word to its meaning.',
+        flashCards: Array(5).fill(null).map(() => ({ front: '', back: '', example: '' })),
+        flashInstructions: 'Click on the card to see the translation.',
       });
       setOpenManualExerciseDialog(false);
       loadAllExercises();
@@ -838,7 +852,7 @@ export default function AdminPage() {
             </TableHead>
             <TableBody>
               {allExercises.map((ex) => {
-                const typeColors = { quiz: '#1976d2', text: '#43a047', writing: '#9c27b0', 'gap-fill': '#f57c00', 'true-false': '#2e7d32', 'sentence-order': '#f9a825', matching: '#0288d1' };
+                const typeColors = { quiz: '#1976d2', text: '#43a047', writing: '#9c27b0', 'gap-fill': '#f57c00', 'true-false': '#2e7d32', 'sentence-order': '#f9a825', matching: '#0288d1', flashcards: '#e91e63' };
                 const typeColor = typeColors[ex.type] || '#666';
                 return (
                 <TableRow key={ex.id}>
@@ -857,7 +871,8 @@ export default function AdminPage() {
                             'true-false': '✅ V ou F',
                             'sentence-order': '🧩 Frases',
                             matching: '🔗 Relacionar',
-                            'gap-fill': '✏️ Lacunas'
+                            'gap-fill': '✏️ Lacunas',
+                            flashcards: '🎴 Flashcards'
                           }[ex.type] || ex.type
                         }
                         size="small"
@@ -883,6 +898,7 @@ export default function AdminPage() {
                         <MenuItem value="sentence-order" sx={{ fontSize: '0.8rem' }}>🧩 Frases</MenuItem>
                         <MenuItem value="matching" sx={{ fontSize: '0.8rem' }}>🔗 Relacionar</MenuItem>
                         <MenuItem value="gap-fill" sx={{ fontSize: '0.8rem' }}>✏️ Lacunas</MenuItem>
+                        <MenuItem value="flashcards" sx={{ fontSize: '0.8rem' }}>🎴 Flashcards</MenuItem>
                       </Select>
                     </Box>
                   </TableCell>
@@ -950,6 +966,7 @@ export default function AdminPage() {
               <Tab label="✅ V ou F" />
               <Tab label="🧩 Frases" />
               <Tab label="🔗 Relacionar" />
+              <Tab label="🎴 Flashcards" />
             </Tabs>
             {importTab === 0 && (
               <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
@@ -1034,6 +1051,22 @@ export default function AdminPage() {
 }`}
               </Box>
             )}
+            {importTab === 5 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "Vocabulário de Viagem",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Clique no cartão para ver a tradução.",
+    "cards": [
+      { "front": "Airport", "back": "Aeroporto" },
+      { "front": "Luggage", "back": "Bagagem", "example": "My luggage is too heavy." },
+      { "front": "Flight", "back": "Voo" }
+    ]
+  }
+}`}
+              </Box>
+            )}
             <TextField
               label="Cole o JSON aqui"
               multiline rows={7} fullWidth
@@ -1083,6 +1116,7 @@ export default function AdminPage() {
                   <MenuItem value="true-false">✅ Verdadeiro ou Falso</MenuItem>
                   <MenuItem value="sentence-order">🧩 Montar a Frase</MenuItem>
                   <MenuItem value="matching">🔗 Relacionar Colunas</MenuItem>
+                  <MenuItem value="flashcards">🎴 Flashcards</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -1283,6 +1317,63 @@ export default function AdminPage() {
                     </Box>
                   </Card>
                 ))}
+              </Box>
+            )}
+
+            {/* FLASHCARDS */}
+            {manualExercise.type === 'flashcards' && (
+              <Box>
+                <TextField
+                  label="Instrução (o que o aluno deve fazer)"
+                  fullWidth
+                  value={manualExercise.flashInstructions}
+                  onChange={(e) => setManualExercise({...manualExercise, flashInstructions: e.target.value})}
+                  sx={{ mb: 3 }}
+                  placeholder="Ex: Clique no cartão para ver a tradução em português."
+                />
+                <Typography variant="h6" sx={{ mb: 2 }}>Cartões</Typography>
+                {manualExercise.flashCards.map((card, idx) => (
+                  <Card key={idx} sx={{ p: 2, mb: 2, bgcolor: '#f9f4ff', border: '1px solid #ce93d8' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1.5, color: '#7b1fa2' }}>Cartão {idx + 1}</Typography>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+                      <TextField
+                        label="Frente (Inglês)" size="small"
+                        value={card.front}
+                        onChange={(e) => {
+                          const newC = manualExercise.flashCards.map((c, i) => i === idx ? {...c, front: e.target.value} : c);
+                          setManualExercise({...manualExercise, flashCards: newC});
+                        }}
+                        placeholder="Ex: Airport"
+                      />
+                      <TextField
+                        label="Verso (Português)" size="small"
+                        value={card.back}
+                        onChange={(e) => {
+                          const newC = manualExercise.flashCards.map((c, i) => i === idx ? {...c, back: e.target.value} : c);
+                          setManualExercise({...manualExercise, flashCards: newC});
+                        }}
+                        placeholder="Ex: Aeroporto"
+                      />
+                      <TextField
+                        label="Exemplo (opcional)" size="small"
+                        value={card.example}
+                        onChange={(e) => {
+                          const newC = manualExercise.flashCards.map((c, i) => i === idx ? {...c, example: e.target.value} : c);
+                          setManualExercise({...manualExercise, flashCards: newC});
+                        }}
+                        placeholder="Ex: I missed my flight."
+                      />
+                    </Box>
+                  </Card>
+                ))}
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setManualExercise({...manualExercise, flashCards: [...manualExercise.flashCards, { front: '', back: '', example: '' }]})}
+                  sx={{ mt: 1 }}
+                >
+                  + Adicionar Cartão
+                </Button>
               </Box>
             )}
           </DialogContent>

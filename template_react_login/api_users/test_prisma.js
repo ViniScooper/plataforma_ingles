@@ -4,19 +4,16 @@ const prisma = new PrismaClient();
 
 async function simulateImport() {
   const exercises = [
-    {
-      "title": "Social Media: Good or Bad?",
-      "type": "writing",
-      "level": "Intermediate",
+      {
+      "title": "Travel Vocabulary Flashcards",
+      "type": "flashcards",
+      "level": "Beginner",
       "content": {
-        "prompt": "Write a short paragraph about the advantages AND disadvantages of using social media. Give your personal opinion at the end.",
-        "minWords": 60,
-        "tips": [
-          "Structure: Introduction → Advantages → Disadvantages → Opinion",
-          "Useful phrases: 'On one hand... On the other hand...'",
-          "Advantage ideas: connect with friends, access information quickly",
-          "Disadvantage ideas: waste of time, cyberbullying, fake news",
-          "End with: 'In my opinion, social media is... because...'"
+        "instructions": "Click on each card to see the translation.",
+        "cards": [
+          { "front": "Airport", "back": "Aeroporto" },
+          { "front": "Luggage", "back": "Bagagem", "example": "My luggage is too heavy." },
+          { "front": "Flight", "back": "Voo" }
         ]
       }
     }

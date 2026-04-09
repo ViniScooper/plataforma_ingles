@@ -513,15 +513,173 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
   );
 }
 
+// --- Flashcards ---
+function FlashcardsRenderer({ exercise, onAllSeen }) {
+  const cards = exercise.content?.cards || [];
+  const instructions = exercise.content?.instructions || 'Clique no cartão para virar e ver a tradução.';
+  const [current, setCurrent] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [seen, setSeen] = useState(new Set());
+
+  const handleFlip = () => setFlipped(f => !f);
+
+  const handleNext = () => {
+    const next = current + 1;
+    const newSeen = new Set(seen).add(current);
+    setSeen(newSeen);
+    if (next < cards.length) {
+      setCurrent(next);
+      setFlipped(false);
+    } else {
+      if (onAllSeen) onAllSeen();
+    }
+  };
+
+  const handlePrev = () => {
+    if (current > 0) {
+      setCurrent(current - 1);
+      setFlipped(false);
+    }
+  };
+
+  if (cards.length === 0) {
+    return <Box sx={{ p: 3, bgcolor: '#fff3e0', borderRadius: 2 }}><Typography>Nenhum cartão encontrado nesta atividade.</Typography></Box>;
+  }
+
+  const card = cards[current];
+  const progress = Math.round(((seen.size) / cards.length) * 100);
+
+  return (
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography variant="body2" sx={{ mb: 2, color: '#666', fontStyle: 'italic' }}>
+        {instructions}
+      </Typography>
+
+      {/* Progress */}
+      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ flex: 1, height: 6, bgcolor: '#e0e0e0', borderRadius: 3, overflow: 'hidden' }}>
+          <Box sx={{ width: `${progress}%`, height: '100%', bgcolor: '#667eea', transition: 'width 0.4s ease', borderRadius: 3 }} />
+        </Box>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: '#667eea', minWidth: 50 }}>
+          {current + 1}/{cards.length}
+        </Typography>
+      </Box>
+
+      {/* 3D Flip Card */}
+      <Box
+        onClick={handleFlip}
+        sx={{
+          cursor: 'pointer',
+          perspective: '1000px',
+          height: 220,
+          mb: 3,
+          '&:hover .flip-inner': { boxShadow: '0 12px 40px rgba(102,126,234,0.25)' },
+        }}
+      >
+        <Box
+          className="flip-inner"
+          sx={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            transition: 'transform 0.5s ease, box-shadow 0.2s',
+            transformStyle: 'preserve-3d',
+            transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            borderRadius: 4,
+          }}
+        >
+          {/* Front */}
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            borderRadius: 4,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(102,126,234,0.2)',
+            p: 3,
+          }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>🎴 Frente</Typography>
+            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800, textAlign: 'center', lineHeight: 1.2 }}>
+              {card.front}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mt: 2 }}>Clique para ver</Typography>
+          </Box>
+
+          {/* Back */}
+          <Box sx={{
+            position: 'absolute', inset: 0,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            borderRadius: 4,
+            background: 'linear-gradient(135deg, #43a047 0%, #1de9b6 100%)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 8px 32px rgba(67,160,71,0.2)',
+            p: 3,
+          }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>✅ Verso</Typography>
+            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800, textAlign: 'center', lineHeight: 1.2 }}>
+              {card.back}
+            </Typography>
+            {card.example && (
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', mt: 1.5, fontStyle: 'italic' }}>
+                {card.example}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Navigation */}
+      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+        <Button
+          variant="outlined"
+          onClick={handlePrev}
+          disabled={current === 0}
+          sx={{ borderRadius: 2, px: 3 }}
+        >
+          ← Anterior
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleNext}
+          sx={{ borderRadius: 2, px: 3, background: 'linear-gradient(135deg, #667eea, #764ba2)', '&:hover': { background: 'linear-gradient(135deg, #5a6fd6, #6a3d94)' } }}
+        >
+          {current === cards.length - 1 ? '✅ Concluir' : 'Próximo →'}
+        </Button>
+      </Box>
+
+      {/* Dot indicators */}
+      <Box sx={{ display: 'flex', gap: 0.8, justifyContent: 'center', mt: 2 }}>
+        {cards.map((_, i) => (
+          <Box
+            key={i}
+            sx={{
+              width: i === current ? 20 : 8, height: 8,
+              borderRadius: 4,
+              bgcolor: i === current ? '#667eea' : seen.has(i) ? '#a5b4fc' : '#e0e0e0',
+              transition: 'all 0.3s',
+            }}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
 // ─── Main ExerciseCard ─────────────────────────────────────────────────────────
 
 export default function ExerciseCard({ exercise, onComplete }) {
   const [answers, setAnswers] = useState({});
   const [validation, setValidation] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [flashcardsComplete, setFlashcardsComplete] = useState(false);
 
   // Detect effective type: 'text' with a prompt field = writing exercise
-  const effectiveType = (exercise.type === 'text' && exercise.content?.prompt) ? 'writing' : exercise.type;
+  const effectiveType = (exercise.type === 'text' && exercise.content?.prompt) ? 'writing'
+    : exercise.type === 'text' && exercise.content?.cards ? 'flashcards'
+    : exercise.type;
 
   const canSubmit = () => {
     if (effectiveType === 'writing') {
@@ -540,6 +698,9 @@ export default function ExerciseCard({ exercise, onComplete }) {
       const pairs = exercise.content?.pairs || [];
       return pairs.every((_, idx) => answers[idx] != null);
     }
+    if (effectiveType === 'flashcards') {
+      return flashcardsComplete;
+    }
     return true;
   };
 
@@ -552,7 +713,12 @@ export default function ExerciseCard({ exercise, onComplete }) {
       let validationData = {};
 
       // effectiveType is computed at component level above canSubmit
-      if (effectiveType === 'text') {
+      if (effectiveType === 'flashcards') {
+        score = 0;
+        totalQuestions = 0;
+        validationData = { allCorrect: true, message: 'Flashcards concluídos! Continue praticando.' };
+
+      } else if (effectiveType === 'text') {
         score = 0;
         totalQuestions = 0;
         validationData = { allCorrect: true, message: 'Leitura concluída!' };
@@ -658,6 +824,8 @@ export default function ExerciseCard({ exercise, onComplete }) {
         return <SentenceOrderRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} />;
       case 'matching':
         return <MatchingRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} />;
+      case 'flashcards':
+        return <FlashcardsRenderer exercise={exercise} onAllSeen={() => setFlashcardsComplete(true)} />;
       default:
         return (
           <Box sx={{ p: 3, bgcolor: '#fff3e0', borderRadius: 2 }}>
@@ -704,7 +872,7 @@ export default function ExerciseCard({ exercise, onComplete }) {
           disabled={loading || !canSubmit()}
           sx={{ borderRadius: 2, py: 1.5, fontWeight: 700 }}
         >
-          {loading ? 'Enviando...' : effectiveType === 'text' ? '✅ Marcar como Lido' : effectiveType === 'writing' ? '📤 Enviar Texto' : '📤 Enviar Respostas'}
+          {loading ? 'Enviando...' : effectiveType === 'text' ? '✅ Marcar como Lido' : effectiveType === 'writing' ? '📤 Enviar Texto' : effectiveType === 'flashcards' ? '🎴 Concluir Flashcards' : '📤 Enviar Respostas'}
         </Button>
       )}
     </Box>

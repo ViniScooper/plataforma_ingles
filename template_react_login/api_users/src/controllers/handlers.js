@@ -416,7 +416,11 @@ export const importExercises = async (req, res) => {
           'matching': 'matching',
           'Relacionar': 'matching',
           'sentence-order': 'sentence-order',
-          'Frases': 'sentence-order'
+          'Frases': 'sentence-order',
+          'flashcards': 'flashcards',
+          'Flashcards': 'flashcards',
+          'cartoes': 'flashcards',
+          'Cartões': 'flashcards'
         };
 
         if (exType && typeMap[exType]) {
@@ -425,6 +429,7 @@ export const importExercises = async (req, res) => {
 
         if (!exType) {
           if (exContent.prompt) exType = 'writing';
+          else if (exContent.cards) exType = 'flashcards';
           else if (exContent.statements) exType = 'true-false';
           else if (exContent.sentences) exType = 'sentence-order';
           else if (exContent.pairs) exType = 'matching';

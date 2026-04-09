@@ -35,6 +35,7 @@ const TYPE_LABELS = {
   'true-false': '✅ V/F',
   'sentence-order': '🧩 Frases',
   matching: '🔗 Relacionar',
+  flashcards: '🎴 Flashcards',
 };
 
 export default function StudentPage() {
@@ -91,12 +92,14 @@ export default function StudentPage() {
   // Filter logic per tab
   const filterExercises = (exercises) => {
     const isWriting = (p) => p.exercise?.type === 'writing' || (p.exercise?.type === 'text' && p.exercise?.content?.prompt);
+    const isFlashcard = (p) => p.exercise?.type === 'flashcards' || (p.exercise?.type === 'text' && p.exercise?.content?.cards);
     switch (activityTab) {
       case 1: return exercises.filter(p => p.status !== 'completed');
       case 2: return exercises.filter(p => p.status === 'completed');
       case 3: return exercises.filter(p => isWriting(p));
       case 4: return exercises.filter(p => p.exercise?.type === 'quiz');
-      case 5: return exercises.filter(p => ['true-false', 'sentence-order', 'matching', 'gap-fill', 'text'].includes(p.exercise?.type) && !isWriting(p));
+      case 5: return exercises.filter(p => isFlashcard(p));
+      case 6: return exercises.filter(p => ['true-false', 'sentence-order', 'matching', 'gap-fill', 'text'].includes(p.exercise?.type) && !isWriting(p) && !isFlashcard(p));
       default: return exercises;
     }
   };
@@ -462,6 +465,7 @@ export default function StudentPage() {
                     } />
                     <Tab label="✍️ Escrita" />
                     <Tab label="🧠 Quiz" />
+                    <Tab label="🎴 Flashcards" />
                     <Tab label="🧩 Outros" />
                   </Tabs>
                 </Card>
