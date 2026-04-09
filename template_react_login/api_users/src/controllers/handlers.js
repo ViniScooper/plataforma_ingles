@@ -1,4 +1,6 @@
 import { prisma } from '../database/index.js';
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export const signUp = async (req, res) => {
   const { email, password, username, age, name, role } = req.body;
@@ -11,8 +13,6 @@ export const signUp = async (req, res) => {
     const check = await checkUserExists(email, username);
     if (check) return res.status(403).json({ error: 'User already exists' });
 
-    // Import bcryptjs dinamicamente
-    const bcryptjs = (await import('bcryptjs')).default;
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     const user = await prisma.user.create({
@@ -50,9 +50,6 @@ export const signIn = async (req, res) => {
   }
 
   try {
-    const bcryptjs = (await import('bcryptjs')).default;
-    const jwt = (await import('jsonwebtoken')).default;
-
     console.log('🔍 SignIn attempt with:', { email, username, password: '***' });
 
     const user = await prisma.user.findUnique({
