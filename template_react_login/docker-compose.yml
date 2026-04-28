@@ -1,7 +1,4 @@
-version: '3.9'
-
 services:
-  # ─── API Backend (Node.js + Express + Prisma → Supabase) ──────────────────
   api:
     build:
       context: ./api_users
@@ -9,16 +6,9 @@ services:
     container_name: plataforma_ingles_api
     restart: unless-stopped
     ports:
-      - "3002:3002"          # porta-host:porta-container
-    environment:
-      PORT: 3002
-      NODE_ENV: production
-      # Supabase — coloque suas credenciais reais aqui ou use um .env na raiz
-      DATABASE_URL: ${DATABASE_URL}
-      DIRECT_URL: ${DIRECT_URL}
-      JWT_SECRET: ${JWT_SECRET}
+      - "3003:3002"
     env_file:
-      - ./api_users/.env     # usa o .env que já existe em api_users/
+      - ./api_users/.env
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
       interval: 30s
