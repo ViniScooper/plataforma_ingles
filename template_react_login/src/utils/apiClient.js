@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-const isProd = import.meta.env.MODE === 'production';
-const API_BASE_URL = isProd 
-  ? 'https://plataforma-ingles-1djx.onrender.com/api' 
-  : 'http://localhost:3000/api';
+// Em produção: /api → Vercel faz proxy para a VM Oracle (sem CORS)
+// Em dev: localhost:3002
+const API_BASE_URL = import.meta.env.MODE === 'production'
+  ? '/api'
+  : 'http://localhost:3002/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
