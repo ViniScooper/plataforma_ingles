@@ -26,8 +26,10 @@ import {
   MenuItem,
   Alert,
   LinearProgress,
-  IconButton,
   Paper,
+  Checkbox,
+  ListItemText,
+  IconButton,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -128,7 +130,7 @@ export default function AdminPage() {
     flashInstructions: 'Click on the card to see the translation.',
   });
 
-  const [selectedExerciseToAssign, setSelectedExerciseToAssign] = useState('');
+  const [selectedExercisesToAssign, setSelectedExercisesToAssign] = useState([]);
   const [openAssignDialog, setOpenAssignDialog] = useState(false);
 
   // Student response viewer state
@@ -439,7 +441,7 @@ export default function AdminPage() {
     try {
       const response = await apiClient.get(`/progress/${studentId}`);
       setStudentProgress(response.data);
-      setTab(3); // Switch to Monitoring tab
+      setTab(4); // Switch to Monitoring tab
     } catch (err) {
       setError('Failed to load student progress: ' + err.message);
     }
@@ -456,16 +458,17 @@ export default function AdminPage() {
         2: 'true-false',
         3: 'sentence-order',
         4: 'matching',
-        5: 'flashcards'
+        5: 'flashcards',
+        6: 'mixed' // mixed/compiled
       };
       const fallbackType = tabTypeMap[importTab];
 
       // Process exercises: if it's an array, force the type for all; if single object, force for it.
-      // This ensures that the active tab ALWAYS overrides whatever is inside the JSON.
+      // This ensures that the active tab ALWAYS overrides whatever is inside the JSON, unless "mixed" is selected.
       const exercisesArray = Array.isArray(data) ? data : [data];
       const processedExercises = exercisesArray.map(ex => ({
         ...ex,
-        type: fallbackType || 'text' // Força o tipo baseado na aba escolhida
+        type: fallbackType === 'mixed' ? (ex.type || 'text') : (fallbackType || ex.type || 'text')
       }));
 
       let selectedPlanId = plans.length > 0 ? plans[0].id : 1;
@@ -478,6 +481,182 @@ export default function AdminPage() {
     } catch (err) {
       setError('Failed to import exercises: ' + err.message);
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target.result;
+      setImportJson(text);
+      try {
+        const parsed = JSON.parse(text);
+        // Se for um array de atividades com tipos variados, muda automaticamente para a aba "Compilado"
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const types = new Set(parsed.map(x => x.type).filter(Boolean));
+          if (types.size > 1) {
+            setImportTab(6); // Seleciona a aba "Compilado"
+          }
+        }
+      } catch (err) {
+        // ignora erro de parsing na hora do upload, deixa o TextField ou o envio tratar
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCopyExample = () => {
+    let template = '';
+    switch (importTab) {
+      case 0:
+        template = `{
+  "title": "Quiz: Present Simple",
+  "type": "quiz",
+  "level": "Beginner",
+  "content": {
+    "text": "Texto de apoio opcional...",
+    "questions": [
+      {
+        "question": "She ___ coffee every day.",
+        "options": ["drink", "drinks", "drinking", "drank"],
+        "correct": "drinks"
+      }
+    ]
+  }
+}`;
+        break;
+      case 1:
+        template = `{
+  "title": "Write about your routine",
+  "type": "writing",
+  "level": "Intermediate",
+  "content": {
+    "prompt": "Write 5-8 sentences about your daily routine.",
+    "minWords": 30,
+    "tips": ["Use Present Simple", "Include time expressions"]
+  }
+}`;
+        break;
+      case 2:
+        template = `{
+  "title": "True or False: London Life",
+  "type": "true-false",
+  "level": "Beginner",
+  "content": {
+    "text": "John lives in London and takes the subway...",
+    "statements": [
+      { "statement": "John lives in New York.", "correct": false },
+      { "statement": "He uses public transport.", "correct": true }
+    ]
+  }
+}`;
+        break;
+      case 3:
+        template = `{
+  "title": "Sentence Builder",
+  "type": "sentence-order",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Put the words in the correct order.",
+    "sentences": [
+      {
+        "words": ["She", "every", "morning", "coffee", "drinks"],
+        "correct": "She drinks coffee every morning"
+      }
+    ]
+  }
+}`;
+        break;
+      case 4:
+        template = `{
+  "title": "Vocabulary Match",
+  "type": "matching",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Match the word to its meaning.",
+    "pairs": [
+      { "left": "Dog", "right": "Animal que late" },
+      { "left": "Cat", "right": "Animal que mia" }
+    ]
+  }
+}`;
+        break;
+      case 5:
+        template = `{
+  "title": "Vocabulário de Viagem",
+  "type": "flashcards",
+  "level": "Beginner",
+  "content": {
+    "instructions": "Clique no cartão para ver a tradução.",
+    "cards": [
+      { "front": "Airport", "back": "Aeroporto" },
+      { "front": "Luggage", "back": "Bagagem", "example": "My luggage is too heavy." },
+      { "front": "Flight", "back": "Voo" }
+    ]
+  }
+}`;
+        break;
+      case 6:
+        template = `[
+  {
+    "title": "1. Present Simple (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the best option:",
+      "questions": [{ "question": "She ___ a car.", "options": ["has","have"], "correct": "has" }]
+    }
+  },
+  {
+    "title": "2. Write your routine (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": { "prompt": "Write about your daily routine.", "minWords": 30 }
+  },
+  {
+    "title": "3. True/False (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Mary lives in Rome.",
+      "statements": [{ "statement": "Mary lives in Italy.", "correct": true }]
+    }
+  },
+  {
+    "title": "4. Sentence Builder (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words:",
+      "sentences": [{ "words": ["He","is","here"], "correct": "He is here" }]
+    }
+  },
+  {
+    "title": "5. Match column (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match pairs:",
+      "pairs": [{ "left": "Apple", "right": "Maçã" }]
+    }
+  },
+  {
+    "title": "6. Flashcards (Vocabulário)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study cards:",
+      "cards": [{ "front": "Hello", "back": "Olá" }]
+    }
+  }
+]`;
+        break;
+      default:
+        break;
+    }
+    navigator.clipboard.writeText(template);
+    alert('Modelo copiado para a área de transferência!');
   };
 
   const handleCreateManualExercise = async () => {
@@ -541,15 +720,21 @@ export default function AdminPage() {
   const handleAssignExercise = async () => {
     try {
       setError('');
-      await apiClient.post('/assignments', {
-        userId: selectedMonitorStudent.id,
-        exerciseId: parseInt(selectedExerciseToAssign),
-      });
-      setSelectedExerciseToAssign('');
+      if (selectedExercisesToAssign.length === 0) {
+        alert('Selecione pelo menos uma atividade.');
+        return;
+      }
+      await Promise.all(selectedExercisesToAssign.map(exId => 
+        apiClient.post('/assignments', {
+          userId: selectedMonitorStudent.id,
+          exerciseId: parseInt(exId)
+        })
+      ));
+      setSelectedExercisesToAssign([]);
       setOpenAssignDialog(false);
       handleViewProgress(selectedMonitorStudent.id); // Refresh progress
     } catch (err) {
-      setError('Failed to assign exercise: ' + err.response?.data?.message);
+      setError('Erro ao atribuir atividades: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -958,7 +1143,17 @@ export default function AdminPage() {
         <Dialog open={openImportDialog} onClose={() => setOpenImportDialog(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Importar Atividade via JSON</DialogTitle>
           <DialogContent sx={{ mt: 1 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, color: '#666' }}>Exemplos por tipo — copie e adapte:</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="subtitle2" sx={{ color: '#666' }}>Exemplos por tipo — copie e adapte:</Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleCopyExample}
+                sx={{ borderRadius: 2, fontSize: '0.7rem', textTransform: 'none', py: 0.2, px: 1 }}
+              >
+                Copiar Modelo
+              </Button>
+            </Box>
             <Tabs value={importTab} onChange={(_, v) => setImportTab(v)} variant="scrollable" scrollButtons="auto"
               sx={{ minHeight: 36, mb: 1, '& .MuiTab-root': { minHeight: 36, py: 0.5, fontSize: '0.75rem', textTransform: 'none' } }}>
               <Tab label="🧠 Quiz" />
@@ -967,6 +1162,7 @@ export default function AdminPage() {
               <Tab label="🧩 Frases" />
               <Tab label="🔗 Relacionar" />
               <Tab label="🎴 Flashcards" />
+              <Tab label="📦 Compilado (Tudo)" />
             </Tabs>
             {importTab === 0 && (
               <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
@@ -1067,6 +1263,83 @@ export default function AdminPage() {
 }`}
               </Box>
             )}
+            {importTab === 6 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`[
+  {
+    "title": "1. Present Simple (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the best option:",
+      "questions": [{ "question": "She ___ a car.", "options": ["has","have"], "correct": "has" }]
+    }
+  },
+  {
+    "title": "2. Write your routine (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": { "prompt": "Write about your daily routine.", "minWords": 30 }
+  },
+  {
+    "title": "3. True/False (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Mary lives in Rome.",
+      "statements": [{ "statement": "Mary lives in Italy.", "correct": true }]
+    }
+  },
+  {
+    "title": "4. Sentence Builder (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words:",
+      "sentences": [{ "words": ["He","is","here"], "correct": "He is here" }]
+    }
+  },
+  {
+    "title": "5. Match column (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match pairs:",
+      "pairs": [{ "left": "Apple", "right": "Maçã" }]
+    }
+  },
+  {
+    "title": "6. Flashcards (Vocabulário)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study cards:",
+      "cards": [{ "front": "Hello", "back": "Olá" }]
+    }
+  }
+]`}
+              </Box>
+            )}
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+              <Typography variant="caption" color="textSecondary">
+                Ou carregue um arquivo .json salvo no seu computador:
+              </Typography>
+              <Button
+                variant="outlined"
+                component="label"
+                size="small"
+                startIcon={<CloudUploadIcon />}
+                sx={{ borderRadius: 2, textTransform: 'none', py: 0.5 }}
+              >
+                Anexar JSON
+                <input
+                  type="file"
+                  accept=".json"
+                  hidden
+                  onChange={handleFileUpload}
+                />
+              </Button>
+            </Box>
             <TextField
               label="Cole o JSON aqui"
               multiline rows={7} fullWidth
@@ -1626,27 +1899,53 @@ export default function AdminPage() {
           </Box>
         )}
 
-        {/* Assign Dialog ... same as before */}
-        <Dialog open={openAssignDialog} onClose={() => setOpenAssignDialog(false)}>
-          <DialogTitle>Atribuir Atividade para {selectedMonitorStudent?.name}</DialogTitle>
-          <DialogContent sx={{ minWidth: 400, mt: 2 }}>
+        {/* Assign Dialog */}
+        <Dialog open={openAssignDialog} onClose={() => { setOpenAssignDialog(false); setSelectedExercisesToAssign([]); }} maxWidth="sm" fullWidth>
+          <DialogTitle>Atribuir Atividades para {selectedMonitorStudent?.name}</DialogTitle>
+          <DialogContent sx={{ mt: 1 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+              Selecione uma ou mais atividades para atribuir a este aluno. Atividades que o aluno já possui estão marcadas com check e desabilitadas na lista.
+            </Typography>
             <FormControl fullWidth>
-              <InputLabel>Selecionar Atividade</InputLabel>
+              <InputLabel id="assign-exercises-label">Selecionar Atividades</InputLabel>
               <Select
-                value={selectedExerciseToAssign}
-                onChange={(e) => setSelectedExerciseToAssign(e.target.value)}
+                labelId="assign-exercises-label"
+                multiple
+                value={selectedExercisesToAssign}
+                onChange={(e) => setSelectedExercisesToAssign(e.target.value)}
+                renderValue={(selected) => {
+                  const names = selected.map(id => {
+                    const ex = allExercises.find(x => x.id === id);
+                    return ex ? ex.title : id;
+                  });
+                  return names.join(', ');
+                }}
               >
-                {allExercises.map((ex) => (
-                  <MenuItem key={ex.id} value={ex.id}>
-                    {ex.title} ({ex.level} - {ex.type})
-                  </MenuItem>
-                ))}
+                {allExercises.map((ex) => {
+                  const isAssigned = studentProgress.some(p => p.exercise?.id === ex.id);
+                  const isChecked = isAssigned || selectedExercisesToAssign.indexOf(ex.id) > -1;
+                  return (
+                    <MenuItem 
+                      key={ex.id} 
+                      value={ex.id}
+                      disabled={isAssigned}
+                    >
+                      <Checkbox checked={isChecked} disabled={isAssigned} />
+                      <ListItemText 
+                        primary={ex.title} 
+                        secondary={`${ex.level} - ${ex.type}${isAssigned ? ' (Já atribuída)' : ''}`} 
+                      />
+                    </MenuItem>
+                  );
+                })}
               </Select>
             </FormControl>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenAssignDialog(false)}>Cancelar</Button>
-            <Button onClick={handleAssignExercise} variant="contained" color="primary">Atribuir</Button>
+            <Button onClick={() => { setOpenAssignDialog(false); setSelectedExercisesToAssign([]); }}>Cancelar</Button>
+            <Button onClick={handleAssignExercise} variant="contained" color="primary">
+              Atribuir ({selectedExercisesToAssign.length})
+            </Button>
           </DialogActions>
         </Dialog>
 

@@ -1,0 +1,222 @@
+[
+  {
+    "title": "1. Present Simple & Routine (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Read the questions carefully and select the correct option to complete the sentences.",
+      "questions": [
+        {
+          "question": "Sarah ___ to the gym three times a week.",
+          "options": ["go", "goes", "going", "gone"],
+          "correct": "goes"
+        },
+        {
+          "question": "They ___ like coffee. They prefer tea.",
+          "options": ["doesn't", "don't", "aren't", "isn't"],
+          "correct": "don't"
+        },
+        {
+          "question": "What time ___ he wake up in the morning?",
+          "options": ["do", "does", "is", "has"],
+          "correct": "does"
+        }
+      ]
+    }
+  },
+  {
+    "title": "2. Write About Your Last Vacation (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": {
+      "prompt": "Write a short paragraph (5 to 8 sentences, minimum 30 words) describing your last vacation. Mention where you went, who you were with, and what you did.",
+      "minWords": 30,
+      "tips": [
+        "Use Past Simple tense (e.g., went, stayed, visited, bought).",
+        "Include linking words (e.g., because, although, then, after that)."
+      ]
+    }
+  },
+  {
+    "title": "3. The History of Coffee (V ou F)",
+    "type": "true-false",
+    "level": "Intermediate",
+    "content": {
+      "text": "Coffee was originally discovered in Ethiopia by a goat herder named Kaldi, who noticed his goats became very energetic after eating berries from a certain tree. Today, coffee is one of the most popular drinks worldwide, with millions of cups consumed daily. Brazil is the largest producer of coffee in the world, exporting thousands of tons every year.",
+      "statements": [
+        {
+          "statement": "Coffee was first discovered in Brazil.",
+          "correct": false
+        },
+        {
+          "statement": "A goat herder noticed the effects of coffee berries first.",
+          "correct": true
+        },
+        {
+          "statement": "Brazil is currently the world's leading producer of coffee.",
+          "correct": true
+        }
+      ]
+    }
+  },
+  {
+    "title": "4. Future Plans & Intentions (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Put the words in the correct order to form logical sentences about future plans.",
+      "sentences": [
+        {
+          "words": ["going", "travel", "next", "to", "am", "I", "month."],
+          "correct": "I am going to travel next month."
+        },
+        {
+          "words": ["will", "tomorrow.", "They", "the", "visit", "museum"],
+          "correct": "They will visit the museum tomorrow."
+        },
+        {
+          "words": ["study", "tonight.", "We", "are", "going", "to"],
+          "correct": "We are going to study tonight."
+        }
+      ]
+    }
+  },
+  {
+    "title": "5. Business English Match (Relacionar)",
+    "type": "matching",
+    "level": "Advanced",
+    "content": {
+      "instructions": "Match each verb on the left with its corresponding business expression on the right.",
+      "pairs": [
+        {
+          "left": "Reach",
+          "right": "a consensus"
+        },
+        {
+          "left": "Make",
+          "right": "a profit"
+        },
+        {
+          "left": "Schedule",
+          "right": "a meeting"
+        },
+        {
+          "left": "Exceed",
+          "right": "expectations"
+        }
+      ]
+    }
+  },
+  {
+    "title": "6. Essential Phrasal Verbs (Flashcards)",
+    "type": "flashcards",
+    "level": "Intermediate",
+    "content": {
+      "instructions": "Study these crucial phrasal verbs. Click to flip and see translation and examples.",
+      "cards": [
+        {
+          "front": "Give up",
+          "back": "Desistir",
+          "example": "He refused to give up, even when it got difficult."
+        },
+        {
+          "front": "Look for",
+          "back": "Procurar",
+          "example": "Can you help me look for my keys?"
+        },
+        {
+          "front": "Run out of",
+          "back": "Ficar sem",
+          "example": "We ran out of milk, so I need to go to the supermarket."
+        },
+        {
+          "front": "Call off",
+          "back": "Cancelar",
+          "example": "They had to call off the meeting because the manager was sick."
+        }
+      ]
+    }
+  },
+  {
+    "title": "7. Modal Verbs of Advice & Obligation (Quiz)",
+    "type": "quiz",
+    "level": "Intermediate",
+    "content": {
+      "text": "Choose the most appropriate modal verb to complete each sentence.",
+      "questions": [
+        {
+          "question": "You ___ touch that wire. It is extremely dangerous!",
+          "options": ["mustn't", "don't have to", "shouldn't", "might not"],
+          "correct": "mustn't"
+        },
+        {
+          "question": "If you feel sick, you ___ see a doctor.",
+          "options": ["ought", "should", "would", "might"],
+          "correct": "should"
+        },
+        {
+          "question": "We ___ register before entering the library. It's a mandatory rule.",
+          "options": ["have to", "may", "could", "might"],
+          "correct": "have to"
+        }
+      ]
+    }
+  },
+  {
+    "title": "8. Conditionals Structure (Frases)",
+    "type": "sentence-order",
+    "level": "Advanced",
+    "content": {
+      "instructions": "Order the words to build correct Conditional sentences.",
+      "sentences": [
+        {
+          "words": ["had", "known,", "I", "If", "I", "would", "gone.", "have"],
+          "correct": "If I had known, I would have gone."
+        },
+        {
+          "words": ["would", "rich,", "I", "were", "buy", "house.", "If", "I", "a"],
+          "correct": "If I were rich, I would buy a house."
+        }
+      ]
+    }
+  },
+  {
+    "title": "9. Idioms & Expressions Match (Relacionar)",
+    "type": "matching",
+    "level": "Advanced",
+    "content": {
+      "instructions": "Match each English idiom with its correct meaning in Portuguese.",
+      "pairs": [
+        {
+          "left": "A piece of cake",
+          "right": "Algo muito fácil"
+        },
+        {
+          "left": "Bite the bullet",
+          "right": "Encarar uma situação difícil com coragem"
+        },
+        {
+          "left": "Break a leg",
+          "right": "Desejo de boa sorte (no teatro/geral)"
+        },
+        {
+          "left": "Under the weather",
+          "right": "Sentir-se indisposto ou doente"
+        }
+      ]
+    }
+  },
+  {
+    "title": "10. Technology in Society (Escrita)",
+    "type": "writing",
+    "level": "Advanced",
+    "content": {
+      "prompt": "Explain your opinion on artificial intelligence. Will it create more jobs than it destroys, or the opposite? Write a paragraph of at least 40 words.",
+      "minWords": 40,
+      "tips": [
+        "Use concession clauses (e.g., although, despite, whereas).",
+        "Use advanced vocabulary (e.g., automation, workforce, state-of-the-art)."
+      ]
+    }
+  }
+]

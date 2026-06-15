@@ -1,0 +1,692 @@
+[
+  {
+    "title": "Quiz 1: Verb to Be (Am/Is/Are)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Complete the sentences with am, is, or are.",
+      "questions": [
+        {
+          "question": "I ___ a student at the local school.",
+          "options": ["am", "is", "are", "be"],
+          "correct": "am"
+        },
+        {
+          "question": "They ___ my friends from Spain.",
+          "options": ["am", "is", "are", "be"],
+          "correct": "are"
+        },
+        {
+          "question": "He ___ a very good doctor.",
+          "options": ["am", "is", "are", "be"],
+          "correct": "is"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Quiz 2: Plural Nouns",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the correct plural form of the nouns.",
+      "questions": [
+        {
+          "question": "I have two ___ in my family.",
+          "options": ["brother", "brothers", "brotheres", "brother's"],
+          "correct": "brothers"
+        },
+        {
+          "question": "Look at those ___ swimming in the lake.",
+          "options": ["goose", "gooses", "geese", "geeses"],
+          "correct": "geese"
+        },
+        {
+          "question": "The ___ are playing in the park.",
+          "options": ["child", "childs", "children", "childrens"],
+          "correct": "children"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Quiz 3: Present Simple Pronouns",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Complete with the correct verb form for third person (he/she/it).",
+      "questions": [
+        {
+          "question": "My sister ___ in London.",
+          "options": ["live", "lives", "living", "lived"],
+          "correct": "lives"
+        },
+        {
+          "question": "He ___ breakfast at 7 AM every day.",
+          "options": ["have", "has", "haves", "having"],
+          "correct": "has"
+        },
+        {
+          "question": "It ___ a lot during the winter.",
+          "options": ["rain", "rains", "raining", "rained"],
+          "correct": "rains"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Quiz 4: Common Habits",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the correct verb to complete the phrase.",
+      "questions": [
+        {
+          "question": "I always ___ my teeth in the morning.",
+          "options": ["wash", "clean", "brush", "make"],
+          "correct": "brush"
+        },
+        {
+          "question": "We ___ homework after school.",
+          "options": ["do", "make", "play", "go"],
+          "correct": "do"
+        },
+        {
+          "question": "They ___ lunch at a nice restaurant on Sundays.",
+          "options": ["take", "make", "have", "do"],
+          "correct": "have"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Quiz 5: Question Words (Wh- Questions)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the correct question word.",
+      "questions": [
+        {
+          "question": "___ is your name?",
+          "options": ["Who", "Where", "What", "Why"],
+          "correct": "What"
+        },
+        {
+          "question": "___ do you live?",
+          "options": ["Who", "Where", "What", "When"],
+          "correct": "Where"
+        },
+        {
+          "question": "___ is that boy? Oh, he is my cousin.",
+          "options": ["Who", "Where", "What", "Why"],
+          "correct": "Who"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Writing 1: Introduce Yourself (Apresentação)",
+    "type": "writing",
+    "level": "Beginner",
+    "content": {
+      "prompt": "Write 3 to 5 sentences introducing yourself. Mention your name, your age, where you are from, and your favorite hobby.",
+      "minWords": 15,
+      "tips": [
+        "Use: 'My name is...', 'I am ... years old', 'I am from...'",
+        "Use: 'In my free time, I like to...'"
+      ]
+    }
+  },
+  {
+    "title": "Writing 2: Describe Your Family",
+    "type": "writing",
+    "level": "Beginner",
+    "content": {
+      "prompt": "Write a short paragraph about your family. How many people are in your family? Who are they?",
+      "minWords": 20,
+      "tips": [
+        "Use family vocabulary (father, mother, brother, sister, dog, cat).",
+        "Use: 'There are ... people in my family.'"
+      ]
+    }
+  },
+  {
+    "title": "Writing 3: Favorite Food",
+    "type": "writing",
+    "level": "Beginner",
+    "content": {
+      "prompt": "Describe your favorite food. What is it? When do you eat it? Why do you like it?",
+      "minWords": 15,
+      "tips": [
+        "Use food vocabulary (pizza, pasta, salad, chicken, fruit).",
+        "Use adjectives like delicious, healthy, sweet, hot."
+      ]
+    }
+  },
+  {
+    "title": "Writing 4: Describe Your House",
+    "type": "writing",
+    "level": "Beginner",
+    "content": {
+      "prompt": "Write a short description of your home. Is it an apartment or a house? How many rooms does it have?",
+      "minWords": 20,
+      "tips": [
+        "Use house vocabulary (bedroom, bathroom, kitchen, living room, garden).",
+        "Use: 'My house is big/small. It has...'"
+      ]
+    }
+  },
+  {
+    "title": "Writing 5: Weekend Activities",
+    "type": "writing",
+    "level": "Beginner",
+    "content": {
+      "prompt": "Write about what you do on Saturdays and Sundays. Do you watch TV? Do you meet friends?",
+      "minWords": 15,
+      "tips": [
+        "Use verbs in simple present (watch, play, visit, relax, sleep).",
+        "Use time expressions: 'On Saturdays...', 'At night...'"
+      ]
+    }
+  },
+  {
+    "title": "Reading 1: My Dog Max (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "This is Max. Max is a big brown dog. He is three years old. He loves to run in the park and catch yellow balls. Max sleeps in the kitchen. Every morning, he eats chicken food and drinks fresh water.",
+      "statements": [
+        {
+          "statement": "Max is a small white dog.",
+          "correct": false
+        },
+        {
+          "statement": "Max likes to play with yellow balls.",
+          "correct": true
+        },
+        {
+          "statement": "Max sleeps in the bedroom.",
+          "correct": false
+        }
+      ]
+    }
+  },
+  {
+    "title": "Reading 2: A Day at the Beach (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Today is Saturday. The weather is very hot and sunny. Clara and her family are at the beach. Clara is swimming in the ocean. Her parents are reading books under a blue umbrella. They plan to eat ice cream at 4 PM.",
+      "statements": [
+        {
+          "statement": "The weather today is cold and rainy.",
+          "correct": false
+        },
+        {
+          "statement": "Clara's parents are reading books.",
+          "correct": true
+        },
+        {
+          "statement": "The family plans to eat pizza at 4 PM.",
+          "correct": false
+        }
+      ]
+    }
+  },
+  {
+    "title": "Reading 3: Welcome to New York (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "New York is a famous city in the United States. Many tourists visit Central Park and the Statue of Liberty every year. In the winter, it is cold and sometimes it snows. The city has many yellow taxis and large subway stations.",
+      "statements": [
+        {
+          "statement": "New York is in Canada.",
+          "correct": false
+        },
+        {
+          "statement": "Tourists visit Central Park.",
+          "correct": true
+        },
+        {
+          "statement": "It never snows in New York in the winter.",
+          "correct": false
+        }
+      ]
+    }
+  },
+  {
+    "title": "Reading 4: Grocery Shopping (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Tom is at the supermarket. He needs to buy food for dinner. He puts red apples, green bananas, and fresh milk in his shopping cart. He also buys a chocolate cake for his daughter's birthday.",
+      "statements": [
+        {
+          "statement": "Tom is shopping for breakfast.",
+          "correct": false
+        },
+        {
+          "statement": "Tom buys bananas and apples.",
+          "correct": true
+        },
+        {
+          "statement": "Tom buys a cake for his daughter.",
+          "correct": true
+        }
+      ]
+    }
+  },
+  {
+    "title": "Reading 5: Hobbies: Soccer (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Pedro plays soccer with his friends every Friday night. They play in a small field near Pedro's house. Pedro is a good goalkeeper. After the game, they drink cold water and talk about their favorite professional teams.",
+      "statements": [
+        {
+          "statement": "Pedro plays soccer on Fridays.",
+          "correct": true
+        },
+        {
+          "statement": "Pedro plays soccer alone in his backyard.",
+          "correct": false
+        },
+        {
+          "statement": "Pedro is a good goalkeeper.",
+          "correct": true
+        }
+      ]
+    }
+  },
+  {
+    "title": "Sentence Builder 1: Simple Verb Be (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to build correct sentences with the verb to be.",
+      "sentences": [
+        {
+          "words": ["doctor.", "is", "a", "good", "She"],
+          "correct": "She is a good doctor."
+        },
+        {
+          "words": ["We", "in", "classroom.", "are", "the"],
+          "correct": "We are in the classroom."
+        },
+        {
+          "words": ["is", "very", "cold", "today.", "It"],
+          "correct": "It is very cold today."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Sentence Builder 2: Negatives (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to build correct negative sentences.",
+      "sentences": [
+        {
+          "words": ["like", "not", "milk.", "do", "I"],
+          "correct": "I do not like milk."
+        },
+        {
+          "words": ["not", "have", "a", "car.", "She", "does"],
+          "correct": "She does not have a car."
+        },
+        {
+          "words": ["watch", "TV.", "do", "They", "not"],
+          "correct": "They do not watch TV."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Sentence Builder 3: Questions (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to form correct questions.",
+      "sentences": [
+        {
+          "words": ["do", "live?", "you", "Where"],
+          "correct": "Where do you live?"
+        },
+        {
+          "words": ["he", "a", "teacher?", "Is"],
+          "correct": "Is he a teacher?"
+        },
+        {
+          "words": ["she", "speak", "Does", "English?"],
+          "correct": "Does she speak English?"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Sentence Builder 4: Adjectives (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words placing the adjective correctly before the noun.",
+      "sentences": [
+        {
+          "words": ["has", "a", "car.", "blue", "He"],
+          "correct": "He has a blue car."
+        },
+        {
+          "words": ["red", "apples.", "eating", "They", "are"],
+          "correct": "They are eating red apples."
+        },
+        {
+          "words": ["beautiful", "is", "a", "This", "flower."],
+          "correct": "This is a beautiful flower."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Sentence Builder 5: Night Routine (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to describe a typical night routine.",
+      "sentences": [
+        {
+          "words": ["dinner", "at", "8 PM.", "We", "eat"],
+          "correct": "We eat dinner at 8 PM."
+        },
+        {
+          "words": ["to", "bed", "at", "10 PM.", "She", "goes"],
+          "correct": "She goes to bed at 10 PM."
+        },
+        {
+          "words": ["They", "books", "before", "sleep.", "read"],
+          "correct": "They read books before sleep."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Matching 1: Colors (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the English colors with their Portuguese translation.",
+      "pairs": [
+        {
+          "left": "Red",
+          "right": "Vermelho"
+        },
+        {
+          "left": "Blue",
+          "right": "Azul"
+        },
+        {
+          "left": "Green",
+          "right": "Verde"
+        },
+        {
+          "left": "Yellow",
+          "right": "Amarelo"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Matching 2: Numbers 1-10 (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the English number word with the correct digit.",
+      "pairs": [
+        {
+          "left": "Three",
+          "right": "3"
+        },
+        {
+          "left": "Seven",
+          "right": "7"
+        },
+        {
+          "left": "Five",
+          "right": "5"
+        },
+        {
+          "left": "Nine",
+          "right": "9"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Matching 3: Days of the week (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the English day names with Portuguese translations.",
+      "pairs": [
+        {
+          "left": "Monday",
+          "right": "Segunda-feira"
+        },
+        {
+          "left": "Wednesday",
+          "right": "Quarta-feira"
+        },
+        {
+          "left": "Friday",
+          "right": "Sexta-feira"
+        },
+        {
+          "left": "Sunday",
+          "right": "Domingo"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Matching 4: Opposite Adjectives (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the opposite adjectives in English.",
+      "pairs": [
+        {
+          "left": "Big",
+          "right": "Small"
+        },
+        {
+          "left": "Hot",
+          "right": "Cold"
+        },
+        {
+          "left": "Happy",
+          "right": "Sad"
+        },
+        {
+          "left": "Fast",
+          "right": "Slow"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Matching 5: Family Members (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the English family terms with their Portuguese meaning.",
+      "pairs": [
+        {
+          "left": "Mother",
+          "right": "Mãe"
+        },
+        {
+          "left": "Father",
+          "right": "Pai"
+        },
+        {
+          "left": "Brother",
+          "right": "Irmão"
+        },
+        {
+          "left": "Sister",
+          "right": "Irmã"
+        }
+      ]
+    }
+  },
+  {
+    "title": "Flashcards 1: Basic Greetings (Flashcards)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Learn common English greetings. Click to flip.",
+      "cards": [
+        {
+          "front": "Hello / Hi",
+          "back": "Olá / Oi",
+          "example": "Hello, how are you today?"
+        },
+        {
+          "front": "Good morning",
+          "back": "Bom dia",
+          "example": "Good morning, my friend!"
+        },
+        {
+          "front": "Goodbye",
+          "back": "Tchau / Adeus",
+          "example": "Goodbye, see you tomorrow."
+        },
+        {
+          "front": "Good night",
+          "back": "Boa noite (despedida)",
+          "example": "Good night! Sleep well."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Flashcards 2: Common Verbs (Flashcards)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Learn basic action verbs. Click to flip.",
+      "cards": [
+        {
+          "front": "Eat",
+          "back": "Comer",
+          "example": "I like to eat apples."
+        },
+        {
+          "front": "Drink",
+          "back": "Beber",
+          "example": "Please drink some water."
+        },
+        {
+          "front": "Sleep",
+          "back": "Dormir",
+          "example": "I sleep eight hours every night."
+        },
+        {
+          "front": "Run",
+          "back": "Correr",
+          "example": "He can run very fast."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Flashcards 3: School Objects (Flashcards)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study names of common school and office items.",
+      "cards": [
+        {
+          "front": "Pen",
+          "back": "Caneta",
+          "example": "Can I borrow your black pen?"
+        },
+        {
+          "front": "Pencil",
+          "back": "Lápis",
+          "example": "Use a pencil to draw."
+        },
+        {
+          "front": "Notebook",
+          "back": "Caderno",
+          "example": "Write the grammar notes in your notebook."
+        },
+        {
+          "front": "Book",
+          "back": "Livro",
+          "example": "This is a very interesting book."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Flashcards 4: Fruits (Flashcards)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Learn fruit names in English.",
+      "cards": [
+        {
+          "front": "Apple",
+          "back": "Maçã",
+          "example": "I eat a red apple every morning."
+        },
+        {
+          "front": "Banana",
+          "back": "Banana",
+          "example": "Monkeys like to eat bananas."
+        },
+        {
+          "front": "Orange",
+          "back": "Laranja",
+          "example": "She drinks fresh orange juice."
+        },
+        {
+          "front": "Grape",
+          "back": "Uva",
+          "example": "Green grapes are very sweet."
+        }
+      ]
+    }
+  },
+  {
+    "title": "Flashcards 5: Feelings (Flashcards)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study words to express your feelings.",
+      "cards": [
+        {
+          "front": "Happy",
+          "back": "Feliz",
+          "example": "I am so happy today!"
+        },
+        {
+          "front": "Sad",
+          "back": "Triste",
+          "example": "She is sad because it's raining."
+        },
+        {
+          "front": "Tired",
+          "back": "Cansado",
+          "example": "I am tired after a long day of work."
+        },
+        {
+          "front": "Angry",
+          "back": "Bravo / Irritado",
+          "example": "He was angry about the traffic."
+        }
+      ]
+    }
+  }
+]
