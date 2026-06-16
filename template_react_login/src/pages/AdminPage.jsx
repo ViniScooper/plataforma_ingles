@@ -156,6 +156,27 @@ export default function AdminPage() {
 
   const [error, setError] = useState('');
 
+  // Live RPG monitoring state
+  const [activeRpgGames, setActiveRpgGames] = useState([]);
+
+  // Poll active RPG games for teacher monitoring
+  useEffect(() => {
+    if (tab !== 4) return;
+
+    const fetchActiveRpgGames = async () => {
+      try {
+        const response = await apiClient.get('/games/active');
+        setActiveRpgGames(response.data);
+      } catch (err) {
+        console.error('Error fetching active RPG games:', err);
+      }
+    };
+
+    fetchActiveRpgGames();
+    const interval = setInterval(fetchActiveRpgGames, 3000);
+    return () => clearInterval(interval);
+  }, [tab]);
+
   // Load data
   useEffect(() => {
     loadPlans();
@@ -1863,8 +1884,142 @@ export default function AdminPage() {
             </TableContainer>
           </Box>
         ) : (
-          <Box sx={{ py: 5 }}>
-             <Typography variant="h6" align="center" color="textSecondary">Selecione um aluno na aba "Alunos" para ver o monitoramento.</Typography>
+          <Box sx={{ py: 3 }}>
+             {/* Co-op RPG Real-time Battle Monitoring */}
+             <Card sx={{ p: 3, mb: 4, background: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)', color: '#fff', borderRadius: 4, boxShadow: '0 8px 32px rgba(124, 77, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                   <Typography variant="h5" sx={{ fontWeight: 900, letterSpacing: 0.5, color: '#b388ff', display: 'flex', alignItems: 'center', gap: 1 }}>
+                     ⚔️ RPG Co-op: Combates Ativos
+                   </Typography>
+                   <Chip label="Ao Vivo" color="error" size="small" sx={{ fontWeight: 800, px: 0.5 }} />
+                 </Box>
+                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                   Atualiza a cada 3s
+                 </Typography>
+               </Box>
+
+               {activeRpgGames.length > 0 ? (
+                 <Grid container spacing={3}>
+                   {activeRpgGames.map((game) => {
+                     const monsterColors = {
+                       slime: '#4caf50',
+                       skeleton: '#9e9e9e',
+                       dragon: '#f44336'
+                     };
+                     const monsterColor = monsterColors[game.monsterType] || '#00b4d8';
+                     const hpPercent = Math.round((game.monsterHp / game.maxMonsterHp) * 100);
+
+                     return (
+                       <Grid item xs={12} md={6} key={game.roomCode}>
+                         <Card sx={{
+                           p: 2.5,
+                           background: 'rgba(255, 255, 255, 0.04)',
+                           border: '1px solid rgba(255, 255, 255, 0.08)',
+                           borderRadius: 3,
+                           color: '#fff',
+                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                         }}>
+                           {/* Header */}
+                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                             <Box>
+                               <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8' }}>
+                                 SALA: <span style={{ letterSpacing: 1, color: '#fff', fontSize: '1.1rem', fontWeight: 950 }}>{game.roomCode}</span>
+                               </Typography>
+                               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                                 Estágio {game.stage}/3
+                               </Typography>
+                             </Box>
+                             <Chip
+                               label={game.status.toUpperCase()}
+                               size="small"
+                               sx={{
+                                 fontWeight: 800,
+                                 fontSize: '0.7rem',
+                                 bgcolor: game.status === 'victory' ? 'rgba(76, 175, 80, 0.2)' : game.status === 'defeat' ? 'rgba(244, 67, 54, 0.2)' : 'rgba(0, 180, 216, 0.2)',
+                                 color: game.status === 'victory' ? '#4caf50' : game.status === 'defeat' ? '#f44336' : '#00b4d8',
+                                 border: `1px solid ${game.status === 'victory' ? 'rgba(76, 175, 80, 0.3)' : game.status === 'defeat' ? 'rgba(244, 67, 54, 0.3)' : 'rgba(0, 180, 216, 0.3)'}`
+                               }}
+                             />
+                           </Box>
+
+                           {/* Monster Status */}
+                           <Box sx={{ mb: 2.5 }}>
+                             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                               <Typography variant="body2" sx={{ fontWeight: 700, color: monsterColor, textTransform: 'uppercase' }}>
+                                 👾 {game.monsterType}
+                               </Typography>
+                               <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                 {game.monsterHp} / {game.maxMonsterHp} HP
+                               </Typography>
+                             </Box>
+                             {/* Progress Bar */}
+                             <Box sx={{ width: '100%', height: 8, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
+                               <Box sx={{ width: `${hpPercent}%`, height: '100%', bgcolor: monsterColor, transition: 'width 0.3s ease' }} />
+                             </Box>
+                           </Box>
+
+                           {/* Players Status */}
+                           <Box sx={{ display: 'flex', gap: 2, mb: 2.5 }}>
+                             {game.players.map((p) => {
+                               const playerHpPercent = p.hp;
+                               return (
+                                 <Box key={p.id} sx={{ flex: 1, p: 1.5, bgcolor: 'rgba(255, 255, 255, 0.03)', borderRadius: 2.5, border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                   <Typography variant="body2" sx={{ fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                     👤 {p.name}
+                                   </Typography>
+                                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5, mb: 0.5 }}>
+                                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>HP</Typography>
+                                     <Typography variant="caption" sx={{ fontWeight: 700, color: p.hp > 30 ? '#4caf50' : '#f44336' }}>{p.hp}/100</Typography>
+                                   </Box>
+                                   <Box sx={{ width: '100%', height: 4, bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                                     <Box sx={{ width: `${playerHpPercent}%`, height: '100%', bgcolor: p.hp > 30 ? '#4caf50' : '#f44336' }} />
+                                   </Box>
+                                 </Box>
+                               );
+                             })}
+                             {game.players.length === 1 && (
+                               <Box sx={{ flex: 1, p: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255, 255, 255, 0.01)', border: '1px dashed rgba(255, 255, 255, 0.1)', borderRadius: 2.5 }}>
+                                 <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                                   Aguardando Jogador 2...
+                                 </Typography>
+                               </Box>
+                             )}
+                           </Box>
+
+                           {/* Combat Log */}
+                           <Box sx={{ p: 1.5, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2.5, maxHeight: 120, overflowY: 'auto' }}>
+                             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700, display: 'block', mb: 0.5, textTransform: 'uppercase' }}>
+                               Histórico de Combate
+                             </Typography>
+                             {game.combatLog.length > 0 ? (
+                               game.combatLog.map((log, idx) => (
+                                 <Typography key={idx} variant="caption" sx={{ display: 'block', color: 'rgba(255,255,255,0.85)', lineHeight: 1.4, mb: 0.2 }}>
+                                   {log}
+                                 </Typography>
+                               ))
+                             ) : (
+                               <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                                 Nenhum evento registrado.
+                               </Typography>
+                             )}
+                           </Box>
+                         </Card>
+                       </Grid>
+                     );
+                   })}
+                 </Grid>
+               ) : (
+                 <Box sx={{ textAlign: 'center', py: 4 }}>
+                   <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
+                     Nenhum jogo de RPG Co-op ativo no momento.
+                   </Typography>
+                 </Box>
+               )}
+             </Card>
+
+             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>👤 Monitoramento de Alunos</Typography>
+             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>Selecione um aluno abaixo para ver o histórico individual de atividades e presenças.</Typography>
              <TableContainer component={Card} sx={{ mt: 3 }}>
                 <Table>
                   <TableHead>

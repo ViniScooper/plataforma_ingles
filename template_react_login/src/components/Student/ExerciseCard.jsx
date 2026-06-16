@@ -7,9 +7,6 @@ import {
   FormControl,
   Button,
   Alert,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
   Card,
   TextField,
   Chip,
@@ -33,35 +30,122 @@ function wordCount(text = '') {
 
 // ─── Sub-renderers ─────────────────────────────────────────────────────────────
 
-// --- Quiz (multiple choice) ---
+// --- Quiz (multiple choice cards) ---
 function QuizRenderer({ exercise, answers, setAnswers, validation }) {
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
       {exercise.content?.text && (
-        <Box sx={{ p: 2.5, backgroundColor: '#f0f4ff', borderLeft: '5px solid #667eea', borderRadius: 1, mb: 3 }}>
-          <Typography variant="subtitle2" color="primary" sx={{ mb: 0.5, fontWeight: 700 }}>📖 Leitura base:</Typography>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+        <Box sx={{
+          p: 3,
+          backgroundColor: 'rgba(0, 180, 216, 0.05)',
+          borderLeft: '4px solid #00b4d8',
+          borderRadius: 3.5,
+          mb: 4,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+        }}>
+          <Typography variant="subtitle2" sx={{ color: '#00b4d8', mb: 1, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
+            📖 Reading Context:
+          </Typography>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#cbd5e1', fontSize: '1.02rem' }}>
             {exercise.content.text}
           </Typography>
         </Box>
       )}
+      
       {Array.isArray(exercise.content?.questions) && exercise.content.questions.map((q, idx) => {
         const result = validation?.results?.[idx];
+        const studentChoice = answers[idx] || '';
+        
         return (
-          <Card key={idx} sx={{
-            p: 3, mb: 2,
-            borderLeft: result ? `5px solid ${result.isCorrect ? '#4caf50' : '#f44336'}` : '5px solid #e0e0e0',
-            transition: 'border-color 0.3s',
-          }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5 }}>
-              {idx + 1}. {q.question || q.q}
+          <Box key={idx} sx={{ mb: 4 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: '#fff', fontSize: '1.1rem', display: 'flex', gap: 1 }}>
+              <span style={{ color: '#00b4d8' }}>{idx + 1}.</span> {q.question || q.q}
             </Typography>
-            <RadioGroup value={answers[idx] || ''} onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}>
-              {Array.isArray(q.options) && q.options.map((opt) => (
-                <FormControlLabel key={opt} value={opt} control={<Radio />} label={opt} disabled={!!validation} />
-              ))}
-            </RadioGroup>
-          </Card>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {Array.isArray(q.options) && q.options.map((opt) => {
+                const isSelected = studentChoice === opt;
+                const isCorrectOpt = result ? (q.correct === opt || q.a === opt) : false;
+                const isStudentIncorrect = result ? (!result.isCorrect && studentChoice === opt) : false;
+                
+                let borderColor = 'rgba(255, 255, 255, 0.08)';
+                let bgcolor = 'rgba(255, 255, 255, 0.02)';
+                let glowColor = 'transparent';
+                let textColor = '#cbd5e1';
+                
+                if (isSelected && !validation) {
+                  borderColor = '#00b4d8';
+                  bgcolor = 'rgba(0, 180, 216, 0.08)';
+                  glowColor = 'rgba(0, 180, 216, 0.2)';
+                  textColor = '#fff';
+                }
+                
+                if (validation) {
+                  const correctVal = q.correct || q.a || '';
+                  if (opt === correctVal) {
+                    borderColor = '#48c78e';
+                    bgcolor = 'rgba(72, 199, 142, 0.12)';
+                    glowColor = 'rgba(72, 199, 142, 0.1)';
+                    textColor = '#a5d6a7';
+                  } else if (isStudentIncorrect) {
+                    borderColor = '#ff8fa3';
+                    bgcolor = 'rgba(255, 143, 163, 0.12)';
+                    textColor = '#ffcbd5';
+                  } else {
+                    bgcolor = 'rgba(255,255,255,0.01)';
+                    textColor = 'rgba(255,255,255,0.25)';
+                    borderColor = 'transparent';
+                  }
+                }
+                
+                return (
+                  <Box
+                    key={opt}
+                    onClick={() => !validation && setAnswers({ ...answers, [idx]: opt })}
+                    sx={{
+                      p: 2.2,
+                      borderRadius: 3.5,
+                      border: `1.5px solid ${borderColor}`,
+                      bgcolor: bgcolor,
+                      cursor: validation ? 'default' : 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      boxShadow: glowColor !== 'transparent' ? `0 0 15px ${glowColor}` : 'none',
+                      '&:hover': {
+                        border: validation ? borderColor : '1.5px solid #00b4d8',
+                        bgcolor: validation ? bgcolor : 'rgba(0, 180, 216, 0.05)',
+                        transform: validation ? 'none' : 'translateX(4px)'
+                      }
+                    }}
+                  >
+                    <Typography sx={{ color: textColor, fontWeight: isSelected || isCorrectOpt ? 700 : 500, fontSize: '0.95rem' }}>
+                      {opt}
+                    </Typography>
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      {validation ? (
+                        (opt === q.correct || opt === q.a) ? (
+                          <span style={{ color: '#48c78e', fontWeight: 900, fontSize: '1.2rem' }}>✓</span>
+                        ) : isStudentIncorrect ? (
+                          <span style={{ color: '#ff8fa3', fontWeight: 900, fontSize: '1.2rem' }}>✗</span>
+                        ) : null
+                      ) : (
+                        <Box sx={{
+                          width: 20, height: 20,
+                          borderRadius: '50%',
+                          border: isSelected ? '6px solid #00b4d8' : '2px solid rgba(255,255,255,0.2)',
+                          transition: 'all 0.2s ease',
+                          bgcolor: 'transparent'
+                        }} />
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
         );
       })}
     </Box>
@@ -71,9 +155,11 @@ function QuizRenderer({ exercise, answers, setAnswers, validation }) {
 // --- Text (reading) ---
 function TextRenderer({ exercise }) {
   return (
-    <Box sx={{ p: 3, backgroundColor: '#f9f9f9', borderLeft: '5px solid #1976d2', borderRadius: 1, mb: 3 }}>
-      <Typography variant="subtitle2" color="primary" sx={{ mb: 1, fontStyle: 'italic' }}>Leitura:</Typography>
-      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
+    <Box sx={{ p: 4, backgroundColor: 'rgba(0, 180, 216, 0.04)', borderLeft: '4px solid #00b4d8', borderRadius: 4, mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Typography variant="subtitle2" sx={{ color: '#00b4d8', mb: 2, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+        📖 Reading Passage:
+      </Typography>
+      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.9, color: '#f1f5f9', fontSize: '1.08rem' }}>
         {exercise.content?.text || 'Sem texto disponível.'}
       </Typography>
     </Box>
@@ -90,12 +176,38 @@ function GapFillRenderer({ exercise, answers, setAnswers }) {
   for (let i = 0; i < text.length; i++) {
     if (text.substr(i, 3) === '___') {
       if (i > currentPos) {
-        elements.push(<Typography key={`text-${gapIndex}`} component="span">{text.substring(currentPos, i)}</Typography>);
+        elements.push(
+          <Typography key={`text-${gapIndex}`} component="span" sx={{ color: '#f1f5f9', fontSize: '1.1rem', lineHeight: '2.5', fontWeight: 500 }}>
+            {text.substring(currentPos, i)}
+          </Typography>
+        );
       }
+      const activeGapIndex = gapIndex;
       elements.push(
-        <FormControl key={`gap-${gapIndex}`} sx={{ minWidth: 100, mx: 1 }}>
-          <Select size="small" value={answers[gapIndex] || ''} onChange={(e) => setAnswers({ ...answers, [gapIndex]: e.target.value })}>
-            {exercise.gaps?.[gapIndex]?.options.map((opt) => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+        <FormControl key={`gap-${gapIndex}`} sx={{ minWidth: 140, mx: 1, my: 0.5 }} size="small">
+          <Select 
+            value={answers[activeGapIndex] || ''} 
+            onChange={(e) => setAnswers({ ...answers, [activeGapIndex]: e.target.value })}
+            displayEmpty
+            sx={{
+              color: '#00b4d8',
+              fontWeight: 800,
+              fontSize: '0.95rem',
+              bgcolor: 'rgba(0, 180, 216, 0.06)',
+              borderRadius: 3,
+              height: 38,
+              '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(0, 180, 216, 0.25)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#00b4d8' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00b4d8' },
+              '.MuiSvgIcon-root': { color: '#00b4d8' }
+            }}
+          >
+            <MenuItem value="" disabled>
+              <em style={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'normal' }}>Selecione...</em>
+            </MenuItem>
+            {exercise.gaps?.[gapIndex]?.options.map((opt) => (
+              <MenuItem key={opt} value={opt} sx={{ fontWeight: 600 }}>{opt}</MenuItem>
+            ))}
           </Select>
         </FormControl>
       );
@@ -104,11 +216,20 @@ function GapFillRenderer({ exercise, answers, setAnswers }) {
       i += 2;
     }
   }
-  if (currentPos < text.length) elements.push(<Typography key="text-end" component="span">{text.substring(currentPos)}</Typography>);
+  if (currentPos < text.length) {
+    elements.push(
+      <Typography key="text-end" component="span" sx={{ color: '#f1f5f9', fontSize: '1.1rem', lineHeight: '2.5', fontWeight: 500 }}>
+        {text.substring(currentPos)}
+      </Typography>
+    );
+  }
 
   return (
-    <Box sx={{ p: 2, backgroundColor: '#fff', border: '1px solid #e0e0e0', borderRadius: 1, mb: 3 }}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}>
+    <Box sx={{ p: 4, backgroundColor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 2 }}>
+        ✏️ Complete as lacunas com as palavras correspondentes:
+      </Typography>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5, py: 1 }}>
         {elements}
       </Box>
     </Box>
@@ -122,48 +243,70 @@ function WritingRenderer({ exercise, answers, setAnswers, validation }) {
   const minWords = exercise.content?.minWords || 0;
   const currentText = answers[0] || '';
   const wc = wordCount(currentText);
+  const isTargetReached = wc >= minWords;
+  const progressVal = minWords > 0 ? Math.min(Math.round((wc / minWords) * 100), 100) : 100;
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ p: 2.5, backgroundColor: '#f3e5f5', borderLeft: '5px solid #9c27b0', borderRadius: 1, mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#6a1b9a', mb: 0.5 }}>✍️ Instrução:</Typography>
-        <Typography variant="body1">{prompt}</Typography>
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Box sx={{ p: 3, backgroundColor: 'rgba(179, 136, 255, 0.05)', borderLeft: '4px solid #b388ff', borderRadius: 3.5, mb: 3 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#b388ff', mb: 1, textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+          ✍️ Writing Instructions:
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#f1f5f9', fontSize: '1.02rem', lineHeight: 1.7 }}>{prompt}</Typography>
       </Box>
 
       {tips.length > 0 && (
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-            💡 Dicas
+        <Box sx={{ mb: 3.5, p: 2.5, bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 1.5 }}>
+            💡 Suggested Vocabulary & Tips:
           </Typography>
-          {tips.map((tip, i) => (
-            <Typography key={i} variant="body2" sx={{ mt: 0.5, color: '#666' }}>• {tip}</Typography>
-          ))}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {tips.map((tip, i) => (
+              <Chip key={i} label={tip} size="small" variant="outlined" sx={{ color: '#b388ff', borderColor: 'rgba(179, 136, 255, 0.3)', fontWeight: 600, fontSize: '0.78rem' }} />
+            ))}
+          </Box>
         </Box>
       )}
 
       <TextField
         multiline
-        rows={7}
+        rows={8}
         fullWidth
-        placeholder="Escreva sua resposta em inglês aqui..."
+        placeholder="Type your response in English here..."
         value={currentText}
         onChange={(e) => setAnswers({ 0: e.target.value })}
         disabled={!!validation}
         sx={{
           '& .MuiOutlinedInput-root': {
-            fontFamily: 'Georgia, serif',
-            fontSize: '1rem',
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '1.05rem',
             lineHeight: 1.8,
-            '&.Mui-focused fieldset': { borderColor: '#9c27b0' },
+            color: '#fff',
+            bgcolor: 'rgba(0,0,0,0.25)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            '& fieldset': { borderColor: 'transparent' },
+            '&:hover fieldset': { borderColor: 'transparent' },
+            '&.Mui-focused fieldset': { borderColor: 'transparent' },
+            borderBottom: isTargetReached ? '3px solid #48c78e' : '3px solid rgba(179, 136, 255, 0.4)'
           }
         }}
       />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
-        <Typography variant="caption" color={wc < minWords ? 'error' : 'success.main'}>
-          {wc} palavra{wc !== 1 ? 's' : ''} {minWords > 0 ? `(mínimo: ${minWords})` : ''}
-        </Typography>
-        {minWords > 0 && wc >= minWords && (
-          <Typography variant="caption" color="success.main">✅ Mínimo atingido!</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ width: 100, height: 6, bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+            <Box sx={{ width: `${progressVal}%`, height: '100%', bgcolor: isTargetReached ? '#48c78e' : '#b388ff', transition: 'width 0.3s ease' }} />
+          </Box>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: isTargetReached ? '#48c78e' : '#ffb74d' }}>
+            {wc} palavra{wc !== 1 ? 's' : ''} {minWords > 0 ? `(mínimo: ${minWords})` : ''}
+          </Typography>
+        </Box>
+        
+        {minWords > 0 && isTargetReached && (
+          <Chip
+            label="✓ Mínimo atingido"
+            size="small"
+            sx={{ bgcolor: 'rgba(72, 199, 142, 0.12)', color: '#48c78e', border: '1px solid rgba(72, 199, 142, 0.2)', fontWeight: 800 }}
+          />
         )}
       </Box>
     </Box>
@@ -176,16 +319,16 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
   const statements = exercise.content?.statements || [];
 
   return (
-    <Box sx={{ mb: 3 }}>
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
       {text && (
-        <Box sx={{ p: 2.5, backgroundColor: '#e8f5e9', borderLeft: '5px solid #43a047', borderRadius: 1, mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#2e7d32', mb: 0.5 }}>📖 Texto base:</Typography>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>{text}</Typography>
+        <Box sx={{ p: 3, backgroundColor: 'rgba(72, 199, 142, 0.04)', borderLeft: '4px solid #48c78e', borderRadius: 3.5, mb: 4 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#48c78e', mb: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>📖 Context:</Typography>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#f1f5f9', fontSize: '1.02rem' }}>{text}</Typography>
         </Box>
       )}
 
-      <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#555' }}>
-        Marque cada afirmação como Verdadeiro (V) ou Falso (F):
+      <Typography variant="caption" sx={{ fontWeight: 800, mb: 2.5, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>
+        Mark each statement as True or False:
       </Typography>
 
       {statements.map((st, idx) => {
@@ -194,41 +337,72 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
 
         return (
           <Card key={idx} sx={{
-            p: 2.5, mb: 2,
-            borderLeft: validation ? `5px solid ${isCorrect ? '#4caf50' : '#f44336'}` : '5px solid #e0e0e0',
-            transition: 'all 0.3s',
-            bgcolor: validation ? (isCorrect ? '#f9fff9' : '#fff9f9') : 'white',
+            p: 3, mb: 3,
+            background: 'rgba(255,255,255,0.01)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderLeft: validation ? `5px solid ${isCorrect ? '#48c78e' : '#ff5a79'}` : '1.5px solid rgba(255,255,255,0.06)',
+            borderRadius: 4,
+            transition: 'all 0.3s ease',
           }}>
-            <Typography variant="body1" sx={{ fontWeight: 500, mb: 1.5 }}>
+            <Typography variant="body1" sx={{ fontWeight: 800, mb: 2, color: '#fff', fontSize: '1.02rem' }}>
               {idx + 1}. {st.statement}
             </Typography>
+            
             <Box sx={{ display: 'flex', gap: 2 }}>
               {[true, false].map((val) => {
-                const label = val ? '✅ Verdadeiro' : '❌ Falso';
+                const label = val ? 'True (Verdadeiro)' : 'False (Falso)';
                 const isSelected = selected === val;
                 const isThisCorrect = validation && st.correct === val;
-                let bgcolor = isSelected ? '#667eea' : '#f5f5f5';
-                let color = isSelected ? '#fff' : '#333';
-                if (validation) {
-                  if (isThisCorrect) { bgcolor = '#4caf50'; color = '#fff'; }
-                  else if (isSelected && !isCorrect) { bgcolor = '#f44336'; color = '#fff'; }
-                  else { bgcolor = '#f5f5f5'; color = '#aaa'; }
+                
+                let borderColor = 'rgba(255, 255, 255, 0.08)';
+                let bgcolor = 'rgba(255, 255, 255, 0.02)';
+                let color = '#cbd5e1';
+                let shadow = 'none';
+
+                if (isSelected && !validation) {
+                  borderColor = val ? '#48c78e' : '#ff8fa3';
+                  bgcolor = val ? 'rgba(72, 199, 142, 0.08)' : 'rgba(255, 143, 163, 0.08)';
+                  color = '#fff';
+                  shadow = val ? '0 0 12px rgba(72, 199, 142, 0.2)' : '0 0 12px rgba(255, 143, 163, 0.2)';
                 }
+
+                if (validation) {
+                  if (isThisCorrect) {
+                    borderColor = '#48c78e';
+                    bgcolor = 'rgba(72, 199, 142, 0.12)';
+                    color = '#a5d6a7';
+                  } else if (isSelected && !isCorrect) {
+                    borderColor = '#ff8fa3';
+                    bgcolor = 'rgba(255, 143, 163, 0.12)';
+                    color = '#ffcbd5';
+                  } else {
+                    bgcolor = 'rgba(255,255,255,0.01)';
+                    color = 'rgba(255,255,255,0.2)';
+                    borderColor = 'transparent';
+                  }
+                }
+
                 return (
                   <Button
                     key={String(val)}
                     variant="contained"
-                    size="small"
+                    size="medium"
                     disabled={!!validation}
                     onClick={() => setAnswers({ ...answers, [idx]: val })}
                     sx={{
+                      flex: 1,
                       bgcolor,
                       color,
-                      fontWeight: 700,
-                      px: 2.5,
-                      borderRadius: 2,
-                      border: isSelected && !validation ? '2px solid #3a5bda' : '2px solid transparent',
-                      '&:hover': { bgcolor: isSelected ? '#5a6fd6' : '#e0e0e0', color: isSelected ? '#fff' : '#333' },
+                      fontWeight: 800,
+                      py: 1.2,
+                      borderRadius: 3,
+                      textTransform: 'none',
+                      border: `1.5px solid ${borderColor}`,
+                      boxShadow: shadow,
+                      '&:hover': {
+                        bgcolor: validation ? bgcolor : (val ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 143, 163, 0.12)'),
+                        border: validation ? borderColor : `1.5px solid ${val ? '#48c78e' : '#ff8fa3'}`
+                      },
                       '&.Mui-disabled': { bgcolor, color, opacity: 1 },
                     }}
                   >
@@ -237,9 +411,10 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
                 );
               })}
             </Box>
+            
             {validation && (
-              <Typography variant="caption" sx={{ mt: 1, display: 'block', fontWeight: 600, color: isCorrect ? '#2e7d32' : '#c62828' }}>
-                {isCorrect ? '✅ Correto!' : `❌ Errado! A resposta correta é: ${st.correct ? 'Verdadeiro' : 'Falso'}`}
+              <Typography variant="caption" sx={{ mt: 2, display: 'block', fontWeight: 800, color: isCorrect ? '#48c78e' : '#ff5a79', fontSize: '0.8rem' }}>
+                {isCorrect ? '✅ Correto!' : `❌ Incorreto! Resposta correta: ${st.correct ? 'True' : 'False'}`}
               </Typography>
             )}
           </Card>
@@ -252,9 +427,8 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
 // --- Sentence Order ---
 function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
   const sentences = exercise.content?.sentences || [];
-  const instructions = exercise.content?.instructions || 'Organize as palavras para formar a frase correta.';
+  const instructions = exercise.content?.instructions || 'Reorder the words to build correct sentences.';
 
-  // Each item in answers: { selected: string[], remaining: string[] }
   const initSentence = (sentence) => ({
     selected: [],
     remaining: shuffle(sentence.words),
@@ -282,41 +456,46 @@ function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ p: 2, backgroundColor: '#fff8e1', borderLeft: '5px solid #ffc107', borderRadius: 1, mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#f57f17' }}>🧩 {instructions}</Typography>
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Box sx={{ p: 2.5, backgroundColor: 'rgba(255, 183, 77, 0.05)', borderLeft: '4px solid #ffb74d', borderRadius: 3, mb: 3.5 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#ffb74d', textTransform: 'uppercase', letterSpacing: 0.5 }}>🧩 Instructions:</Typography>
+        <Typography variant="body2" sx={{ color: '#f1f5f9', mt: 0.5 }}>{instructions}</Typography>
       </Box>
 
       {sentences.map((sentence, sIdx) => {
         const st = getState(sIdx);
         const userSentence = st.selected.join(' ');
-        let resultColor = null;
+        let resultColor = '#ffb74d';
         let isCorrect = false;
+        
         if (validation) {
           isCorrect = userSentence.trim().toLowerCase() === sentence.correct.trim().toLowerCase();
-          resultColor = isCorrect ? '#4caf50' : '#f44336';
+          resultColor = isCorrect ? '#48c78e' : '#ff5a79';
         }
 
         return (
           <Card key={sIdx} sx={{
-            p: 2.5, mb: 3,
-            borderLeft: validation ? `5px solid ${resultColor}` : '5px solid #ffc107',
+            p: 3, mb: 3.5,
+            background: 'rgba(255,255,255,0.01)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderLeft: `4px solid ${resultColor}`,
+            borderRadius: 4,
             transition: 'border-color 0.3s',
           }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#555' }}>
-              Frase {sIdx + 1}:
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, mb: 2, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Sentence {sIdx + 1}:
             </Typography>
 
             {/* Answer area */}
             <Box sx={{
-              minHeight: 48, p: 1.5, mb: 2,
-              border: '2px dashed #ccc', borderRadius: 2,
+              minHeight: 58, p: 2, mb: 2.5,
+              border: '2px dashed rgba(255,255,255,0.12)', borderRadius: 3,
               display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center',
-              bgcolor: '#fafafa',
+              bgcolor: 'rgba(0,0,0,0.2)',
             }}>
               {st.selected.length === 0 && (
-                <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
-                  Clique nas palavras abaixo para montar a frase...
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                  Click on the words below to build the sentence...
                 </Typography>
               )}
               {st.selected.map((word, wIdx) => (
@@ -325,18 +504,21 @@ function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
                   label={word}
                   onClick={() => !validation && removeWord(sIdx, wIdx)}
                   sx={{
-                    bgcolor: validation ? (isCorrect ? '#e8f5e9' : '#ffebee') : '#667eea',
-                    color: validation ? (isCorrect ? '#2e7d32' : '#c62828') : '#fff',
-                    fontWeight: 600,
+                    bgcolor: validation ? (isCorrect ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255, 90, 121, 0.15)') : '#00b4d8',
+                    color: validation ? (isCorrect ? '#48c78e' : '#ffcbd5') : '#fff',
+                    border: `1px solid ${validation ? (isCorrect ? '#48c78e' : '#ff5a79') : 'transparent'}`,
+                    fontWeight: 800,
+                    borderRadius: 2.5,
                     cursor: validation ? 'default' : 'pointer',
-                    '&:hover': { bgcolor: validation ? undefined : '#5a6fd6' },
+                    boxShadow: !validation ? '0 2px 8px rgba(0, 180, 216, 0.25)' : 'none',
+                    '&:hover': { bgcolor: validation ? undefined : '#0077b6' },
                   }}
                 />
               ))}
             </Box>
 
             {/* Word bank */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
               {st.remaining.map((word, wIdx) => (
                 <Chip
                   key={wIdx}
@@ -345,28 +527,33 @@ function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
                   variant="outlined"
                   sx={{
                     cursor: validation ? 'default' : 'pointer',
-                    fontWeight: 600,
-                    '&:hover': { bgcolor: validation ? undefined : '#f0f4ff' },
-                    opacity: validation ? 0.5 : 1,
+                    fontWeight: 700,
+                    borderRadius: 2.5,
+                    color: '#eee',
+                    borderColor: 'rgba(255,255,255,0.15)',
+                    background: 'rgba(255,255,255,0.02)',
+                    '&:hover': { bgcolor: validation ? undefined : 'rgba(255,255,255,0.06)' },
+                    opacity: validation ? 0.35 : 1,
                   }}
                 />
               ))}
             </Box>
 
             {!validation && (
-              <Button size="small" onClick={() => resetSentence(sIdx)} sx={{ mt: 0.5, color: '#888' }}>
-                ↺ Recomeçar frase
+              <Button size="small" onClick={() => resetSentence(sIdx)} sx={{ color: 'rgba(255,255,255,0.4)', textTransform: 'none', fontWeight: 800, '&:hover': { color: '#00b4d8' } }}>
+                ↺ Reset sentence
               </Button>
             )}
 
             {validation && (
-              <Box sx={{ mt: 1 }}>
-                {isCorrect
-                  ? <Typography variant="caption" color="success.main" fontWeight={700}>✅ Perfeito!</Typography>
-                  : <Typography variant="caption" color="error" fontWeight={700}>
-                      ❌ Resposta correta: <em>{sentence.correct}</em>
-                    </Typography>
-                }
+              <Box sx={{ mt: 1.5 }}>
+                {isCorrect ? (
+                  <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 800, fontSize: '0.82rem' }}>✅ Perfect!</Typography>
+                ) : (
+                  <Typography variant="body2" sx={{ color: '#ff5a79', fontWeight: 600 }}>
+                    ❌ Correct: <strong style={{ color: '#48c78e' }}>{sentence.correct}</strong>
+                  </Typography>
+                )}
               </Box>
             )}
           </Card>
@@ -379,11 +566,9 @@ function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
 // --- Matching ---
 function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
   const pairs = exercise.content?.pairs || [];
-  const instructions = exercise.content?.instructions || 'Relacione os itens da coluna da esquerda com os da direita.';
+  const instructions = exercise.content?.instructions || 'Match the Column A items with the Column B items.';
 
-  // answers: { [leftIdx]: rightIdx | null }
   const [selectedLeft, setSelectedLeft] = useState(null);
-
   const shuffledRight = useState(() => shuffle(pairs.map((p, i) => ({ text: p.right, originalIdx: i }))))[0];
 
   const getMatchedRight = (leftIdx) => {
@@ -399,7 +584,6 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
   const handleRightClick = (rightIdx) => {
     if (validation || selectedLeft === null) return;
 
-    // If this right item was already matched to another left, unlink it
     const newAnswers = { ...answers };
     Object.keys(newAnswers).forEach((k) => {
       if (newAnswers[k] === rightIdx) delete newAnswers[k];
@@ -410,39 +594,52 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ p: 2, backgroundColor: '#e3f2fd', borderLeft: '5px solid #1e88e5', borderRadius: 1, mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1565c0' }}>🔗 {instructions}</Typography>
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Box sx={{ p: 2.5, backgroundColor: 'rgba(0, 180, 216, 0.05)', borderLeft: '4px solid #00b4d8', borderRadius: 3.5, mb: 4 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 0.5 }}>🔗 Instructions:</Typography>
+        <Typography variant="body2" sx={{ color: '#eee', mt: 0.5 }}>{instructions}</Typography>
         {!validation && selectedLeft !== null && (
-          <Typography variant="caption" color="primary" sx={{ mt: 0.5, display: 'block' }}>
-            ✋ Agora clique no item correspondente da coluna direita...
+          <Typography variant="caption" sx={{ color: '#00b4d8', mt: 1, display: 'block', fontWeight: 800, animation: 'fadeIn 0.3s ease' }}>
+            👉 Now click on the matching item in Column B...
           </Typography>
         )}
         {!validation && selectedLeft === null && (
-          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            Clique em um item da esquerda primeiro.
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', mt: 1, display: 'block', fontWeight: 700 }}>
+            Click on a card in Column A first.
           </Typography>
         )}
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3.5 }}>
         {/* Left column */}
         <Box>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1 }}>
-            Coluna A
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>
+            Column A
           </Typography>
           {pairs.map((pair, leftIdx) => {
             const isSelected = selectedLeft === leftIdx;
             const matchedRightIdx = answers[leftIdx];
             const isMatched = matchedRightIdx != null;
-            let borderColor = isSelected ? '#667eea' : isMatched ? '#43a047' : '#e0e0e0';
-            let bgcolor = isSelected ? '#eef0ff' : isMatched ? '#f1f8f1' : 'white';
+            
+            let borderColor = 'rgba(255,255,255,0.06)';
+            let bgcolor = 'rgba(255,255,255,0.02)';
+            let textColor = '#fff';
+            let shadow = 'none';
+
+            if (isSelected) {
+              borderColor = '#00b4d8';
+              bgcolor = 'rgba(0, 180, 216, 0.08)';
+              shadow = '0 0 12px rgba(0, 180, 216, 0.15)';
+            } else if (isMatched) {
+              borderColor = 'rgba(179, 136, 255, 0.3)';
+              bgcolor = 'rgba(179, 136, 255, 0.04)';
+            }
 
             if (validation) {
               const originalRightIdx = shuffledRight[matchedRightIdx]?.originalIdx;
               const correct = originalRightIdx === leftIdx;
-              borderColor = correct ? '#4caf50' : '#f44336';
-              bgcolor = correct ? '#f9fff9' : '#fff9f9';
+              borderColor = correct ? '#48c78e' : '#ff5a79';
+              bgcolor = correct ? 'rgba(72, 199, 142, 0.08)' : 'rgba(255, 90, 121, 0.08)';
             }
 
             return (
@@ -450,26 +647,34 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
                 key={leftIdx}
                 onClick={() => handleLeftClick(leftIdx)}
                 sx={{
-                  p: 2, mb: 1.5,
-                  border: `2px solid ${borderColor}`,
-                  bgcolor,
+                  p: 2.2, mb: 1.8,
+                  border: `1.5px solid ${borderColor}`,
+                  background: bgcolor,
+                  borderRadius: 3.5,
                   cursor: validation ? 'default' : 'pointer',
-                  transition: 'all 0.2s',
-                  '&:hover': { boxShadow: validation ? undefined : '0 2px 8px rgba(102,126,234,0.2)' },
+                  boxShadow: shadow,
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  '&:hover': { 
+                    border: validation ? borderColor : '1.5px solid #00b4d8',
+                    boxShadow: validation ? undefined : '0 4px 15px rgba(0,180,216,0.15)',
+                    transform: validation ? undefined : 'translateY(-2px)'
+                  },
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>{pair.left}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800, color: textColor }}>{pair.left}</Typography>
+                
                 {isMatched && !validation && (
-                  <Typography variant="caption" color="success.main" sx={{ fontWeight: 600 }}>
-                    → {getMatchedRight(leftIdx)}
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#b388ff', mt: 0.6, display: 'block', textTransform: 'uppercase', fontSize: '0.68rem' }}>
+                    🔗 Linked: {getMatchedRight(leftIdx)}
                   </Typography>
                 )}
+                
                 {validation && (() => {
                   const originalRightIdx = shuffledRight[matchedRightIdx]?.originalIdx;
                   const correct = originalRightIdx === leftIdx;
                   return (
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: correct ? '#2e7d32' : '#c62828', display: 'block' }}>
-                      {correct ? `✅ ${pair.right}` : `❌ Correto: ${pair.right}`}
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: correct ? '#48c78e' : '#ff5a79', display: 'block', mt: 0.8 }}>
+                      {correct ? `✅ ${pair.right}` : `❌ Correct: ${pair.right}`}
                     </Typography>
                   );
                 })()}
@@ -480,30 +685,47 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
 
         {/* Right column */}
         <Box>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 1 }}>
-            Coluna B
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>
+            Column B
           </Typography>
           {shuffledRight.map((item, rightIdx) => {
             const isLinked = Object.values(answers).includes(rightIdx);
             const isActive = selectedLeft !== null && !isLinked;
-            let bgcolor = isLinked ? '#f1f8f1' : isActive ? '#fff8e1' : 'white';
-            let borderColor = isLinked ? '#43a047' : isActive ? '#ffc107' : '#e0e0e0';
+            
+            let bgcolor = 'rgba(255,255,255,0.02)';
+            let borderColor = 'rgba(255,255,255,0.06)';
+            let shadow = 'none';
+
+            if (isLinked) {
+              bgcolor = 'rgba(179, 136, 255, 0.05)';
+              borderColor = 'rgba(179, 136, 255, 0.3)';
+            } else if (isActive) {
+              bgcolor = 'rgba(0, 180, 216, 0.03)';
+              borderColor = 'rgba(0, 180, 216, 0.2)';
+              shadow = '0 0 8px rgba(0, 180, 216, 0.05)';
+            }
 
             return (
               <Card
                 key={rightIdx}
                 onClick={() => handleRightClick(rightIdx)}
                 sx={{
-                  p: 2, mb: 1.5,
-                  border: `2px solid ${borderColor}`,
-                  bgcolor,
+                  p: 2.2, mb: 1.8,
+                  border: `1.5px solid ${borderColor}`,
+                  background: bgcolor,
+                  borderRadius: 3.5,
+                  boxShadow: shadow,
                   cursor: validation ? 'default' : (isLinked ? 'default' : 'pointer'),
-                  transition: 'all 0.2s',
-                  opacity: validation ? 1 : (isLinked ? 0.7 : 1),
-                  '&:hover': { boxShadow: (validation || isLinked) ? undefined : '0 2px 8px rgba(255,193,7,0.3)' },
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                  opacity: validation ? 0.6 : (isLinked ? 0.5 : 1),
+                  '&:hover': { 
+                    border: (validation || isLinked) ? undefined : '1.5px solid #00b4d8',
+                    boxShadow: (validation || isLinked) ? undefined : '0 4px 15px rgba(0,180,216,0.15)',
+                    transform: (validation || isLinked) ? undefined : 'translateY(-2px)'
+                  },
                 }}
               >
-                <Typography variant="body2">{item.text}</Typography>
+                <Typography variant="body2" sx={{ color: '#eee', fontWeight: 500 }}>{item.text}</Typography>
               </Card>
             );
           })}
@@ -516,7 +738,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
 // --- Flashcards ---
 function FlashcardsRenderer({ exercise, onAllSeen }) {
   const cards = exercise.content?.cards || [];
-  const instructions = exercise.content?.instructions || 'Clique no cartão para virar e ver a tradução.';
+  const instructions = exercise.content?.instructions || 'Click on the card to flip and reveal translation.';
   const [current, setCurrent] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [seen, setSeen] = useState(new Set());
@@ -543,25 +765,25 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
   };
 
   if (cards.length === 0) {
-    return <Box sx={{ p: 3, bgcolor: '#fff3e0', borderRadius: 2 }}><Typography>Nenhum cartão encontrado nesta atividade.</Typography></Box>;
+    return <Box sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.02)', borderRadius: 2 }}><Typography sx={{ color: '#bbb' }}>No cards found in this activity.</Typography></Box>;
   }
 
   const card = cards[current];
   const progress = Math.round(((seen.size) / cards.length) * 100);
 
   return (
-    <Box sx={{ textAlign: 'center' }}>
-      <Typography variant="body2" sx={{ mb: 2, color: '#666', fontStyle: 'italic' }}>
+    <Box sx={{ textAlign: 'center', animation: 'fadeIn 0.3s ease' }}>
+      <Typography variant="body2" sx={{ mb: 3, color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>
         {instructions}
       </Typography>
 
-      {/* Progress */}
-      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Box sx={{ flex: 1, height: 6, bgcolor: '#e0e0e0', borderRadius: 3, overflow: 'hidden' }}>
-          <Box sx={{ width: `${progress}%`, height: '100%', bgcolor: '#667eea', transition: 'width 0.4s ease', borderRadius: 3 }} />
+      {/* Progress bar */}
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ flex: 1, height: 6, bgcolor: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+          <Box sx={{ width: `${progress}%`, height: '100%', bgcolor: '#00b4d8', transition: 'width 0.4s ease', borderRadius: 3 }} />
         </Box>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: '#667eea', minWidth: 50 }}>
-          {current + 1}/{cards.length}
+        <Typography variant="caption" sx={{ fontWeight: 800, color: '#00b4d8', minWidth: 50 }}>
+          {current + 1} / {cards.length}
         </Typography>
       </Box>
 
@@ -571,9 +793,10 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
         sx={{
           cursor: 'pointer',
           perspective: '1000px',
-          height: 220,
-          mb: 3,
-          '&:hover .flip-inner': { boxShadow: '0 12px 40px rgba(102,126,234,0.25)' },
+          height: 250,
+          mb: 4,
+          position: 'relative',
+          '&:hover .flip-inner': { boxShadow: '0 15px 40px rgba(0, 180, 216, 0.25)' },
         }}
       >
         <Box
@@ -582,10 +805,10 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
             position: 'relative',
             width: '100%',
             height: '100%',
-            transition: 'transform 0.5s ease, box-shadow 0.2s',
+            transition: 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s',
             transformStyle: 'preserve-3d',
             transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-            borderRadius: 4,
+            borderRadius: 5,
           }}
         >
           {/* Front */}
@@ -593,17 +816,18 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
             position: 'absolute', inset: 0,
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderRadius: 5,
+            background: 'linear-gradient(135deg, #0f2342 0%, #15325c 100%)',
+            border: '1px solid rgba(255,255,255,0.08)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(102,126,234,0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             p: 3,
           }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>🎴 Frente</Typography>
-            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800, textAlign: 'center', lineHeight: 1.2 }}>
+            <Typography variant="caption" sx={{ color: '#00b4d8', mb: 1.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>🎴 ENGLISH</Typography>
+            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, textAlign: 'center', lineHeight: 1.2 }}>
               {card.front}
             </Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', mt: 2 }}>Clique para ver</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', mt: 3, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tap to flip</Typography>
           </Box>
 
           {/* Back */}
@@ -612,19 +836,20 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
             transform: 'rotateY(180deg)',
-            borderRadius: 4,
-            background: 'linear-gradient(135deg, #43a047 0%, #1de9b6 100%)',
+            borderRadius: 5,
+            background: 'linear-gradient(135deg, #093721 0%, #0d4b2e 100%)',
+            border: '1px solid rgba(72, 199, 142, 0.2)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 8px 32px rgba(67,160,71,0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             p: 3,
           }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>✅ Verso</Typography>
-            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 800, textAlign: 'center', lineHeight: 1.2 }}>
+            <Typography variant="caption" sx={{ color: '#48c78e', mb: 1.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 2 }}>✅ PORTUGUÊS</Typography>
+            <Typography variant="h4" sx={{ color: '#fff', fontWeight: 900, textAlign: 'center', lineHeight: 1.2 }}>
               {card.back}
             </Typography>
             {card.example && (
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)', mt: 1.5, fontStyle: 'italic' }}>
-                {card.example}
+              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.75)', mt: 2.2, fontStyle: 'italic', fontWeight: 500 }}>
+                "{card.example}"
               </Typography>
             )}
           </Box>
@@ -637,29 +862,48 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
           variant="outlined"
           onClick={handlePrev}
           disabled={current === 0}
-          sx={{ borderRadius: 2, px: 3 }}
+          sx={{ 
+            borderRadius: 3.5, 
+            px: 4.5, 
+            py: 1.2,
+            color: '#fff',
+            borderColor: 'rgba(255,255,255,0.15)',
+            fontWeight: 800,
+            textTransform: 'none',
+            '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0,180,216,0.06)' },
+            '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)', borderColor: 'rgba(255,255,255,0.05)' }
+          }}
         >
           ← Anterior
         </Button>
         <Button
           variant="contained"
           onClick={handleNext}
-          sx={{ borderRadius: 2, px: 3, background: 'linear-gradient(135deg, #667eea, #764ba2)', '&:hover': { background: 'linear-gradient(135deg, #5a6fd6, #6a3d94)' } }}
+          sx={{ 
+            borderRadius: 3.5, 
+            px: 4.5, 
+            py: 1.2,
+            fontWeight: 800,
+            textTransform: 'none',
+            background: 'linear-gradient(135deg, #00b4d8, #0077b6)', 
+            color: '#fff',
+            '&:hover': { background: 'linear-gradient(135deg, #00c0f0, #0096c7)' } 
+          }}
         >
-          {current === cards.length - 1 ? '✅ Concluir' : 'Próximo →'}
+          {current === cards.length - 1 ? 'Concluir ✅' : 'Próximo →'}
         </Button>
       </Box>
 
       {/* Dot indicators */}
-      <Box sx={{ display: 'flex', gap: 0.8, justifyContent: 'center', mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 3 }}>
         {cards.map((_, i) => (
           <Box
             key={i}
             sx={{
-              width: i === current ? 20 : 8, height: 8,
+              width: i === current ? 24 : 8, height: 8,
               borderRadius: 4,
-              bgcolor: i === current ? '#667eea' : seen.has(i) ? '#a5b4fc' : '#e0e0e0',
-              transition: 'all 0.3s',
+              bgcolor: i === current ? '#00b4d8' : seen.has(i) ? 'rgba(0, 180, 216, 0.4)' : 'rgba(255,255,255,0.1)',
+              transition: 'all 0.3s ease',
             }}
           />
         ))}
@@ -676,7 +920,6 @@ export default function ExerciseCard({ exercise, onComplete }) {
   const [loading, setLoading] = useState(false);
   const [flashcardsComplete, setFlashcardsComplete] = useState(false);
 
-  // Detect effective type: 'text' with a prompt field = writing exercise
   const effectiveType = (exercise.type === 'text' && exercise.content?.prompt) ? 'writing'
     : exercise.type === 'text' && exercise.content?.cards ? 'flashcards'
     : exercise.type;
@@ -712,7 +955,6 @@ export default function ExerciseCard({ exercise, onComplete }) {
       let results = [];
       let validationData = {};
 
-      // effectiveType is computed at component level above canSubmit
       if (effectiveType === 'flashcards') {
         score = 0;
         totalQuestions = 0;
@@ -732,9 +974,10 @@ export default function ExerciseCard({ exercise, onComplete }) {
         const questions = exercise.content?.questions || [];
         totalQuestions = questions.length;
         results = questions.map((q, idx) => {
-          const isCorrect = (answers[idx] || '').trim().toLowerCase() === (q.correct || q.a || '').trim().toLowerCase();
+          const correctVal = q.correct || q.a || '';
+          const isCorrect = (answers[idx] || '').trim().toLowerCase() === correctVal.trim().toLowerCase();
           if (isCorrect) score++;
-          return { question: q.question || q.q, userAnswer: answers[idx], correctAnswer: q.correct || q.a, isCorrect };
+          return { question: q.question || q.q, userAnswer: answers[idx], correctAnswer: correctVal, isCorrect };
         });
         validationData = { allCorrect: score === totalQuestions, results, score, totalQuestions };
 
@@ -791,7 +1034,6 @@ export default function ExerciseCard({ exercise, onComplete }) {
         score,
         totalQuestions,
         result: { answers, validation: results, type: effectiveType },
-
       });
 
       if (onComplete) onComplete();
@@ -806,6 +1048,7 @@ export default function ExerciseCard({ exercise, onComplete }) {
   const handleReset = () => {
     setAnswers({});
     setValidation(null);
+    setFlashcardsComplete(false);
   };
 
   const renderExercise = () => {
@@ -828,7 +1071,7 @@ export default function ExerciseCard({ exercise, onComplete }) {
         return <FlashcardsRenderer exercise={exercise} onAllSeen={() => setFlashcardsComplete(true)} />;
       default:
         return (
-          <Box sx={{ p: 3, bgcolor: '#fff3e0', borderRadius: 2 }}>
+          <Box sx={{ p: 3, bgcolor: 'rgba(239, 108, 0, 0.08)', borderRadius: 2 }}>
             <Typography color="warning.main">Tipo de atividade não suportado: {exercise.type}</Typography>
           </Box>
         );
@@ -836,20 +1079,29 @@ export default function ExerciseCard({ exercise, onComplete }) {
   };
 
   return (
-    <Box>
+    <Box sx={{ position: 'relative' }}>
       {renderExercise()}
 
       {validation ? (
-        <Box>
+        <Box sx={{ mt: 3 }}>
           {effectiveType === 'writing' ? (
-            <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
+            <Alert severity="success" sx={{ mb: 2.5, borderRadius: 3, bgcolor: 'rgba(72, 199, 142, 0.12)', border: '1px solid rgba(72, 199, 142, 0.25)', color: '#a5d6a7' }}>
+              <Typography variant="subtitle2" fontWeight={800}>
                 ✅ Resposta enviada! O professor irá analisar seu texto.
               </Typography>
             </Alert>
           ) : (
-            <Alert severity={validation.allCorrect ? 'success' : 'warning'} sx={{ mb: 2, borderRadius: 2 }}>
-              <Typography variant="subtitle2" fontWeight={700}>
+            <Alert 
+              severity={validation.allCorrect ? 'success' : 'warning'} 
+              sx={{ 
+                mb: 2.5, 
+                borderRadius: 3, 
+                bgcolor: validation.allCorrect ? 'rgba(72, 199, 142, 0.12)' : 'rgba(239, 108, 0, 0.12)',
+                border: `1px solid ${validation.allCorrect ? 'rgba(72, 199, 142, 0.25)' : 'rgba(239, 108, 0, 0.25)'}`,
+                color: validation.allCorrect ? '#a5d6a7' : '#ffb74d'
+              }}
+            >
+              <Typography variant="subtitle2" fontWeight={800}>
                 {validation.score === validation.totalQuestions && validation.totalQuestions > 0
                   ? `🏆 Perfeito! Você acertou tudo! (${validation.score}/${validation.totalQuestions})`
                   : validation.totalQuestions === 0
@@ -859,7 +1111,19 @@ export default function ExerciseCard({ exercise, onComplete }) {
               </Typography>
             </Alert>
           )}
-          <Button variant="outlined" fullWidth onClick={handleReset} sx={{ borderRadius: 2 }}>
+          <Button 
+            variant="outlined" 
+            fullWidth 
+            onClick={handleReset} 
+            sx={{ 
+              borderRadius: 3.5, 
+              py: 1.2, 
+              fontWeight: 800,
+              color: '#00b4d8',
+              borderColor: 'rgba(0, 180, 216, 0.3)',
+              '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0,180,216,0.06)' }
+            }}
+          >
             ↺ Tentar Novamente
           </Button>
         </Box>
@@ -870,9 +1134,28 @@ export default function ExerciseCard({ exercise, onComplete }) {
           size="large"
           onClick={handleSubmit}
           disabled={loading || !canSubmit()}
-          sx={{ borderRadius: 2, py: 1.5, fontWeight: 700 }}
+          sx={{ 
+            mt: 3,
+            borderRadius: 3.5, 
+            py: 1.5, 
+            fontWeight: 800,
+            fontSize: '1rem',
+            background: 'linear-gradient(135deg, #00b4d8, #48c78e)',
+            color: '#fff',
+            boxShadow: '0 4px 15px rgba(0, 180, 216, 0.25)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #00c0f0, #5ae0a2)',
+              boxShadow: '0 6px 20px rgba(0, 180, 216, 0.35)'
+            },
+            '&.Mui-disabled': {
+              background: 'rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.2)',
+              boxShadow: 'none',
+              border: '1px solid rgba(255,255,255,0.05)'
+            }
+          }}
         >
-          {loading ? 'Enviando...' : effectiveType === 'text' ? '✅ Marcar como Lido' : effectiveType === 'writing' ? '📤 Enviar Texto' : effectiveType === 'flashcards' ? '🎴 Concluir Flashcards' : '📤 Enviar Respostas'}
+          {loading ? 'Enviando...' : effectiveType === 'text' ? 'Marcar como Lido ✅' : effectiveType === 'writing' ? 'Enviar Texto 📤' : effectiveType === 'flashcards' ? 'Concluir Flashcards 🎴' : 'Enviar Respostas 📤'}
         </Button>
       )}
     </Box>
