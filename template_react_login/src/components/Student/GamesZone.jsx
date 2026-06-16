@@ -19,7 +19,9 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  Avatar
+  Avatar,
+  Select,
+  MenuItem
 } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
@@ -297,19 +299,415 @@ const generateWordGrid = (words, size = 10) => {
 // ─── 2. Pixel Word Battle Questions ─────────────────────────────────────────────
 
 const BATTLE_QUESTIONS = [
-  { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"] },
-  { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"] },
-  { q: "Qual o antônimo de 'Happy'?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"] },
-  { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"] },
-  { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"] },
-  { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"] },
-  { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"] },
-  { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"] },
-  { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"] },
-  { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"] }
+  { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"], level: 1 },
+  { q: "Qual o antônimo de 'Happy' (Feliz)?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"], level: 1 },
+  { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"], level: 1 },
+  { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"], level: 1 },
+  { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"], level: 1 },
+  { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"], level: 1 },
+  { q: "Qual a palavra correta para 'Espada'?", a: "Sword", options: ["Shield", "Sword", "Spear", "Bow"], level: 1 },
+  { q: "Como se diz 'Castelo' em inglês?", a: "Castle", options: ["Kingdom", "Palace", "Castle", "Fortress"], level: 1 },
+  { q: "Como se diz 'Floresta' em inglês?", a: "Forest", options: ["Desert", "Forest", "Mountain", "River"], level: 1 },
+  { q: "O que é 'Treasure'?", a: "Tesouro", options: ["Ouro", "Tesouro", "Moeda", "Baú"], level: 1 },
+  { q: "Como se diz 'Chave' em inglês?", a: "Key", options: ["Door", "Lock", "Key", "Chest"], level: 1 },
+  { q: "Como se diz 'Gelo' em inglês?", a: "Ice", options: ["Fire", "Ice", "Water", "Wind"], level: 1 },
+  { q: "Qual o significado de 'Ring'?", a: "Anel", options: ["Colar", "Pulseira", "Anel", "Brinco"], level: 1 },
+  { q: "Como se traduz 'Victory'?", a: "Vitória", options: ["Vitória", "Derrota", "Empate", "Combate"], level: 1 },
+  { q: "Como se diz 'Dourado' em inglês?", a: "Golden", options: ["Gold", "Golden", "Yellow", "Gilded"], level: 1 },
+  { q: "Como traduzir: 'Open the gate'?", a: "Abra o portão", options: ["Abra a porta", "Abra o portão", "Feche a porta", "Destranque o baú"], level: 1 },
+  { q: "Qual a palavra em inglês para 'Ponte'?", a: "Bridge", options: ["River", "Bridge", "Road", "Tunnel"], level: 1 },
+  { q: "Como se escreve 'Feitiço' em inglês?", a: "Spell", options: ["Spell", "Magic", "Charm", "Hex"], level: 1 },
+  { q: "O que significa a palavra 'Shield'?", a: "Escudo", options: ["Armadura", "Espada", "Escudo", "Capacete"], level: 1 },
+  { q: "Como se diz 'Monstro' em inglês?", a: "Monster", options: ["Creature", "Beast", "Monster", "Goblin"], level: 1 },
+  { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"], level: 2 },
+  { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"], level: 2 },
+  { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"], level: 2 },
+  { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"], level: 2 },
+  { q: "Como se diz 'Poção de Vida' em inglês?", a: "Health Potion", options: ["Life Drink", "Healing Potion", "Health Potion", "Mana Flask"], level: 2 },
+  { q: "Complete: 'I have ___ money to buy a new armor.'", a: "enough", options: ["enough", "many", "very", "too much"], level: 2 },
+  { q: "O que significa 'Quest'?", a: "Missão", options: ["Perguntar", "Missão", "Batalha", "Castelo"], level: 2 },
+  { q: "Qual é o significado de 'Darkness'?", a: "Escuridão", options: ["Luz", "Escuridão", "Morte", "Medo"], level: 2 },
+  { q: "Complete: 'If you want to defeat the slime, you ___ use fire.'", a: "should", options: ["should", "are", "do", "have"], level: 2 },
+  { q: "O que significa o verbo 'To heal'?", a: "Curar", options: ["Correr", "Curar", "Machucar", "Combater"], level: 2 },
+  { q: "Como traduzir: 'Beware of the trap'?", a: "Cuidado com a armadilha", options: ["Fuja do monstro", "Cuidado com a armadilha", "Pegue o tesouro", "Encontre a saída"], level: 2 },
+  { q: "Qual o antônimo de 'Weak' (Fraco)?", a: "Strong", options: ["Strong", "Tough", "Heavy", "Fast"], level: 2 },
+  { q: "Complete: 'I can't read this map, it is in another ___.'", a: "language", options: ["language", "country", "speak", "writing"], level: 2 },
+  { q: "Complete: 'They ___ fighting the giant boss now!'", a: "are", options: ["is", "are", "was", "were"], level: 2 },
+  { q: "Complete: 'She ___ have a sword, she uses a magic wand.'", a: "doesn't", options: ["don't", "doesn't", "isn't", "hasn't"], level: 2 },
+  { q: "Qual o significado de 'Fear'?", a: "Medo", options: ["Coragem", "Medo", "Monstro", "Raiva"], level: 2 },
+  { q: "Como se diz 'Vender' em inglês?", a: "Sell", options: ["Buy", "Sell", "Trade", "Give"], level: 2 },
+  { q: "Complete: 'There is ___ apple on the table.'", a: "an", options: ["a", "an", "the", "some"], level: 2 },
+  { q: "O que significa 'Bow' no contexto de combate/armas?", a: "Arco", options: ["Flecha", "Espada", "Arco", "Adaga"], level: 2 },
+  { q: "Como se diz 'Guerreiro' em inglês?", a: "Warrior", options: ["Mage", "Knight", "Warrior", "Thief"], level: 2 },
+  { q: "Como traduzir: 'The dragon is flying above the castle'?", a: "O dragão está voando acima do castelo", options: ["O dragão está voando acima do castelo", "O dragão está dormindo no castelo", "O dragão atacou o castelo", "O dragão fugiu do castelo"], level: 3 },
+  { q: "Qual o passado do verbo 'Buy' (Comprar)?", a: "Bought", options: ["Buyed", "Bought", "Brought", "Bin"], level: 3 },
+  { q: "Como traduzir: 'He is the king of this land'?", a: "Ele é o rei desta terra", options: ["Ele é o rei desta terra", "Ele quer reinar esta terra", "Ele protege esta terra", "Ele é o guerreiro desta terra"], level: 3 },
+  { q: "Complete: 'We must walk ___ the dark cave.'", a: "through", options: ["through", "across", "about", "above"], level: 3 },
+  { q: "Qual a tradução de 'Knight'?", a: "Cavaleiro", options: ["Noite", "Rei", "Guerreiro", "Cavaleiro"], level: 3 },
+  { q: "Qual o passado de 'Find' (Encontrar)?", a: "Found", options: ["Finded", "Found", "Founded", "Fund"], level: 3 },
+  { q: "Complete: '___ you ready to enter the dungeon?'", a: "Are", options: ["Is", "Do", "Are", "Have"], level: 3 },
+  { q: "Traduzir: 'The sun rises in the east'", a: "O sol nasce no leste", options: ["O sol nasce no leste", "O sol brilha no leste", "O sol se põe no leste", "A lua nasce no leste"], level: 3 },
+  { q: "Qual o plural de 'Wolf' (Lobo)?", a: "Wolves", options: ["Wolfs", "Wolves", "Wolfes", "Wolverines"], level: 3 },
+  { q: "Complete: 'We need to make a ___ to rest.'", a: "camp", options: ["camp", "tent", "house", "fire"], level: 3 },
+  { q: "O que significa a palavra 'Arrow'?", a: "Flecha", options: ["Arco", "Flecha", "Escudo", "Lança"], level: 3 },
+  { q: "Como se diz 'Perigo' em inglês?", a: "Danger", options: ["Safety", "Hazard", "Danger", "Risk"], level: 3 },
+  { q: "Qual o oposto de 'Light' (Claro/Luz)?", a: "Dark", options: ["Shadow", "Dark", "Heavy", "Bright"], level: 3 },
+  { q: "Complete: 'He is the ___ wizard in the school.'", a: "smartest", options: ["smartest", "smarter", "more smart", "most smart"], level: 3 },
+  { q: "Complete: 'I have never ___ a dragon before.'", a: "seen", options: ["see", "saw", "seen", "seeing"], level: 3 },
+  { q: "O que significa o verbo 'To steal'?", a: "Roubar", options: ["Comprar", "Roubar", "Pegar", "Guardar"], level: 3 },
+  { q: "Complete: 'You should not go there ___ night.'", a: "at", options: ["in", "on", "at", "during"], level: 3 },
+  { q: "Qual o passado de 'Fight' (Lutar)?", a: "Fought", options: ["Fighted", "Fought", "Foughted", "Figh"], level: 3 },
+  { q: "Complete: 'This sword is made ___ steel.'", a: "of", options: ["of", "by", "from", "with"], level: 3 },
+  { q: "O que significa 'To escape'?", a: "Escapar", options: ["Entrar", "Lutar", "Escapar", "Esconder"], level: 3 }
 ];
 
-// ──────────────────────────────────────────────────────────────────────────────
+const CMD_STAGES = [
+  {
+    id: 1,
+    name: "Caminho do Aprendiz",
+    tip: "Escreva comandos passo a passo. Digite 'right' para ir à direita. Chegue na chave (🔑), digite 'grab key'. Vá ao baú (🔒) e digite 'open chest'!",
+    player: { x: 0, y: 0 },
+    key: { x: 2, y: 2 },
+    chest: { x: 4, y: 4 },
+    obstacles: [],
+    dangers: [],
+    dangerType: 'fire'
+  },
+  {
+    id: 2,
+    name: "Primeiras Funções",
+    tip: "Aprenda a usar funções! Defina uma função com 'define [nome]' e feche com 'end'. Ex:\ndefine andar_diagonal\n  right\n  down\nend\nE chame ela digitando: andar_diagonal",
+    player: { x: 0, y: 0 },
+    key: { x: 3, y: 3 },
+    chest: { x: 5, y: 5 },
+    obstacles: [],
+    dangers: [],
+    dangerType: 'fire'
+  },
+  {
+    id: 3,
+    name: "Desvio do Calabouço",
+    tip: "Paredes de pedra 🧱 bloqueiam seu caminho! Use funções para planejar caminhos repetitivos e desviar dos muros.",
+    player: { x: 0, y: 5 },
+    key: { x: 5, y: 0 },
+    chest: { x: 5, y: 5 },
+    obstacles: [{ x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }, { x: 2, y: 4 }],
+    dangers: [],
+    dangerType: 'pit'
+  },
+  {
+    id: 4,
+    name: "Rios de Fogo",
+    tip: "Alerta de perigo! Áreas de fogo 🔥 tiram 1 vida (❤️) e reiniciam sua posição se pisar nelas.",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 0 },
+    chest: { x: 5, y: 5 },
+    obstacles: [],
+    dangers: [{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 2, y: 3 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 5,
+    name: "Abismo Sem Fim",
+    tip: "Dungeons profundas contêm abismos 🕳️ letais! Se você cair, morre e volta al início, perdendo um coração.",
+    player: { x: 0, y: 5 },
+    key: { x: 3, y: 2 },
+    chest: { x: 5, y: 0 },
+    obstacles: [{ x: 1, y: 4 }, { x: 2, y: 4 }],
+    dangers: [{ x: 3, y: 3 }, { x: 4, y: 3 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 6,
+    name: "Ciclo de Repetição (Loops)",
+    tip: "loops de repetição ativos! Use:\nrepeat 4\n  right\nend\nIsso executa a instrução interna 4 vezes seguidas!",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 0 },
+    chest: { x: 5, y: 5 },
+    obstacles: [],
+    dangers: [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 7,
+    name: "O Pântano Ácido",
+    tip: "Use loops de repetição para fazer movimentos diagonais precisos pelo pântano.",
+    player: { x: 0, y: 0 },
+    key: { x: 4, y: 2 },
+    chest: { x: 5, y: 5 },
+    obstacles: [{ x: 1, y: 1 }, { x: 3, y: 3 }],
+    dangers: [{ x: 2, y: 0 }, { x: 0, y: 2 }, { x: 4, y: 4 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 8,
+    name: "A Câmara Secreta",
+    tip: "Escreva uma função que use loops internos para desviar das chamas e dos muros de pedra.",
+    player: { x: 0, y: 5 },
+    key: { x: 0, y: 0 },
+    chest: { x: 5, y: 0 },
+    obstacles: [{ x: 1, y: 1 }, { x: 1, y: 2 }, { x: 1, y: 3 }],
+    dangers: [{ x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 9,
+    name: "Labirinto de Fogo",
+    tip: "Um labirinto cercado por fogo! Evite pisar nas brasas enquanto busca o tesouro.",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 5 },
+    chest: { x: 0, y: 5 },
+    obstacles: [{ x: 2, y: 2 }, { x: 3, y: 2 }],
+    dangers: [{ x: 1, y: 4 }, { x: 2, y: 4 }, { x: 3, y: 4 }, { x: 4, y: 4 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 10,
+    name: "Desafio dos Cavaleiros",
+    tip: "Apenas programadores experientes passam! Use loops de repetição para andar pelo corredor estreito.",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 1 },
+    chest: { x: 1, y: 5 },
+    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 1 }],
+    dangers: [{ x: 0, y: 3 }, { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 11,
+    name: "A Ponte da Morte",
+    tip: "Uma ponte estreita de terra rodeada de lava. Caminhe reto e não caia!",
+    player: { x: 0, y: 2 },
+    key: { x: 3, y: 2 },
+    chest: { x: 5, y: 2 },
+    obstacles: [],
+    dangers: [
+      { x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }, { x: 4, y: 1 },
+      { x: 1, y: 3 }, { x: 2, y: 3 }, { x: 3, y: 3 }, { x: 4, y: 3 }
+    ],
+    dangerType: 'fire'
+  },
+  {
+    id: 12,
+    name: "Espelhos Duplos",
+    tip: "A chave e o baú estão em posições inversas. Crie uma função flexível.",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 0 },
+    chest: { x: 0, y: 5 },
+    obstacles: [{ x: 2, y: 2 }],
+    dangers: [{ x: 1, y: 1 }, { x: 4, y: 4 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 13,
+    name: "Dungeon de Lava",
+    tip: "Desvie dos fluxos de lava fervente nas laterais usando loops de repetição.",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 2 },
+    chest: { x: 0, y: 4 },
+    obstacles: [{ x: 2, y: 1 }, { x: 3, y: 4 }],
+    dangers: [{ x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 14,
+    name: "Espiral da Perdição",
+    tip: "A espiral requer uma sequência de movimentos incrementais. Escreva um script otimizado.",
+    player: { x: 3, y: 3 },
+    key: { x: 0, y: 0 },
+    chest: { x: 5, y: 5 },
+    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 1 }, { x: 3, y: 1 }],
+    dangers: [{ x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 15,
+    name: "Os Quatro Pilares",
+    tip: "Calcule a rota e contorne os pilares de pedra no calabouço.",
+    player: { x: 0, y: 0 },
+    key: { x: 3, y: 3 },
+    chest: { x: 5, y: 5 },
+    obstacles: [{ x: 1, y: 1 }, { x: 4, y: 1 }, { x: 1, y: 4 }, { x: 4, y: 4 }],
+    dangers: [],
+    dangerType: 'pit'
+  },
+  {
+    id: 16,
+    name: "Labirinto de Gelo e Fogo",
+    tip: "Desvie dos blocos e das chamas alternadas. Defina uma função curta e repita-a.",
+    player: { x: 0, y: 5 },
+    key: { x: 5, y: 0 },
+    chest: { x: 0, y: 0 },
+    obstacles: [{ x: 2, y: 3 }, { x: 3, y: 3 }],
+    dangers: [{ x: 1, y: 2 }, { x: 4, y: 2 }, { x: 2, y: 1 }, { x: 3, y: 1 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 17,
+    name: "Desfiladeiro da Sorte",
+    tip: "Desfiladeiro cheio de chamas! Planeje a movimentação usando funções seguras.",
+    player: { x: 0, y: 0 },
+    key: { x: 4, y: 4 },
+    chest: { x: 5, y: 0 },
+    obstacles: [{ x: 1, y: 2 }, { x: 2, y: 2 }, { x: 3, y: 2 }],
+    dangers: [{ x: 0, y: 4 }, { x: 1, y: 4 }, { x: 2, y: 4 }],
+    dangerType: 'fire'
+  },
+  {
+    id: 18,
+    name: "Corredor das Sombras",
+    tip: "O perigo espreita a cada linha. Mantenha o foco!",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 2 },
+    chest: { x: 5, y: 5 },
+    obstacles: [{ x: 1, y: 0 }, { x: 3, y: 0 }, { x: 1, y: 4 }, { x: 3, y: 4 }],
+    dangers: [{ x: 2, y: 1 }, { x: 4, y: 3 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 19,
+    name: "O Templo Antigo",
+    tip: "Estamos quase lá! Atravesse a nave principal do templo evitando as poças de ácido.",
+    player: { x: 0, y: 5 },
+    key: { x: 5, y: 5 },
+    chest: { x: 5, y: 0 },
+    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }],
+    dangers: [{ x: 0, y: 1 }, { x: 4, y: 3 }, { x: 2, y: 5 }],
+    dangerType: 'pit'
+  },
+  {
+    id: 20,
+    name: "A Arena do Mago Supremo",
+    tip: "O DESAFIO FINAL! Use funções e loops combinados para coletar a chave e escapar de vez!",
+    player: { x: 0, y: 0 },
+    key: { x: 5, y: 5 },
+    chest: { x: 5, y: 0 },
+    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 3 }, { x: 4, y: 4 }],
+    dangers: [{ x: 1, y: 2 }, { x: 2, y: 3 }, { x: 3, y: 4 }, { x: 0, y: 5 }],
+    dangerType: 'fire'
+  }
+];
+
+const preprocessScript = (scriptText, stageNum) => {
+  const lines = scriptText
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  const functions = new Map();
+  const mainCode = [];
+  
+  let inFunc = false;
+  let currentFuncName = '';
+  let currentFuncBody = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lower = line.toLowerCase();
+    
+    if (lower.startsWith('define ')) {
+      if (stageNum < 2) {
+        throw new Error("Funções só são permitidas a partir do Estágio 2!");
+      }
+      if (inFunc) {
+        throw new Error(`Erro na linha ${i + 1}: Definição de função aninhada não permitida.`);
+      }
+      const parts = line.split(/\s+/);
+      const name = parts[1]?.toLowerCase();
+      if (!name || ['left', 'right', 'up', 'down', 'grab', 'take', 'get', 'open', 'unlock', 'repeat', 'define', 'end'].includes(name)) {
+        throw new Error(`Erro na linha ${i + 1}: Nome de função inválido ou reservado: "${name}".`);
+      }
+      inFunc = true;
+      currentFuncName = name;
+      currentFuncBody = [];
+    } else if (lower === 'end') {
+      if (inFunc) {
+        functions.set(currentFuncName, currentFuncBody);
+        inFunc = false;
+      } else {
+        mainCode.push(line);
+      }
+    } else {
+      if (inFunc) {
+        currentFuncBody.push(line);
+      } else {
+        mainCode.push(line);
+      }
+    }
+  }
+
+  if (inFunc) {
+    throw new Error(`Função "${currentFuncName}" não foi fechada com "end".`);
+  }
+
+  const expand = (cmdList, depth = 0) => {
+    if (depth > 20) {
+      throw new Error("Recursão muito profunda ou loop infinito detectado!");
+    }
+    
+    const expanded = [];
+    let i = 0;
+    
+    while (i < cmdList.length) {
+      const line = cmdList[i];
+      const lower = line.toLowerCase();
+      const parts = lower.split(/\s+/);
+      
+      if (parts[0] === 'repeat') {
+        if (stageNum < 6) {
+          throw new Error("Loops (repeat) só são permitidos a partir do Estágio 6!");
+        }
+        const count = parseInt(parts[1], 10);
+        if (isNaN(count) || count <= 0 || count > 50) {
+          throw new Error(`Número de repetições inválido: "${parts[1]}".`);
+        }
+        
+        let repeatBody = [];
+        let endIdx = -1;
+        let nestedRepeats = 0;
+        
+        for (let j = i + 1; j < cmdList.length; j++) {
+          const l = cmdList[j].toLowerCase();
+          if (l.startsWith('repeat')) {
+            nestedRepeats++;
+            repeatBody.push(cmdList[j]);
+          } else if (l === 'end') {
+            if (nestedRepeats === 0) {
+              endIdx = j;
+              break;
+            } else {
+              nestedRepeats--;
+              repeatBody.push(cmdList[j]);
+            }
+          } else {
+            repeatBody.push(cmdList[j]);
+          }
+        }
+        
+        if (endIdx === -1) {
+          throw new Error("Bloco 'repeat' não foi fechado com 'end'.");
+        }
+        
+        const expandedBody = expand(repeatBody, depth + 1);
+        for (let r = 0; r < count; r++) {
+          expanded.push(...expandedBody);
+        }
+        
+        i = endIdx + 1;
+      } else if (functions.has(lower)) {
+        const funcBody = functions.get(lower);
+        expanded.push(...expand(funcBody, depth + 1));
+        i++;
+      } else {
+        expanded.push(line);
+        i++;
+      }
+    }
+    
+    return expanded;
+  };
+
+  return expand(mainCode);
+};
 
 export default function GamesZone({ userId, userName, onEarnXP }) {
   const [activeGame, setActiveGame] = useState(null); // 'wordsearch' | 'battle' | null
@@ -350,6 +748,25 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const [currentQuestIdx, setCurrentQuestIdx] = useState(0);
   const [battleStatus, setBattleStatus] = useState('active');
   const [coopPlayers, setCoopPlayers] = useState({});
+
+  // --- Pixel Command Quest States ---
+  const [cmdText, setCmdText] = useState('');
+  const [cmdLog, setCmdLog] = useState([]);
+  const [cmdStage, setCmdStage] = useState(1);
+  const [selectedStageMenu, setSelectedStageMenu] = useState(1);
+  const [showCmdTutorial, setShowCmdTutorial] = useState(true);
+  const [cmdStatus, setCmdStatus] = useState('playing');
+  const [cmdPlayerPos, setCmdPlayerPos] = useState({ x: 0, y: 0 });
+  const [cmdKeyPos, setCmdKeyPos] = useState({ x: 2, y: 2 });
+  const [cmdChestPos, setCmdChestPos] = useState({ x: 4, y: 4 });
+  const [cmdHasKey, setCmdHasKey] = useState(false);
+  const [cmdObstacles, setCmdObstacles] = useState([]);
+  const [cmdDangers, setCmdDangers] = useState([]);
+  const [cmdLives, setCmdLives] = useState(3);
+  const [showCmdHelp, setShowCmdHelp] = useState(false);
+  const [cmdHistory, setCmdHistory] = useState([]);
+  const [cmdScriptRunning, setCmdScriptRunning] = useState(false);
+  const currentStageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
 
   const canvasRef = useRef(null);
   
@@ -849,10 +1266,23 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
       }
 
+      const isEnemyDefeated = (option === q.a && Math.max(enemyHp - (battleStage === 3 ? 30 : 20), 0) === 0);
+      const activeStageForNextQuestion = isEnemyDefeated 
+        ? Math.min(battleStage + 1, 3) 
+        : battleStage;
+
+      const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === activeStageForNextQuestion);
       let nextIdx;
-      do {
-        nextIdx = Math.floor(Math.random() * BATTLE_QUESTIONS.length);
-      } while (nextIdx === currentQuestIdx && BATTLE_QUESTIONS.length > 1);
+      if (candidates.length > 0) {
+        do {
+          const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
+          nextIdx = BATTLE_QUESTIONS.findIndex(quest => quest.q === selectedQ.q);
+        } while (nextIdx === currentQuestIdx && candidates.length > 1);
+      } else {
+        do {
+          nextIdx = Math.floor(Math.random() * BATTLE_QUESTIONS.length);
+        } while (nextIdx === currentQuestIdx && BATTLE_QUESTIONS.length > 1);
+      }
       setCurrentQuestIdx(nextIdx);
     }
   };
@@ -1219,7 +1649,10 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setBattleStage(1);
     setBattleStatus('active');
     setBattleLog(['⚔️ Combate solo iniciado! Defenda seu reino contra o SLIME.']);
-    setCurrentQuestIdx(Math.floor(Math.random() * BATTLE_QUESTIONS.length));
+    const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === 1);
+    const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
+    const globalIdx = BATTLE_QUESTIONS.findIndex(quest => quest.q === selectedQ.q);
+    setCurrentQuestIdx(globalIdx);
     
     // Reset canvas states
     const state = animRef.current;
@@ -1239,6 +1672,268 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setActiveGame('battle');
   };
 
+  // --- Pixel Command Quest Game Handlers ---
+  const startCommandQuest = (stageNum = 1, initialLives = null) => {
+    playRetroSound('select', soundOn);
+    setCmdStage(stageNum);
+    setCmdStatus('playing');
+    setCmdHasKey(false);
+    setCmdScriptRunning(false);
+    setCmdText('');
+    
+    let currentLives = cmdLives;
+    if (initialLives !== null) {
+      setCmdLives(initialLives);
+      currentLives = initialLives;
+    }
+    
+    const stageData = CMD_STAGES.find(s => s.id === stageNum) || CMD_STAGES[0];
+    
+    setCmdLog([
+      `🎮 Pixel Command Quest - Estágio ${stageNum}: ${stageData.name} Iniciado!`,
+      `Objetivo: Escreva comandos em inglês para se mover, pegar a chave (🔑) e abrir o baú (🔒).`,
+      `Vidas restantes: ${'❤️ '.repeat(currentLives)}`,
+      `Dica: ${stageData.tip}`
+    ]);
+    setCmdHistory([]);
+
+    setCmdPlayerPos({ ...stageData.player });
+    setCmdKeyPos({ ...stageData.key });
+    setCmdChestPos({ ...stageData.chest });
+    setCmdObstacles([...stageData.obstacles]);
+    setCmdDangers([...stageData.dangers]);
+
+    setActiveGame('command');
+  };
+
+  const processCommandText = (rawCmd, playerPosState, hasKeyState) => {
+    const cmd = rawCmd.trim().toLowerCase();
+    let dx = 0;
+    let dy = 0;
+    let action = null;
+
+    if (cmd === 'left' || cmd === 'go left' || cmd === 'move left') {
+      dx = -1;
+    } else if (cmd === 'right' || cmd === 'go right' || cmd === 'move right') {
+      dx = 1;
+    } else if (cmd === 'up' || cmd === 'go up' || cmd === 'move up') {
+      dy = -1;
+    } else if (cmd === 'down' || cmd === 'go down' || cmd === 'move down') {
+      dy = 1;
+    } else if (cmd === 'grab' || cmd === 'take' || cmd === 'get' || cmd === 'grab key' || cmd === 'take key' || cmd === 'get key') {
+      action = 'grab';
+    } else if (cmd === 'open' || cmd === 'unlock' || cmd === 'open chest' || cmd === 'unlock chest') {
+      action = 'open';
+    } else {
+      return { success: false, log: `❌ Comando inválido: "${rawCmd}".` };
+    }
+
+    if (action === null) {
+      const newX = playerPosState.x + dx;
+      const newY = playerPosState.y + dy;
+
+      if (newX < 0 || newX > 5 || newY < 0 || newY > 5) {
+        return { success: false, log: `💥 Colisão! Limite do mapa em (${newX}, ${newY}).` };
+      }
+
+      const isObstacle = cmdObstacles.some(obs => obs.x === newX && obs.y === newY);
+      if (isObstacle) {
+        return { success: false, log: `🧱 Bloqueado! Obstáculo em (${newX}, ${newY}).` };
+      }
+
+      return { success: true, newPos: { x: newX, y: newY }, log: `🚶 Movido para (${newX}, ${newY}).` };
+    } else if (action === 'grab') {
+      if (playerPosState.x === cmdKeyPos.x && playerPosState.y === cmdKeyPos.y) {
+        if (hasKeyState) {
+          return { success: false, log: `🔑 Você já tem a chave!` };
+        } else {
+          return { success: true, grabKey: true, log: `🔑 Chave coletada com sucesso!` };
+        }
+      } else {
+        return { success: false, log: `❌ Não há chaves aqui em (${playerPosState.x}, ${playerPosState.y}).` };
+      }
+    } else if (action === 'open') {
+      if (playerPosState.x === cmdChestPos.x && playerPosState.y === cmdChestPos.y) {
+        if (!hasKeyState) {
+          return { success: false, log: `🔒 Baú trancado! Pegue a chave primeiro.` };
+        } else {
+          return { success: true, win: true, log: `🔓 Parabéns! Baú aberto. Missão Cumprida!` };
+        }
+      } else {
+        return { success: false, log: `❌ Não há baú aqui em (${playerPosState.x}, ${playerPosState.y}).` };
+      }
+    }
+
+    return { success: false, log: `❌ Algo deu errado.` };
+  };
+
+  const runCommandScript = (scriptText) => {
+    if (cmdScriptRunning || cmdStatus !== 'playing') return;
+    setCmdScriptRunning(true);
+    setCmdLog(prev => [...prev, `⚡ Compilando e executando script...`]);
+
+    let expandedLines;
+    try {
+      expandedLines = preprocessScript(scriptText, cmdStage);
+    } catch (err) {
+      setCmdLog(prev => [...prev, `❌ Erro de Compilação: ${err.message}`]);
+      setCmdScriptRunning(false);
+      return;
+    }
+
+    if (expandedLines.length === 0) {
+      setCmdLog(prev => [...prev, `❌ Script vazio ou sem comandos executáveis.`]);
+      setCmdScriptRunning(false);
+      return;
+    }
+
+    let currentPos = { ...cmdPlayerPos };
+    let hasKey = cmdHasKey;
+    let step = 0;
+
+    const executeNextStep = () => {
+      if (step >= expandedLines.length) {
+        setCmdLog(prev => [...prev, `🏁 Script executado com sucesso.`]);
+        setCmdScriptRunning(false);
+        return;
+      }
+
+      const rawCmd = expandedLines[step];
+      const result = processCommandText(rawCmd, currentPos, hasKey);
+
+      setCmdLog(prev => [...prev, `> ${rawCmd}`, result.log]);
+
+      if (result.success) {
+        if (result.newPos) {
+          currentPos = result.newPos;
+          setCmdPlayerPos(currentPos);
+          playRetroSound('select', soundOn);
+        }
+        if (result.grabKey) {
+          hasKey = true;
+          setCmdHasKey(true);
+          playRetroSound('victory', soundOn);
+        }
+
+        // Check if player stepped on a danger tile (fire or pit)
+        const isDanger = cmdDangers.some(dang => dang.x === currentPos.x && dang.y === currentPos.y);
+        if (isDanger) {
+          playRetroSound('defeat', soundOn);
+          setCmdLives(prevLives => {
+            const nextLives = prevLives - 1;
+            const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
+            const hazardMsg = stageData.dangerType === 'pit' 
+              ? `🕳️ Calabouço fatal! Você caiu no abismo.` 
+              : `🔥 Rio de fogo! Você se queimou nas chamas.`;
+            
+            if (nextLives === 0) {
+              setCmdLog(prevLog => [
+                ...prevLog,
+                `${hazardMsg} 💀 MORTE! Você perdeu todos os corações ❤️. Voltando para o Estágio 1...`
+              ]);
+              setTimeout(() => {
+                startCommandQuest(1, 3);
+              }, 1200);
+            } else {
+              setCmdLog(prevLog => [
+                ...prevLog,
+                `${hazardMsg} Perdeu 1 vida. Vidas restantes: ${'❤️ '.repeat(nextLives)}`
+              ]);
+              setCmdPlayerPos({ ...stageData.player });
+              setCmdHasKey(false);
+            }
+            return nextLives === 0 ? 3 : nextLives;
+          });
+          setCmdScriptRunning(false);
+          return;
+        }
+
+        if (result.win) {
+          setCmdStatus('victory');
+          setCmdScriptRunning(false);
+          playRetroSound('victory', soundOn);
+          onEarnXP(100);
+          return;
+        }
+      } else {
+        playRetroSound('select', soundOn);
+        setCmdLog(prev => [...prev, `❌ Script parado devido a erro.`]);
+        setCmdScriptRunning(false);
+        return;
+      }
+
+      step++;
+      setTimeout(executeNextStep, 600);
+    };
+
+    executeNextStep();
+  };
+
+  const handleSingleCommandSubmit = (e) => {
+    e.preventDefault();
+    if (!cmdText.trim() || cmdScriptRunning || cmdStatus !== 'playing') return;
+    
+    const rawCmd = cmdText.trim();
+    setCmdText('');
+    setCmdHistory(prev => [...prev, rawCmd]);
+
+    const result = processCommandText(rawCmd, cmdPlayerPos, cmdHasKey);
+    setCmdLog(prev => [...prev, `> ${rawCmd}`, result.log]);
+
+    if (result.success) {
+      let newPos = { ...cmdPlayerPos };
+      if (result.newPos) {
+        newPos = result.newPos;
+        setCmdPlayerPos(newPos);
+        playRetroSound('select', soundOn);
+      }
+      if (result.grabKey) {
+        setCmdHasKey(true);
+        playRetroSound('victory', soundOn);
+      }
+
+      // Check if player stepped on a danger tile (fire or pit)
+      const isDanger = cmdDangers.some(dang => dang.x === newPos.x && dang.y === newPos.y);
+      if (isDanger) {
+        playRetroSound('defeat', soundOn);
+        setCmdLives(prevLives => {
+          const nextLives = prevLives - 1;
+          const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
+          const hazardMsg = stageData.dangerType === 'pit' 
+            ? `🕳️ Calabouço fatal! Você caiu no abismo.` 
+            : `🔥 Rio de fogo! Você se queimou nas chamas.`;
+          
+          if (nextLives === 0) {
+            setCmdLog(prevLog => [
+              ...prevLog,
+              `${hazardMsg} 💀 MORTE! Você perdeu todos os corações ❤️. Voltando para o Estágio 1...`
+            ]);
+            setTimeout(() => {
+              startCommandQuest(1, 3);
+            }, 1200);
+          } else {
+            setCmdLog(prevLog => [
+              ...prevLog,
+              `${hazardMsg} Perdeu 1 vida. Vidas restantes: ${'❤️ '.repeat(nextLives)}`
+            ]);
+            setCmdPlayerPos({ ...stageData.player });
+            setCmdHasKey(false);
+          }
+          return nextLives === 0 ? 3 : nextLives;
+        });
+        return;
+      }
+
+      if (result.win) {
+        setCmdStatus('victory');
+        playRetroSound('victory', soundOn);
+        onEarnXP(100);
+      }
+    } else {
+      playRetroSound('select', soundOn);
+    }
+  };
+
   // Helper styles for animations
   const customAnimStyles = (
     <style>{`
@@ -1252,17 +1947,46 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         align-items: center;
         justify-content: center;
         font-weight: 950;
-        font-size: 1.15rem;
         cursor: pointer;
-        border-radius: 8px;
         transition: all 0.2s;
         user-select: none;
+      }
+      @media (max-width: 600px) {
+        .ws-grid-cell {
+          font-size: 0.72rem !important;
+          border-radius: 4px !important;
+        }
+      }
+      @media (min-width: 601px) {
+        .ws-grid-cell {
+          font-size: 1.15rem !important;
+          border-radius: 8px !important;
+        }
       }
     `}</style>
   );
 
+  const isFullscreen = activeGame !== null;
+
   return (
-    <Box sx={{ mt: 1, animation: 'fadeIn 0.5s ease', position: 'relative' }}>
+    <Box sx={isFullscreen ? {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      zIndex: 9999,
+      overflowY: 'auto',
+      bgcolor: '#0a0d1a',
+      backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(124, 77, 255, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.05) 0%, transparent 40%)',
+      p: { xs: 1, sm: 2, md: 4 },
+      boxSizing: 'border-box',
+      animation: 'fadeIn 0.4s ease'
+    } : {
+      mt: 1,
+      animation: 'fadeIn 0.5s ease',
+      position: 'relative'
+    }}>
       {customAnimStyles}
 
       {/* Main Bar with Sound Button */}
@@ -1309,7 +2033,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       {activeGame === null && (
         <Grid container spacing={3.5}>
           {/* Card 1: Word Search */}
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} md={4}>
             <Card sx={{
               p: 3.5,
               height: '100%',
@@ -1363,7 +2087,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           </Grid>
 
           {/* Card 2: Pixel RPG Battle */}
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} md={4}>
             <Card sx={{
               p: 3.5,
               height: '100%',
@@ -1430,12 +2154,101 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               </Box>
             </Card>
           </Grid>
+
+          {/* Card 3: Pixel Command Quest */}
+          <Grid item xs={12} md={4}>
+            <Card sx={{
+              p: 3.5,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.4), rgba(72, 199, 142, 0.05))',
+              border: '1px solid rgba(72, 199, 142, 0.2)',
+              '&:hover': {
+                border: '1px solid #48c78e',
+                boxShadow: '0 8px 30px rgba(72, 199, 142, 0.15)',
+                transform: 'translateY(-4px)'
+              }
+            }}>
+              <Box>
+                <Typography fontSize={48} sx={{ mb: 1.5 }}>🧙‍♂️</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#48c78e' }}>
+                  Pixel Command Quest
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3.5, lineHeight: 1.6 }}>
+                  Digite comandos em inglês para mover o Mago pelo mapa. Pegue a chave de ouro e destranque o baú de tesouro! Suporta scripts de comando.
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5, letterSpacing: 0.5 }}>
+                  Selecione um Estágio (1 a 20):
+                </Typography>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={selectedStageMenu}
+                    onChange={(e) => setSelectedStageMenu(Number(e.target.value))}
+                    sx={{
+                      color: '#fff',
+                      bgcolor: 'rgba(0, 0, 0, 0.25)',
+                      borderRadius: 2.5,
+                      fontSize: '0.88rem',
+                      fontWeight: 700,
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(72, 199, 142, 0.3)' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#48c78e' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#48c78e' }
+                    }}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          bgcolor: '#0d1b2a',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          color: '#fff',
+                          maxHeight: 300,
+                          '& .MuiMenuItem-root': {
+                            fontSize: '0.85rem',
+                            fontWeight: 700,
+                            '&:hover': { bgcolor: 'rgba(72, 199, 142, 0.15)', color: '#fff' },
+                            '&.Mui-selected': { bgcolor: 'rgba(72, 199, 142, 0.25)', color: '#fff', '&:hover': { bgcolor: 'rgba(72, 199, 142, 0.3)' } }
+                          }
+                        }
+                      }
+                    }}
+                  >
+                    {CMD_STAGES.map((s) => (
+                      <MenuItem key={s.id} value={s.id}>
+                        Fase {s.id}: {s.name} {s.id >= 11 ? '🔥🕳️' : s.id >= 6 ? '🔄' : s.id >= 2 ? '⚡' : '🧙‍♂️'}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                
+                <Button
+                  variant="contained"
+                  fullWidth
+                  onClick={() => startCommandQuest(selectedStageMenu)}
+                  sx={{
+                    py: 1.2,
+                    borderRadius: 2.5,
+                    bgcolor: '#48c78e',
+                    color: '#000',
+                    fontWeight: 900,
+                    textTransform: 'none',
+                    '&:hover': { bgcolor: '#38a374' }
+                  }}
+                >
+                  Jogar Estágio {selectedStageMenu} ➡️
+                </Button>
+              </Box>
+            </Card>
+          </Grid>
         </Grid>
       )}
 
       {/* ────────────────── GAME 1: WORD SEARCH ────────────────── */}
       {activeGame === 'wordsearch' && (
-        <Card sx={{ p: 4, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <Card sx={{ p: { xs: 1.5, sm: 3, md: 4 }, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mb: 3, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, gap: 2 }}>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 900, color: '#00b4d8' }}>
@@ -1568,21 +2381,22 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Button>
               </Box>
 
-              <Grid container spacing={4}>
+              <Grid container spacing={{ xs: 2, md: 4 }}>
                 <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <Box sx={{
                     bgcolor: 'rgba(0,0,0,0.25)',
-                    p: 2.5,
+                    p: { xs: 1, sm: 2, md: 2.5 },
                     borderRadius: 4,
                     border: '1.5px solid rgba(255,255,255,0.06)',
                     width: '100%',
                     maxWidth: 420,
-                    mx: 'auto'
+                    mx: 'auto',
+                    boxSizing: 'border-box'
                   }}>
                     <Box sx={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(10, 1fr)',
-                      gap: 1
+                      gap: { xs: '3px', sm: '6px', md: '8px' }
                     }}>
                       {wsGrid.map((row, rIdx) => 
                         row.map((letter, cIdx) => {
@@ -1628,12 +2442,12 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 fontWeight: 950,
-                                fontSize: { xs: '0.9rem', sm: '1.15rem' },
+                                fontSize: { xs: '0.72rem', sm: '0.95rem', md: '1.15rem' },
                                 bgcolor: bg,
                                 border: border,
                                 color: color,
                                 boxShadow: shadow,
-                                borderRadius: '8px',
+                                borderRadius: { xs: '4px', sm: '6px', md: '8px' },
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',
                                 userSelect: 'none',
@@ -1662,11 +2476,13 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       border: '1px solid rgba(179, 136, 255, 0.2)',
                       borderRadius: 3.5,
                       display: 'flex',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      gap: 2,
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       animation: 'fadeIn 0.3s ease'
                     }}>
-                      <Box>
+                      <Box sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
                         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5 }}>
                           Palavra Formada:
                         </Typography>
@@ -1674,7 +2490,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                           {wsSelectedCells.map(cell => wsGrid[cell.r][cell.c]).join('')}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: 'center' }}>
                         <Button 
                           variant="outlined" 
                           size="small" 
@@ -2071,8 +2887,29 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     </Typography>
                   </Alert>
                   <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                    <Button variant="contained" onClick={rpgMode === 'coop' ? startCoopBattleChoice : startSoloBattle} sx={{ bgcolor: rpgMode === 'coop' ? '#7c4dff' : '#00b4d8', fontWeight: 800, borderRadius: 3, px: 4, py: 1.2 }}>
-                      Jogar Novamente
+                    {rpgMode === 'solo' ? (
+                      <Button
+                        variant="contained"
+                        onClick={startSoloBattle}
+                        sx={{ bgcolor: '#48c78e', '&:hover': { bgcolor: '#38a374' }, fontWeight: 900, borderRadius: 2.5 }}
+                      >
+                        Jogar Novamente 🔁
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        onClick={startCoopBattleChoice}
+                        sx={{ bgcolor: '#b388ff', '&:hover': { bgcolor: '#9c27b0' }, fontWeight: 900, borderRadius: 2.5 }}
+                      >
+                        Voltar ao Lobby Co-op 👥
+                      </Button>
+                    )}
+                    <Button
+                      variant="outlined"
+                      onClick={() => setActiveGame(null)}
+                      sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      Voltar ao Menu
                     </Button>
                   </Box>
                 </Box>
@@ -2083,21 +2920,601 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 <Box sx={{ textAlign: 'center', py: 4, animation: 'fadeIn 0.5s ease' }}>
                   <Typography fontSize={64} sx={{ mb: 1 }}>💀</Typography>
                   <Typography variant="h4" sx={{ fontWeight: 950, color: '#ff5a79', mb: 1 }}>
-                    FIM DE JOGO
+                    DERROTA!
                   </Typography>
                   <Typography variant="body1" sx={{ color: '#b3c5d7', mb: 3.5 }}>
-                    Seus pontos de vida acabaram. Não desmaie, continue praticando!
+                    O monstro derrotou você! Estude o vocabulário e tente novamente.
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                    <Button variant="contained" onClick={rpgMode === 'coop' ? startCoopBattleChoice : startSoloBattle} sx={{ bgcolor: '#ff5a79', fontWeight: 800, borderRadius: 3, px: 4, py: 1.2, '&:hover': { bgcolor: '#ff3b30' } }}>
-                      Tentar Novamente
+                    {rpgMode === 'solo' ? (
+                      <Button
+                        variant="contained"
+                        onClick={startSoloBattle}
+                        sx={{ bgcolor: '#ff5a79', '&:hover': { bgcolor: '#ff3b5c' }, fontWeight: 900, borderRadius: 2.5 }}
+                      >
+                        Tentar Novamente 🔁
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        onClick={startCoopBattleChoice}
+                        sx={{ bgcolor: '#b388ff', '&:hover': { bgcolor: '#9c27b0' }, fontWeight: 900, borderRadius: 2.5 }}
+                      >
+                        Voltar ao Lobby Co-op 👥
+                      </Button>
+                    )}
+                    <Button
+                      variant="outlined"
+                      onClick={() => setActiveGame(null)}
+                      sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      Voltar ao Menu
                     </Button>
                   </Box>
                 </Box>
               )}
             </Box>
           )}
+        </Card>
+      )}
 
+      {/* ────────────────── GAME 3: PIXEL COMMAND QUEST ────────────────── */}
+      {activeGame === 'command' && (
+        <Card sx={{ p: { xs: 1.5, sm: 3, md: 4 }, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)', mb: 4 }}>
+          {/* Header Bar */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mb: 3, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, gap: 2 }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#48c78e' }}>
+                Pixel Command Quest: Estágio {cmdStage} — {CMD_STAGES.find(s => s.id === cmdStage)?.name || ""}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.5 }}>
+                {CMD_STAGES.find(s => s.id === cmdStage)?.tip || ""}
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, flexWrap: 'wrap' }}>
+              {/* Hearts / Lives indicator */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>
+                  Vidas:
+                </Typography>
+                <Typography sx={{ fontSize: '1.2rem', letterSpacing: 1.5, userSelect: 'none' }}>
+                  {'❤️'.repeat(cmdLives)}
+                  {'🖤'.repeat(3 - cmdLives)}
+                </Typography>
+              </Box>
+
+              <Chip
+                label={cmdHasKey ? "🔑 Chave Coletada" : "🔒 Procurando Chave"}
+                color={cmdHasKey ? "success" : "warning"}
+                sx={{ fontWeight: 900 }}
+              />
+            </Box>
+          </Box>
+
+          <Grid container spacing={{ xs: 2, md: 4 }}>
+            {/* GRID MAP AREA */}
+            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Box sx={{
+                bgcolor: 'rgba(0,0,0,0.3)',
+                p: { xs: 0.75, sm: 2 },
+                borderRadius: 4,
+                border: '1.5px solid rgba(255,255,255,0.06)',
+                width: '100%',
+                maxWidth: { xs: '100%', sm: 460, md: 520 },
+                boxSizing: 'border-box',
+                mx: 'auto'
+              }}>
+                <Box sx={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gap: { xs: '3px', sm: '6px', md: '8px' },
+                  bgcolor: '#0d1117',
+                  p: { xs: '4px', sm: '8px' },
+                  borderRadius: 3
+                }}>
+                  {Array.from({ length: 6 }).map((_, y) => 
+                    Array.from({ length: 6 }).map((_, x) => {
+                      const isPlayer = cmdPlayerPos.x === x && cmdPlayerPos.y === y;
+                      const isKey = cmdKeyPos.x === x && cmdKeyPos.y === y && !cmdHasKey;
+                      const isChest = cmdChestPos.x === x && cmdChestPos.y === y;
+                      const isObstacle = cmdObstacles.some(obs => obs.x === x && obs.y === y);
+                      const isDanger = cmdDangers.some(dang => dang.x === x && dang.y === y);
+
+                      let bg = 'rgba(255,255,255,0.02)';
+                      let border = '1px solid rgba(255,255,255,0.04)';
+                      let shadow = 'none';
+
+                      if (isObstacle) {
+                        bg = 'rgba(255,255,255,0.05)';
+                        border = '1px solid rgba(255,255,255,0.15)';
+                      } else if (isDanger) {
+                        const isPit = currentStageData.dangerType === 'pit';
+                        bg = isPit ? 'rgba(0,0,0,0.45)' : 'rgba(255, 90, 121, 0.15)';
+                        border = isPit ? '1px solid rgba(255,255,255,0.1)' : '1px solid #ff5a79';
+                      } else if (isPlayer) {
+                        bg = 'rgba(72, 199, 142, 0.15)';
+                        border = '1px solid #48c78e';
+                        shadow = '0 0 10px rgba(72, 199, 142, 0.25)';
+                      } else if (isKey) {
+                        bg = 'rgba(255, 183, 77, 0.08)';
+                        border = '1px dashed rgba(255, 183, 77, 0.4)';
+                      } else if (isChest) {
+                        bg = 'rgba(124, 77, 255, 0.12)';
+                        border = '1px solid #7c4dff';
+                      }
+
+                      return (
+                        <Box
+                          key={`${x}-${y}`}
+                          sx={{
+                            aspectRatio: '1/1',
+                            bgcolor: bg,
+                            border: border,
+                            boxShadow: shadow,
+                            borderRadius: '6px',
+                            display: 'flex',
+                            position: 'relative',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.25s ease',
+                            fontSize: { xs: '1.6rem', sm: '1.9rem', md: '2.3rem' },
+                            '&:hover': {
+                              bgcolor: isPlayer ? bg : 'rgba(255,255,255,0.05)'
+                            }
+                          }}
+                        >
+                          {/* Element rendering */}
+                          {isPlayer ? (
+                            <Box sx={{ 
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              animation: 'pulsePlayer 2s infinite ease-in-out',
+                              '@keyframes pulsePlayer': {
+                                '0%, 100%': { transform: 'scale(1)' },
+                                '50%': { transform: 'scale(1.18)' }
+                              }
+                            }}>
+                              🧙‍♂️
+                            </Box>
+                          ) : (
+                            <>
+                              {isKey && '🔑'}
+                              {isChest && (cmdStatus === 'victory' ? '🔓' : '🔒')}
+                              {isObstacle && '🧱'}
+                              {isDanger && (currentStageData.dangerType === 'pit' ? '🕳️' : '🔥')}
+                            </>
+                          )}
+
+                          {/* Mini overlay icon in top-left when player is on an item */}
+                          {isPlayer && (
+                            <>
+                              {isKey && (
+                                <Box sx={{ position: 'absolute', top: 2, left: 4, fontSize: '0.55em', lineHeight: 1 }}>
+                                  🔑
+                                </Box>
+                              )}
+                              {isChest && (
+                                <Box sx={{ position: 'absolute', top: 2, left: 4, fontSize: '0.55em', lineHeight: 1 }}>
+                                  {cmdStatus === 'victory' ? '🔓' : '🔒'}
+                                </Box>
+                              )}
+                              {isDanger && (
+                                <Box sx={{ position: 'absolute', top: 2, left: 4, fontSize: '0.55em', lineHeight: 1 }}>
+                                  {currentStageData.dangerType === 'pit' ? '🕳️' : '🔥'}
+                                </Box>
+                              )}
+                            </>
+                          )}
+
+                          {/* Faint coordinates */}
+                          <Typography sx={{
+                            position: 'absolute',
+                            bottom: 2,
+                            right: 4,
+                            fontSize: '0.55rem',
+                            color: 'rgba(255,255,255,0.12)',
+                            userSelect: 'none',
+                            display: { xs: 'none', sm: 'block' }
+                          }}>
+                            {x},{y}
+                          </Typography>
+                        </Box>
+                      );
+                    })
+                  )}
+                </Box>
+              </Box>
+
+              {/* Status / Win Message */}
+              {cmdStatus === 'victory' && (
+                <Box sx={{ mt: 3, p: 2.5, bgcolor: 'rgba(72, 199, 142, 0.08)', border: '1px solid rgba(72, 199, 142, 0.25)', borderRadius: 3.5, width: '100%', maxWidth: 400, textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
+                  <Typography variant="h6" sx={{ color: '#48c78e', fontWeight: 900, mb: 1 }}>
+                    🏆 Missão Concluída!
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2 }}>
+                    Você usou os comandos perfeitamente e abriu o baú! Recebeu +100 XP extras.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                    <Button 
+                      variant="contained" 
+                      size="small"
+                      onClick={() => {
+                        if (cmdStage < 20) startCommandQuest(cmdStage + 1);
+                        else startCommandQuest(1);
+                      }}
+                      sx={{ bgcolor: '#48c78e', '&:hover': { bgcolor: '#38a374' }, fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      {cmdStage < 20 ? `Próximo Estágio (${cmdStage + 1}) ➡️` : "Reiniciar Jogo"}
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      onClick={() => setActiveGame(null)}
+                      sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      Sair
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+            </Grid>
+
+            {/* COLUMN 2: OPTION B (SCRIPT EDITOR) */}
+            <Grid item xs={12} md={6}>
+              <Card sx={{ 
+                p: 3, 
+                bgcolor: 'rgba(0,0,0,0.2)', 
+                border: '1.5px solid rgba(255,255,255,0.06)', 
+                borderRadius: 4,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, display: 'block', mb: 1.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    💻 OPÇÃO B: Escrever um Script Completo (Múltiplas Linhas)
+                  </Typography>
+                  <Box sx={{ position: 'relative', flexGrow: 1, display: 'flex', flexDirection: 'column', mb: 1.5 }}>
+                    <textarea
+                      id="cmd-script-editor"
+                      placeholder={`Digite um comando por linha. Ex:\nright\nright\ndown\ngrab key`}
+                      disabled={cmdScriptRunning || cmdStatus !== 'playing'}
+                      style={{
+                        width: '100%',
+                        height: '240px',
+                        backgroundColor: 'rgba(0,0,0,0.3)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '12px',
+                        color: '#cbd5e1',
+                        padding: '12px',
+                        boxSizing: 'border-box',
+                        fontFamily: 'monospace',
+                        fontSize: '0.88rem',
+                        resize: 'none',
+                        outline: 'none',
+                        flexGrow: 1
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <Button
+                      variant="contained"
+                      size="small"
+                      disabled={cmdScriptRunning || cmdStatus !== 'playing'}
+                      onClick={() => {
+                        const val = document.getElementById('cmd-script-editor').value;
+                        runCommandScript(val);
+                      }}
+                      sx={{
+                        bgcolor: '#b388ff',
+                        color: '#000',
+                        fontWeight: 900,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: '#7c4dff' }
+                      }}
+                    >
+                      Executar Script ⚡
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={cmdScriptRunning || cmdStatus !== 'playing'}
+                      onClick={() => {
+                        let exampleText = "";
+                        if (cmdStage === 1) {
+                          exampleText = "right\nright\ndown\ndown\ngrab key\ndown\ndown\nright\nright\nopen chest";
+                        } else if (cmdStage >= 2 && cmdStage < 6) {
+                          exampleText = "define diag\n  right\n  down\nend\ndiag\ndiag\ndiag\ngrab key\ndiag\ndiag\nopen chest";
+                        } else if (cmdStage >= 6) {
+                          exampleText = "repeat 5\n  right\nend\ngrab key\nrepeat 5\n  down\nend\nopen chest";
+                        }
+                        document.getElementById('cmd-script-editor').value = exampleText;
+                        playRetroSound('select', soundOn);
+                      }}
+                      sx={{
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        color: '#ccc',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.04)' }
+                      }}
+                    >
+                      Carregar Exemplo 💡
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      disabled={cmdScriptRunning}
+                      onClick={() => {
+                        setCmdLog([`🧹 Console limpo.`]);
+                        playRetroSound('select', soundOn);
+                      }}
+                      sx={{
+                        borderColor: 'rgba(255,255,255,0.1)',
+                        color: '#ff8fa3',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        '&:hover': { bgcolor: 'rgba(255,143,163,0.04)' }
+                      }}
+                    >
+                      Limpar Log
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => startCommandQuest(cmdStage)}
+                      disabled={cmdScriptRunning}
+                      sx={{
+                        borderRadius: 2,
+                        borderColor: 'rgba(72, 199, 142, 0.25)',
+                        color: '#48c78e',
+                        textTransform: 'none',
+                        '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72,199,142,0.04)' }
+                      }}
+                    >
+                      ↺ Resetar Fase
+                    </Button>
+                  </Box>
+                </Box>
+              </Card>
+            </Grid>
+
+            {/* ROW 2: LOG, TUTORIAL, OPTION A, AND OTHER CONTROLS */}
+            <Grid item xs={12}>
+              <Grid container spacing={3.5}>
+                {/* Column 1 of Row 2: Tutorial & Syntax Guide */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, height: '100%' }}>
+                    {/* Collapsible dynamic tutorial */}
+                    <Box sx={{
+                      mb: 2,
+                      borderRadius: 3.5,
+                      bgcolor: 'rgba(0, 180, 216, 0.05)',
+                      border: '1px solid rgba(0, 180, 216, 0.15)',
+                      borderLeft: '4px solid #00b4d8',
+                      overflow: 'hidden',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}>
+                      <Box 
+                        onClick={() => setShowCmdTutorial(!showCmdTutorial)}
+                        sx={{ 
+                          p: 1.5, 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center', 
+                          cursor: 'pointer',
+                          bgcolor: 'rgba(0, 180, 216, 0.04)',
+                          '&:hover': { bgcolor: 'rgba(0, 180, 216, 0.08)' }
+                        }}
+                      >
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#00b4d8', display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: 0.5, userSelect: 'none' }}>
+                          💡 Tutorial da Fase {cmdStage}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 800, fontSize: '0.7rem' }}>
+                          {showCmdTutorial ? "OCULTAR ➖" : "MOSTRAR ➕"}
+                        </Typography>
+                      </Box>
+                      {showCmdTutorial && (
+                        <Box sx={{ p: 2, borderTop: '1px solid rgba(0, 180, 216, 0.1)', animation: 'fadeIn 0.25s ease' }}>
+                          <Typography variant="body2" sx={{ color: '#e2e8f0', display: 'block', fontSize: '0.78rem', lineHeight: 1.5 }}>
+                            {cmdStage === 1 && "Escreva comandos passo a passo em inglês para mover o Mago 🧙‍♂️. Ex: 'right' para ir à direita, 'down' para descer. Use 'grab key' para coletar a chave (🔑) e depois 'open chest' para abrir o baú (🔒)."}
+                            {cmdStage === 2 && (
+                              <span>
+                                <strong>Funções (Fase 2+):</strong> Crie blocos de código reutilizáveis! Escreva:
+                                <pre style={{ margin: '6px 0', padding: '6px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: 6, fontFamily: 'monospace', color: '#a5d6a7', fontSize: '0.75rem' }}>
+{`define turn
+  right
+  down
+end
+turn`}
+                                </pre>
+                                Defina com <code>define nome</code>, coloque as ações, feche com <code>end</code> e depois chame <code>nome</code>!
+                              </span>
+                            )}
+                            {cmdStage >= 3 && cmdStage < 6 && "Use Funções para planejar caminhos eficientes, desviando dos blocos de muro 🧱. Escreva seu código no Console Multilinhas e aperte Executar Script!"}
+                            {cmdStage === 6 && (
+                              <span>
+                                <strong>Loops de Repetição (Fase 6+):</strong> Escreva menos linhas repetindo comandos! Escreva:
+                                <pre style={{ margin: '6px 0', padding: '6px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: 6, fontFamily: 'monospace', color: '#a5d6a7', fontSize: '0.75rem' }}>
+{`repeat 4
+  right
+end`}
+                                </pre>
+                                Isso fará o mago andar 4 passos para a direita. Use <code>repeat [contagem]</code>, as ações, e feche com <code>end</code>!
+                              </span>
+                            )}
+                            {cmdStage > 6 && cmdStage < 11 && "Combine Funções e Loops! Você pode colocar um 'repeat' dentro de uma função. Crie comandos de atalho para cruzar as salas rapidamente!"}
+                            {cmdStage >= 11 && "Calabouço Final! Cuidado extremo com a lava 🔥 e os abismos 🕳️. Lembre-se: se você perder todas as 3 vidas (❤️), voltará direto ao Estágio 1!"}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Syntax Help Button */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.75rem' }}>
+                        📖 Guia Rápido de Referência:
+                      </Typography>
+                      <Button 
+                        size="small"
+                        onClick={() => setShowCmdHelp(!showCmdHelp)}
+                        sx={{ fontSize: '0.72rem', textTransform: 'none', color: '#48c78e', fontWeight: 800 }}
+                      >
+                        {showCmdHelp ? "Ocultar Guia ➖" : "Guia de Sintaxe ➕"}
+                      </Button>
+                    </Box>
+
+                    {/* Collapsible Syntax Tutorial */}
+                    {showCmdHelp && (
+                      <Box sx={{
+                        p: 2,
+                        bgcolor: 'rgba(72, 199, 142, 0.04)',
+                        border: '1px dashed rgba(72, 199, 142, 0.25)',
+                        borderRadius: 3.5,
+                        animation: 'fadeIn 0.3s ease',
+                        fontSize: '0.8rem', 
+                        color: '#cbd5e1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1.5
+                      }}>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>1. Comandos Básicos (Fase 1+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>left</code>, <code>right</code>, <code>up</code>, <code>down</code> — Mover.<br />
+                            <code>grab key</code> — Coletar chave 🔑.<br />
+                            <code>open chest</code> — Abrir baú 🔒.
+                          </div>
+                        </Box>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>2. Funções (Fase 2+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>define [nome]</code> ... <code>end</code>
+                          </div>
+                        </Box>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>3. Loops (Fase 6+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>repeat [vezes]</code> ... <code>end</code>
+                          </div>
+                        </Box>
+                      </Box>
+                    )}
+                  </Card>
+                </Grid>
+
+                {/* Column 2 of Row 2: Log, Option A & Bottom Controls */}
+                <Grid item xs={12} md={6}>
+                  <Card sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: 0.5 }}>
+                        💻 Terminal de Execução:
+                      </Typography>
+                      {/* Terminal history output box */}
+                      <Box sx={{
+                        bgcolor: '#090d16',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: 3,
+                        p: 2,
+                        height: 110,
+                        overflowY: 'auto',
+                        fontFamily: 'monospace, Courier New',
+                        fontSize: '0.82rem',
+                        mb: 2.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.5
+                      }}>
+                        {cmdLog.map((log, idx) => (
+                          <Typography 
+                            key={idx} 
+                            sx={{ 
+                              fontFamily: 'monospace, Courier New',
+                              fontSize: '0.82rem',
+                              color: log.startsWith('❌') ? '#ff5a79' : log.startsWith('>') ? '#b388ff' : log.startsWith('🚶') || log.startsWith('🔑') || log.startsWith('🔓') ? '#48c78e' : 'rgba(255,255,255,0.7)',
+                              pl: log.startsWith('>') ? 0 : 1.5
+                            }}
+                          >
+                            {log}
+                          </Typography>
+                        ))}
+                      </Box>
+
+                      {/* Option A: Single Command */}
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, display: 'block', mb: 1 }}>
+                        OPÇÃO A: Enviar um comando de cada vez (Modo Interativo)
+                      </Typography>
+                      <Box component="form" onSubmit={handleSingleCommandSubmit} sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                        <TextField
+                          size="small"
+                          fullWidth
+                          value={cmdText}
+                          onChange={(e) => setCmdText(e.target.value)}
+                          placeholder="Ex: right, left, up, down, grab key, open chest..."
+                          disabled={cmdScriptRunning || cmdStatus !== 'playing'}
+                          InputProps={{
+                            sx: {
+                              color: '#fff',
+                              bgcolor: 'rgba(0,0,0,0.25)',
+                              borderRadius: 2.5,
+                              fontSize: '0.88rem',
+                              fontFamily: 'monospace',
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.1)' },
+                              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.2) !important' },
+                              '&.Mui-focused fieldset': { borderColor: '#48c78e !important' }
+                            }
+                          }}
+                        />
+                        <Button
+                          type="submit"
+                          disabled={cmdScriptRunning || cmdStatus !== 'playing'}
+                          sx={{
+                            bgcolor: '#48c78e',
+                            color: '#000',
+                            fontWeight: 900,
+                            borderRadius: 2.5,
+                            px: 3,
+                            '&:hover': { bgcolor: '#38a374' }
+                          }}
+                        >
+                          Enviar
+                        </Button>
+                      </Box>
+                    </Box>
+
+                    {/* Reset / Voltar Buttons */}
+                    <Box sx={{ borderTop: '1px solid rgba(255,255,255,0.08)', pt: 2, display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          playRetroSound('select', soundOn);
+                          setActiveGame(null);
+                        }}
+                        disabled={cmdScriptRunning}
+                        sx={{
+                          borderRadius: 2.5,
+                          borderColor: 'rgba(255,255,255,0.15)',
+                          color: '#fff',
+                          textTransform: 'none',
+                          '&:hover': { borderColor: 'rgba(255,255,255,0.3)', bgcolor: 'rgba(255,255,255,0.04)' }
+                        }}
+                      >
+                        ↺ Voltar ao Menu
+                      </Button>
+                    </Box>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
         </Card>
       )}
 

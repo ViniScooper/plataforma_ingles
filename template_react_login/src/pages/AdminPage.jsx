@@ -56,14 +56,34 @@ function TabPanel({ children, value, index }) {
 }
 
 const DashboardCard = ({ icon, title, value, subtitle, color }) => (
-  <Card sx={{ p: 3, borderRadius: 4, height: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-      <Paper sx={{ p: 1.5, borderRadius: 3, bgcolor: `${color}15`, color }}>{icon}</Paper>
-      <Typography variant="subtitle2" color="textSecondary" sx={{ fontWeight: 600, letterSpacing: 0.5 }}>{title}</Typography>
+  <Card sx={{ 
+    p: 3, 
+    borderRadius: 4, 
+    height: '100%', 
+    background: 'rgba(255, 255, 255, 0.02)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-4px)',
+      borderColor: color || '#7c4dff',
+      boxShadow: `0 8px 30px ${color}1a`
+    }
+  }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
+      <Paper sx={{ 
+        p: 1.5, 
+        borderRadius: 3, 
+        bgcolor: `${color}1a`, 
+        color,
+        boxShadow: `0 0 15px ${color}15`
+      }}>{icon}</Paper>
+      <Typography variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: 1, color: 'rgba(255,255,255,0.5)' }}>{title}</Typography>
     </Box>
-    <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>{value}</Typography>
-    <Typography variant="caption" color="textSecondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-      <TrendingUpIcon sx={{ fontSize: 14, color: '#4caf50' }} />
+    <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.5, color: '#fff' }}>{value}</Typography>
+    <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'rgba(255,255,255,0.4)' }}>
+      <TrendingUpIcon sx={{ fontSize: 14, color: '#00b4d8' }} />
       {subtitle}
     </Typography>
   </Card>
@@ -786,42 +806,50 @@ export default function AdminPage() {
   }).length;
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f8f9fa' }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#070913', 
+      backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(124, 77, 255, 0.04) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.04) 0%, transparent 40%)',
+      color: '#ffffff',
+      pb: 8
+    }}>
       {/* Header Banner */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #090a0f 0%, #15142b 100%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
           color: 'white',
           pb: 10,
-          pt: 4,
+          pt: 5,
           px: 3,
         }}
       >
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <Box>
-              <Typography variant="overline" sx={{ opacity: 0.8, letterSpacing: 2, fontWeight: 700 }}>
+              <Typography variant="overline" sx={{ color: '#b388ff', letterSpacing: 2, fontWeight: 800 }}>
                 ADMINISTRATION PANEL
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 800, mt: 0.5 }}>
+              <Typography variant="h4" sx={{ fontWeight: 950, mt: 0.5, background: 'linear-gradient(90deg, #fff 0%, #b388ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 Dashboard Overview 🚀
               </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.85, mt: 0.5 }}>
+              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mt: 0.5 }}>
                 Gerencie seus alunos, planos e atividades em um só lugar.
               </Typography>
             </Box>
             <Box sx={{ textAlign: 'right' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{user?.name}</Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8, display: 'block', mb: 1 }}>Administrator</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff' }}>{user?.name}</Typography>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mb: 1.5 }}>Administrator</Typography>
               <Button
                 variant="outlined"
                 size="small"
                 startIcon={<LogoutIcon />}
                 onClick={logout}
                 sx={{
-                  color: 'white',
-                  borderColor: 'rgba(255,255,255,0.5)',
-                  '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.1)' }
+                  color: '#ff5a79',
+                  borderColor: 'rgba(255, 90, 121, 0.4)',
+                  fontWeight: 700,
+                  '&:hover': { borderColor: '#ff5a79', bgcolor: 'rgba(255, 90, 121, 0.05)' }
                 }}
               >
                 Sair
@@ -832,7 +860,14 @@ export default function AdminPage() {
       </Box>
 
       <Container maxWidth="lg" sx={{ mt: -5 }}>
-        <Paper elevation={0} sx={{ borderRadius: 4, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+        <Paper elevation={0} sx={{ 
+          borderRadius: 4, 
+          overflow: 'hidden', 
+          boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+          background: 'rgba(20, 26, 46, 0.45)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255, 255, 255, 0.08)'
+        }}>
           <Tabs
             value={tab}
             onChange={(e, newValue) => setTab(newValue)}
@@ -840,10 +875,10 @@ export default function AdminPage() {
             scrollButtons="auto"
             sx={{
               px: 2,
-              bgcolor: 'white',
-              borderBottom: '1px solid #eee',
-              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
-              '& .MuiTab-root': { py: 2, minHeight: 64, fontWeight: 700, fontSize: '0.9rem' }
+              bgcolor: 'rgba(9, 10, 15, 0.7)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+              '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0', bgcolor: '#7c4dff', boxShadow: '0 0 10px #7c4dff' },
+              '& .MuiTab-root': { py: 2, minHeight: 64, fontWeight: 800, fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', '&.Mui-selected': { color: '#b388ff' } }
             }}
           >
             <Tab icon={<DashboardIcon />} iconPosition="start" label="Visão Geral" />
@@ -853,7 +888,7 @@ export default function AdminPage() {
             <Tab icon={<AssessmentIcon />} iconPosition="start" label="Monitoramento" />
           </Tabs>
 
-          <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'white' }}>
+          <Box sx={{ p: { xs: 2, md: 4 }, bgcolor: 'transparent' }}>
             {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
 
             {/* Tab 0: Visão Geral */}
@@ -892,35 +927,60 @@ export default function AdminPage() {
             {/* Tab 1: Alunos */}
             <TabPanel value={tab} index={1}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>Gestão de Alunos</Typography>
-                <Button variant="contained" startIcon={<PeopleIcon />} onClick={handleOpenCreateStudent} sx={{ borderRadius: 2, px: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: '#fff' }}>Gestão de Alunos 👥</Typography>
+                <Button 
+                  variant="contained" 
+                  startIcon={<PeopleIcon />} 
+                  onClick={handleOpenCreateStudent} 
+                  sx={{ 
+                    borderRadius: 3, 
+                    px: 3, 
+                    background: 'linear-gradient(135deg, #7c4dff 0%, #b388ff 100%)',
+                    boxShadow: '0 4px 15px rgba(124, 77, 255, 0.3)',
+                    fontWeight: 800,
+                    textTransform: 'none',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #b388ff 0%, #7c4dff 100%)',
+                      boxShadow: '0 6px 20px rgba(124, 77, 255, 0.45)'
+                    }
+                  }}
+                >
                   Novo Aluno
                 </Button>
               </Box>
 
-              <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #eee', borderRadius: 3 }}>
+              <TableContainer component={Paper} elevation={0} sx={{ 
+                border: '1px solid rgba(255, 255, 255, 0.08)', 
+                borderRadius: 4,
+                background: 'rgba(255, 255, 255, 0.02)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+              }}>
                 <Table>
-                  <TableHead sx={{ bgcolor: '#fafafa' }}>
+                  <TableHead sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }}>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 700 }}>Nome</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Nível</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Plano</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Ações</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nome</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nível</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Plano</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {students.map((student) => {
                       const enrollment = enrollments.find(e => e.userId === student.id);
                       return (
-                        <TableRow key={student.id} hover>
-                          <TableCell>
+                        <TableRow key={student.id} hover sx={{ 
+                          '&:hover': { bgcolor: 'rgba(255,255,255,0.02) !important' },
+                          '& td': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }
+                        }}>
+                          <TableCell sx={{ color: '#fff' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <Paper sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                              <Paper sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: 'rgba(124, 77, 255, 0.15)', color: '#b388ff', border: '1px solid rgba(124, 77, 255, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
                                 {student.name.charAt(0)}
                               </Paper>
                               <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{student.name}</Typography>
-                                <Typography variant="caption" color="textSecondary">{student.email}</Typography>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{student.name}</Typography>
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{student.email}</Typography>
                               </Box>
                             </Box>
                           </TableCell>
@@ -929,25 +989,26 @@ export default function AdminPage() {
                               label={enrollment?.studentLevel || 'N/A'}
                               size="small"
                               sx={{
-                                fontWeight: 700,
-                                bgcolor: enrollment?.studentLevel === 'Advanced' ? '#e8f5e9' : enrollment?.studentLevel === 'Intermediate' ? '#fff3e0' : '#e3f2fd',
-                                color: enrollment?.studentLevel === 'Advanced' ? '#2e7d32' : enrollment?.studentLevel === 'Intermediate' ? '#e65100' : '#1565c0'
+                                fontWeight: 800,
+                                bgcolor: enrollment?.studentLevel === 'Advanced' ? 'rgba(76, 175, 80, 0.15)' : enrollment?.studentLevel === 'Intermediate' ? 'rgba(255, 152, 0, 0.15)' : 'rgba(33, 150, 243, 0.15)',
+                                color: enrollment?.studentLevel === 'Advanced' ? '#4caf50' : enrollment?.studentLevel === 'Intermediate' ? '#ff9800' : '#2196f3',
+                                border: `1px solid ${enrollment?.studentLevel === 'Advanced' ? 'rgba(76, 175, 80, 0.25)' : enrollment?.studentLevel === 'Intermediate' ? 'rgba(255, 152, 0, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
                               }}
                             />
                           </TableCell>
-                          <TableCell>
-                            <Typography variant="body2">R$ {enrollment?.pricePerClass?.toFixed(2)}/h</Typography>
-                            <Typography variant="caption" color="textSecondary">{enrollment?.classesPerWeek}x por semana</Typography>
+                          <TableCell sx={{ color: 'rgba(255,255,255,0.85)' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>R$ {enrollment?.pricePerClass?.toFixed(2)}/h</Typography>
+                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{enrollment?.classesPerWeek}x por semana</Typography>
                           </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 1 }}>
-                              <IconButton size="small" color="primary" onClick={() => handleOpenEditStudent(student, enrollment)} title="Editar">
+                              <IconButton size="small" onClick={() => handleOpenEditStudent(student, enrollment)} title="Editar" sx={{ color: '#b388ff', '&:hover': { bgcolor: 'rgba(179,136,255,0.1)' } }}>
                                 <EditIcon fontSize="small" />
                               </IconButton>
-                              <IconButton size="small" color="info" onClick={() => { setSelectedMonitorStudent(student); handleViewProgress(student.id); setTab(4); }} title="Monitorar">
+                              <IconButton size="small" onClick={() => { setSelectedMonitorStudent(student); handleViewProgress(student.id); setTab(4); }} title="Monitorar" sx={{ color: '#00b4d8', '&:hover': { bgcolor: 'rgba(0,180,216,0.1)' } }}>
                                 <VisibilityIcon fontSize="small" />
                               </IconButton>
-                              <IconButton size="small" color="error" onClick={() => handleDeleteStudent(student)} title="Excluir">
+                              <IconButton size="small" onClick={() => handleDeleteStudent(student)} title="Excluir" sx={{ color: '#ff5a79', '&:hover': { bgcolor: 'rgba(255,90,121,0.1)' } }}>
                                 <DeleteIcon fontSize="small" />
                               </IconButton>
                             </Box>
@@ -1038,33 +1099,73 @@ export default function AdminPage() {
 
       {/* Atividades Tab */}
       <TabPanel value={tab} index={3}>
-        <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-          <Button variant="contained" onClick={() => setOpenManualExerciseDialog(true)}>
+        <Box sx={{ mb: 3, display: 'flex', gap: 2 }}>
+          <Button 
+            variant="contained" 
+            onClick={() => setOpenManualExerciseDialog(true)}
+            sx={{ 
+              borderRadius: 3, 
+              px: 3, 
+              background: 'linear-gradient(135deg, #7c4dff 0%, #b388ff 100%)',
+              boxShadow: '0 4px 15px rgba(124, 77, 255, 0.3)',
+              fontWeight: 800,
+              textTransform: 'none',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #b388ff 0%, #7c4dff 100%)',
+                boxShadow: '0 6px 20px rgba(124, 77, 255, 0.45)'
+              }
+            }}
+          >
             + Criar Atividade Manualmente
           </Button>
-          <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => setOpenImportDialog(true)}>
+          <Button 
+            variant="outlined" 
+            startIcon={<CloudUploadIcon />} 
+            onClick={() => setOpenImportDialog(true)}
+            sx={{ 
+              borderRadius: 3, 
+              px: 3, 
+              color: '#b388ff', 
+              borderColor: 'rgba(179, 136, 255, 0.4)',
+              fontWeight: 800,
+              textTransform: 'none',
+              '&:hover': {
+                borderColor: '#b388ff',
+                bgcolor: 'rgba(179, 136, 255, 0.05)'
+              }
+            }}
+          >
             Importar JSON
           </Button>
         </Box>
-        <TableContainer component={Card}>
+        <TableContainer component={Paper} elevation={0} sx={{ 
+          border: '1px solid rgba(255, 255, 255, 0.08)', 
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+        }}>
           <Table>
-            <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableHead sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }}>
               <TableRow>
-                <TableCell>Título</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Nível</TableCell>
-                <TableCell>Ações</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Título</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Tipo</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nível</TableCell>
+                <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Ações</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {allExercises.map((ex) => {
-                const typeColors = { quiz: '#1976d2', text: '#43a047', writing: '#9c27b0', 'gap-fill': '#f57c00', 'true-false': '#2e7d32', 'sentence-order': '#f9a825', matching: '#0288d1', flashcards: '#e91e63' };
+                const typeColors = { quiz: '#00b4d8', text: '#4caf50', writing: '#7c4dff', 'gap-fill': '#ff9800', 'true-false': '#4caf50', 'sentence-order': '#e040fb', matching: '#03a9f4', flashcards: '#e91e63' };
                 const typeColor = typeColors[ex.type] || '#666';
                 return (
-                <TableRow key={ex.id}>
-                  <TableCell>
+                <TableRow key={ex.id} hover sx={{ 
+                  '&:hover': { bgcolor: 'rgba(255,255,255,0.02) !important' },
+                  '& td': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#fff' }
+                }}>
+                  <TableCell sx={{ color: '#fff' }}>
                     <Typography variant="body2" fontWeight={700}>{ex.title}</Typography>
-                    <Typography variant="caption" color="text.secondary">ID: {ex.id}</Typography>
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>ID: {ex.id}</Typography>
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -1082,7 +1183,7 @@ export default function AdminPage() {
                           }[ex.type] || ex.type
                         }
                         size="small"
-                        sx={{ bgcolor: `${typeColor}22`, color: typeColor, fontWeight: 700, fontSize: '0.72rem' }}
+                        sx={{ bgcolor: `${typeColor}22`, color: typeColor, border: `1px solid ${typeColor}44`, fontWeight: 700, fontSize: '0.72rem' }}
                       />
                       {/* Quick fix type selector */}
                       <Select
@@ -1094,7 +1195,16 @@ export default function AdminPage() {
                             loadAllExercises();
                           } catch (err) { setError('Erro ao atualizar tipo: ' + err.message); }
                         }}
-                        sx={{ fontSize: '0.72rem', height: 26, '& .MuiSelect-select': { py: 0.3, px: 1 } }}
+                        sx={{ 
+                          fontSize: '0.72rem', 
+                          height: 26, 
+                          color: '#fff',
+                          '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+                          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#b388ff' },
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#7c4dff' },
+                          '& .MuiSvgIcon-root': { color: 'rgba(255,255,255,0.6)' },
+                          '& .MuiSelect-select': { py: 0.3, px: 1 }
+                        }}
                         variant="outlined"
                       >
                         <MenuItem value="text" sx={{ fontSize: '0.8rem' }}>📖 Leitura</MenuItem>
@@ -1108,14 +1218,53 @@ export default function AdminPage() {
                       </Select>
                     </Box>
                   </TableCell>
-                  <TableCell>{ex.level}</TableCell>
-                  <TableCell sx={{ display: 'flex', gap: 1 }}>
-                    <Button size="small" variant="outlined" color="info" onClick={() => { setSelectedExerciseJson(ex); setOpenJsonDialog(true); }}>
-                      Ver JSON
-                    </Button>
-                    <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => handleDeleteExercise(ex.id)}>
-                      Deletar
-                    </Button>
+                  <TableCell>
+                    <Chip
+                      label={ex.level}
+                      size="small"
+                      sx={{
+                        fontWeight: 800,
+                        bgcolor: ex.level === 'Advanced' ? 'rgba(76, 175, 80, 0.15)' : ex.level === 'Intermediate' ? 'rgba(255, 152, 0, 0.15)' : 'rgba(33, 150, 243, 0.15)',
+                        color: ex.level === 'Advanced' ? '#4caf50' : ex.level === 'Intermediate' ? '#ff9800' : '#2196f3',
+                        border: `1px solid ${ex.level === 'Advanced' ? 'rgba(76, 175, 80, 0.25)' : ex.level === 'Intermediate' ? 'rgba(255, 152, 0, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                      <Button 
+                        size="small" 
+                        variant="outlined" 
+                        onClick={() => { setSelectedExerciseJson(ex); setOpenJsonDialog(true); }}
+                        sx={{ 
+                          color: '#00b4d8', 
+                          borderColor: 'rgba(0, 180, 216, 0.4)',
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.05)' }
+                        }}
+                      >
+                        Ver JSON
+                      </Button>
+                      <Button 
+                        size="small" 
+                        variant="outlined"
+                        color="error" 
+                        startIcon={<DeleteIcon />} 
+                        onClick={() => handleDeleteExercise(ex.id)}
+                        sx={{ 
+                          color: '#ff5a79', 
+                          borderColor: 'rgba(255, 90, 121, 0.4)',
+                          fontWeight: 700,
+                          textTransform: 'none',
+                          borderRadius: 2,
+                          '&:hover': { borderColor: '#ff5a79', bgcolor: 'rgba(255, 90, 121, 0.05)' }
+                        }}
+                      >
+                        Deletar
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
                 );
@@ -1680,7 +1829,24 @@ export default function AdminPage() {
 
       {/* Presença Tab */}
       <TabPanel value={tab} index={2}>
-        <Button variant="contained" startIcon={<EventAvailableIcon />} onClick={() => setOpenAttendanceDialog(true)} sx={{ mb: 2 }}>
+        <Button 
+          variant="contained" 
+          startIcon={<EventAvailableIcon />} 
+          onClick={() => setOpenAttendanceDialog(true)} 
+          sx={{ 
+            mb: 3,
+            borderRadius: 3, 
+            px: 3, 
+            background: 'linear-gradient(135deg, #7c4dff 0%, #b388ff 100%)',
+            boxShadow: '0 4px 15px rgba(124, 77, 255, 0.3)',
+            fontWeight: 800,
+            textTransform: 'none',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #b388ff 0%, #7c4dff 100%)',
+              boxShadow: '0 6px 20px rgba(124, 77, 255, 0.45)'
+            }
+          }}
+        >
           Registrar Presença
         </Button>
         
@@ -1720,31 +1886,75 @@ export default function AdminPage() {
           </DialogActions>
         </Dialog>
 
-        <Typography variant="h6" sx={{ mt: 3, mb: 1 }}>Histórico Geral de Presenças</Typography>
-        <TableContainer component={Card}>
+        <Typography variant="h6" sx={{ mt: 2, mb: 2, fontWeight: 900, color: '#fff' }}>Histórico Geral de Presenças 🗓️</Typography>
+        <TableContainer component={Paper} elevation={0} sx={{ 
+          border: '1px solid rgba(255, 255, 255, 0.08)', 
+          borderRadius: 4,
+          background: 'rgba(255, 255, 255, 0.02)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+        }}>
            <Table>
-            <TableHead sx={{ backgroundColor: '#f0f0f0' }}>
+            <TableHead sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }}>
                <TableRow>
-                 <TableCell>Aluno</TableCell>
-                 <TableCell>Data</TableCell>
-                 <TableCell>Hora</TableCell>
-                 <TableCell>Ações</TableCell>
+                 <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Aluno</TableCell>
+                 <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Data</TableCell>
+                 <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Hora</TableCell>
+                 <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Ações</TableCell>
                </TableRow>
             </TableHead>
             <TableBody>
                {globalAttendance.map((att) => (
-                 <TableRow key={att.id}>
-                   <TableCell>{att.user?.name || 'N/A'}</TableCell>
+                 <TableRow key={att.id} hover sx={{ 
+                   '&:hover': { bgcolor: 'rgba(255,255,255,0.02) !important' },
+                   '& td': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#fff' }
+                 }}>
+                   <TableCell sx={{ fontWeight: 700 }}>{att.user?.name || 'N/A'}</TableCell>
                    <TableCell>{new Date(att.date).toLocaleDateString()}</TableCell>
                    <TableCell>{att.time}</TableCell>
-                   <TableCell sx={{ display: 'flex', gap: 1 }}>
-                     <Button size="small" variant="outlined" onClick={() => handleOpenEditAttendance(att)}>Editar</Button>
-                     <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteAttendance(att.id)}>Remover</Button>
+                   <TableCell>
+                     <Box sx={{ display: 'flex', gap: 1 }}>
+                       <Button 
+                         size="small" 
+                         variant="outlined" 
+                         onClick={() => handleOpenEditAttendance(att)}
+                         sx={{ 
+                           color: '#b388ff', 
+                           borderColor: 'rgba(179, 136, 255, 0.4)',
+                           fontWeight: 700,
+                           textTransform: 'none',
+                           borderRadius: 2,
+                           '&:hover': { borderColor: '#b388ff', bgcolor: 'rgba(179, 136, 255, 0.05)' }
+                         }}
+                       >
+                         Editar
+                       </Button>
+                       <Button 
+                         size="small" 
+                         variant="outlined" 
+                         color="error" 
+                         onClick={() => handleDeleteAttendance(att.id)}
+                         sx={{ 
+                           color: '#ff5a79', 
+                           borderColor: 'rgba(255, 90, 121, 0.4)',
+                           fontWeight: 700,
+                           textTransform: 'none',
+                           borderRadius: 2,
+                           '&:hover': { borderColor: '#ff5a79', bgcolor: 'rgba(255, 90, 121, 0.05)' }
+                         }}
+                       >
+                         Remover
+                       </Button>
+                     </Box>
                    </TableCell>
                  </TableRow>
                ))}
                {globalAttendance.length === 0 && (
-                 <TableRow><TableCell colSpan={4} align="center">Nenhuma presença registrada ainda.</TableCell></TableRow>
+                 <TableRow sx={{ '& td': { borderBottom: 'none', color: 'rgba(255,255,255,0.4)' } }}>
+                   <TableCell colSpan={4} align="center" sx={{ py: 4, fontStyle: 'italic' }}>
+                     Nenhuma presença registrada ainda.
+                   </TableCell>
+                 </TableRow>
                )}
             </TableBody>
            </Table>
@@ -1840,39 +2050,95 @@ export default function AdminPage() {
             </Grid>
 
             {/* Exercise History ... same as before but bigger score details */}
-            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>Histórico de Atividades</Typography>
-            <TableContainer component={Card}>
+            <Typography variant="h6" sx={{ mt: 4, mb: 2, fontWeight: 900, color: '#fff' }}>Histórico de Atividades 📝</Typography>
+            <TableContainer component={Paper} elevation={0} sx={{ 
+              border: '1px solid rgba(255, 255, 255, 0.08)', 
+              borderRadius: 4,
+              background: 'rgba(255, 255, 255, 0.02)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+            }}>
               <Table>
-                <TableHead sx={{ backgroundColor: '#f5f5f5' }}>
+                <TableHead sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }}>
                   <TableRow>
-                    <TableCell>Atividade</TableCell>
-                    <TableCell>Tipo</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Acertos</TableCell>
-                    <TableCell>Enviado em</TableCell>
-                    <TableCell>Respostas</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Atividade</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Tipo</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Status</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Acertos</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Enviado em</TableCell>
+                    <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Respostas</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {studentProgress.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>{p.exercise.title}</TableCell>
-                      <TableCell>{p.exercise.type}</TableCell>
+                    <TableRow key={p.id} hover sx={{ 
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.02) !important' },
+                      '& td': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#fff' }
+                    }}>
+                      <TableCell sx={{ fontWeight: 700 }}>{p.exercise.title}</TableCell>
                       <TableCell>
-                        <Chip size="small" label={p.status} color={p.status === 'completed' ? 'success' : 'info'} />
+                        <Chip
+                          size="small"
+                          label={p.exercise.type}
+                          sx={{ 
+                            fontWeight: 700, 
+                            bgcolor: 'rgba(255,255,255,0.05)', 
+                            color: 'rgba(255,255,255,0.7)',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                          }}
+                        />
                       </TableCell>
                       <TableCell>
+                        <Chip 
+                          size="small" 
+                          label={p.status} 
+                          sx={{ 
+                            fontWeight: 800,
+                            bgcolor: p.status === 'completed' ? 'rgba(76, 175, 80, 0.15)' : 'rgba(33, 150, 243, 0.15)',
+                            color: p.status === 'completed' ? '#4caf50' : '#2196f3',
+                            border: `1px solid ${p.status === 'completed' ? 'rgba(76, 175, 80, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
                         {p.status === 'completed' ? `${p.score}/${p.totalQuestions}` : '-'}
                       </TableCell>
                       <TableCell>{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', gap: 1 }}>
                           {p.status === 'completed' && p.result && (
-                            <Button size="small" variant="outlined" onClick={() => { setSelectedProgressEntry(p); setOpenResponseDialog(true); }}>
+                            <Button 
+                              size="small" 
+                              variant="outlined" 
+                              onClick={() => { setSelectedProgressEntry(p); setOpenResponseDialog(true); }}
+                              sx={{ 
+                                color: '#00b4d8', 
+                                borderColor: 'rgba(0, 180, 216, 0.4)',
+                                fontWeight: 700,
+                                textTransform: 'none',
+                                borderRadius: 2,
+                                '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.05)' }
+                              }}
+                            >
                               Ver Respostas
                             </Button>
                           )}
-                          <Button size="small" variant="outlined" color="warning" startIcon={<ReplayIcon />} onClick={() => handleRestartQuiz(p)} title="Zerar e enviar novamente">
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            color="warning" 
+                            startIcon={<ReplayIcon />} 
+                            onClick={() => handleRestartQuiz(p)} 
+                            title="Zerar e enviar novamente"
+                            sx={{ 
+                              color: '#ff9800', 
+                              borderColor: 'rgba(255, 152, 0, 0.4)',
+                              fontWeight: 700,
+                              textTransform: 'none',
+                              borderRadius: 2,
+                              '&:hover': { borderColor: '#ff9800', bgcolor: 'rgba(255, 152, 0, 0.05)' }
+                            }}
+                          >
                             Reiniciar
                           </Button>
                         </Box>
@@ -2018,33 +2284,70 @@ export default function AdminPage() {
                )}
              </Card>
 
-             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>👤 Monitoramento de Alunos</Typography>
-             <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>Selecione um aluno abaixo para ver o histórico individual de atividades e presenças.</Typography>
-             <TableContainer component={Card} sx={{ mt: 3 }}>
+             <Typography variant="h6" sx={{ fontWeight: 900, mb: 0.5, color: '#fff' }}>👤 Monitoramento de Alunos</Typography>
+             <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3 }}>Selecione um aluno abaixo para ver o histórico individual de atividades e presenças.</Typography>
+             <TableContainer component={Paper} elevation={0} sx={{ 
+               border: '1px solid rgba(255, 255, 255, 0.08)', 
+               borderRadius: 4,
+               background: 'rgba(255, 255, 255, 0.02)',
+               backdropFilter: 'blur(10px)',
+               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+               mt: 2
+             }}>
                 <Table>
-                  <TableHead>
+                  <TableHead sx={{ bgcolor: 'rgba(255, 255, 255, 0.04)' }}>
                     <TableRow>
-                      <TableCell>Aluno</TableCell>
-                      <TableCell>Nível</TableCell>
-                      <TableCell>Progresso</TableCell>
-                      <TableCell>Ações</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Aluno</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nível</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Progresso</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {students.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell>{s.name}</TableCell>
-                        <TableCell>{s.enrollments?.[0]?.studentLevel || 'N/A'}</TableCell>
+                      <TableRow key={s.id} hover sx={{ 
+                        '&:hover': { bgcolor: 'rgba(255,255,255,0.02) !important' },
+                        '& td': { borderBottom: '1px solid rgba(255, 255, 255, 0.05)', color: '#fff' }
+                      }}>
+                        <TableCell sx={{ fontWeight: 700 }}>{s.name}</TableCell>
                         <TableCell>
-                           {/* Simplified progress preview */}
-                           Tracking dynamic...
+                          <Chip
+                            label={s.enrollments?.[0]?.studentLevel || 'N/A'}
+                            size="small"
+                            sx={{
+                              fontWeight: 800,
+                              bgcolor: s.enrollments?.[0]?.studentLevel === 'Advanced' ? 'rgba(76, 175, 80, 0.15)' : s.enrollments?.[0]?.studentLevel === 'Intermediate' ? 'rgba(255, 152, 0, 0.15)' : 'rgba(33, 150, 243, 0.15)',
+                              color: s.enrollments?.[0]?.studentLevel === 'Advanced' ? '#4caf50' : s.enrollments?.[0]?.studentLevel === 'Intermediate' ? '#ff9800' : '#2196f3',
+                              border: `1px solid ${s.enrollments?.[0]?.studentLevel === 'Advanced' ? 'rgba(76, 175, 80, 0.25)' : s.enrollments?.[0]?.studentLevel === 'Intermediate' ? 'rgba(255, 152, 0, 0.25)' : 'rgba(33, 150, 243, 0.25)'}`
+                            }}
+                          />
                         </TableCell>
                         <TableCell>
-                           <Button variant="outlined" size="small" onClick={() => {
-                             setSelectedMonitorStudent(s);
-                             handleViewProgress(s.id);
-                             loadAllAttendance(s.id);
-                           }}>Abrir Monitoramento</Button>
+                           {/* Simplified progress preview */}
+                           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>
+                             Monitoramento ativo...
+                           </Typography>
+                        </TableCell>
+                        <TableCell>
+                           <Button 
+                             variant="outlined" 
+                             size="small" 
+                             onClick={() => {
+                               setSelectedMonitorStudent(s);
+                               handleViewProgress(s.id);
+                               loadAllAttendance(s.id);
+                             }}
+                             sx={{ 
+                               color: '#b388ff', 
+                               borderColor: 'rgba(179, 136, 255, 0.4)',
+                               fontWeight: 700,
+                               textTransform: 'none',
+                               borderRadius: 2,
+                               '&:hover': { borderColor: '#b388ff', bgcolor: 'rgba(179, 136, 255, 0.05)' }
+                             }}
+                           >
+                             Abrir Monitoramento
+                           </Button>
                         </TableCell>
                       </TableRow>
                     ))}

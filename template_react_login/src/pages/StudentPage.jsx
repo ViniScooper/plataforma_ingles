@@ -18,8 +18,12 @@ import {
   TextField,
   InputAdornment,
   ThemeProvider,
-  createTheme
+  createTheme,
+  Menu,
+  MenuItem,
+  IconButton
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
@@ -165,6 +169,12 @@ export default function StudentPage() {
   
   // Dashboard Tabs: 0 = Atividades, 1 = Jogos, 2 = Histórico
   const [dashboardTab, setDashboardTab] = useState(0);
+  
+  // Mobile Hamburger Menu States
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const isMenuOpen = Boolean(menuAnchorEl);
+  const handleOpenMenu = (event) => setMenuAnchorEl(event.currentTarget);
+  const handleCloseMenu = () => setMenuAnchorEl(null);
   
   // Activity Filters (sub-tab)
   const [activityTab, setActivityTab] = useState(0);
@@ -597,10 +607,11 @@ export default function StudentPage() {
               {/* Logo / Brand */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <img
-                  src="/Gemini_Generated_Image_ktr3aktr3aktr3ak.png"
-                  alt="Vnglish"
+                  src="/quest_english_logo.png"
+                  alt="Quest English"
                   style={{
                     height: '38px',
+                    mixBlendMode: 'screen',
                     filter: 'drop-shadow(0 2px 10px rgba(0,180,216,0.3))'
                   }}
                 />
@@ -613,16 +624,16 @@ export default function StudentPage() {
                   letterSpacing: 0.5,
                   display: { xs: 'none', sm: 'block' }
                 }}>
-                  VNGLISH
+                  QUEST ENGLISH
                 </Typography>
               </Box>
 
-              {/* Center Navigation - Tabs style */}
-              <Box sx={{ display: 'flex', gap: 1.5 }}>
+              {/* Center Navigation - Desktop view */}
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1.5 }}>
                 <Button
                   onClick={() => setDashboardTab(0)}
                   sx={{
-                    px: { xs: 1.8, sm: 3 },
+                    px: 3,
                     py: 1,
                     borderRadius: 3,
                     bgcolor: dashboardTab === 0 ? 'rgba(0, 180, 216, 0.12)' : 'transparent',
@@ -640,7 +651,7 @@ export default function StudentPage() {
                 <Button
                   onClick={() => setDashboardTab(1)}
                   sx={{
-                    px: { xs: 1.8, sm: 3 },
+                    px: 3,
                     py: 1,
                     borderRadius: 3,
                     bgcolor: dashboardTab === 1 ? 'rgba(179, 136, 255, 0.12)' : 'transparent',
@@ -658,7 +669,7 @@ export default function StudentPage() {
                 <Button
                   onClick={() => setDashboardTab(2)}
                   sx={{
-                    px: { xs: 1.8, sm: 3 },
+                    px: 3,
                     py: 1,
                     borderRadius: 3,
                     bgcolor: dashboardTab === 2 ? 'rgba(72, 199, 142, 0.12)' : 'transparent',
@@ -675,12 +686,69 @@ export default function StudentPage() {
                 </Button>
               </Box>
 
-              {/* User logout */}
+              {/* Mobile Hamburger Menu */}
+              <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+                <IconButton
+                  onClick={handleOpenMenu}
+                  sx={{ 
+                    color: '#fff', 
+                    border: '1px solid rgba(255,255,255,0.1)', 
+                    borderRadius: 2.5,
+                    p: 1
+                  }}
+                >
+                  <MenuIcon />
+                </IconButton>
+                <Menu
+                  anchorEl={menuAnchorEl}
+                  open={isMenuOpen}
+                  onClose={handleCloseMenu}
+                  PaperProps={{
+                    style: {
+                      background: 'rgba(13, 27, 42, 0.95)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: 12,
+                      color: '#fff',
+                      minWidth: 160
+                    }
+                  }}
+                >
+                  <MenuItem 
+                    onClick={() => { setDashboardTab(0); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 0 ? '#00b4d8' : '#fff', gap: 10 }}
+                  >
+                    <SchoolIcon fontSize="small" /> Atividades
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { setDashboardTab(1); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 1 ? '#b388ff' : '#fff', gap: 10 }}
+                  >
+                    <SportsEsportsIcon fontSize="small" /> Jogos
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { setDashboardTab(2); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 2 ? '#48c78e' : '#fff', gap: 10 }}
+                  >
+                    <EventAvailableIcon fontSize="small" /> Histórico
+                  </MenuItem>
+                  <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
+                  <MenuItem 
+                    onClick={() => { logout(); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: '#ff5a79', gap: 10 }}
+                  >
+                    <LogoutIcon fontSize="small" /> Sair
+                  </MenuItem>
+                </Menu>
+              </Box>
+
+              {/* Desktop Logout Button */}
               <Button
                 variant="outlined"
                 onClick={logout}
                 size="small"
                 sx={{
+                  display: { xs: 'none', md: 'inline-flex' },
                   borderColor: 'rgba(255, 255, 255, 0.12)',
                   color: 'rgba(255,255,255,0.7)',
                   borderRadius: 2.5,

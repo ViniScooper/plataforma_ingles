@@ -153,6 +153,7 @@ export default function LoginPage() {
           width: 180px;
           height: auto;
           object-fit: contain;
+          mix-blend-mode: screen;
           filter: drop-shadow(0 4px 24px rgba(0, 180, 216, 0.3));
           animation: logoPulse 3s ease-in-out infinite;
         }
@@ -317,8 +318,8 @@ export default function LoginPage() {
           <div className="logo-section">
             <img
               className="logo-img"
-              src="/Gemini_Generated_Image_ktr3aktr3aktr3ak.png"
-              alt="Vnglish – Plataforma de Inglês"
+              src="/quest_english_logo.png"
+              alt="Quest English – Plataforma de Inglês"
             />
             <span className="login-subtitle">Acesse sua conta</span>
           </div>
@@ -372,7 +373,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="footer-text">Vnglish © {new Date().getFullYear()} · Plataforma de Inglês</p>
+          <p className="footer-text">Quest English © {new Date().getFullYear()} · Plataforma de Inglês</p>
         </div>
       </div>
     </>

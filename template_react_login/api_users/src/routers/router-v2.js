@@ -51,21 +51,79 @@ router.delete('/attendance/:id', verifyToken, verifyAdmin, handlers.deleteAttend
 const gameRooms = new Map();
 const gameInvites = new Map();
 
-const getNewQuestion = () => {
-  const BATTLE_QUESTIONS = [
-    { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"] },
-    { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"] },
-    { q: "Qual o antônimo de 'Happy'?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"] },
-    { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"] },
-    { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"] },
-    { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"] },
-    { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"] },
-    { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"] },
-    { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"] },
-    { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"] }
-  ];
-  const idx = Math.floor(Math.random() * BATTLE_QUESTIONS.length);
-  return { idx, ...BATTLE_QUESTIONS[idx] };
+const BATTLE_QUESTIONS = [
+  { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"], level: 1 },
+  { q: "Qual o antônimo de 'Happy' (Feliz)?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"], level: 1 },
+  { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"], level: 1 },
+  { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"], level: 1 },
+  { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"], level: 1 },
+  { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"], level: 1 },
+  { q: "Qual a palavra correta para 'Espada'?", a: "Sword", options: ["Shield", "Sword", "Spear", "Bow"], level: 1 },
+  { q: "Como se diz 'Castelo' em inglês?", a: "Castle", options: ["Kingdom", "Palace", "Castle", "Fortress"], level: 1 },
+  { q: "Como se diz 'Floresta' em inglês?", a: "Forest", options: ["Desert", "Forest", "Mountain", "River"], level: 1 },
+  { q: "O que é 'Treasure'?", a: "Tesouro", options: ["Ouro", "Tesouro", "Moeda", "Baú"], level: 1 },
+  { q: "Como se diz 'Chave' em inglês?", a: "Key", options: ["Door", "Lock", "Key", "Chest"], level: 1 },
+  { q: "Como se diz 'Gelo' em inglês?", a: "Ice", options: ["Fire", "Ice", "Water", "Wind"], level: 1 },
+  { q: "Qual o significado de 'Ring'?", a: "Anel", options: ["Colar", "Pulseira", "Anel", "Brinco"], level: 1 },
+  { q: "Como se traduz 'Victory'?", a: "Vitória", options: ["Vitória", "Derrota", "Empate", "Combate"], level: 1 },
+  { q: "Como se diz 'Dourado' em inglês?", a: "Golden", options: ["Gold", "Golden", "Yellow", "Gilded"], level: 1 },
+  { q: "Como traduzir: 'Open the gate'?", a: "Abra o portão", options: ["Abra a porta", "Abra o portão", "Feche a porta", "Destranque o baú"], level: 1 },
+  { q: "Qual a palavra em inglês para 'Ponte'?", a: "Bridge", options: ["River", "Bridge", "Road", "Tunnel"], level: 1 },
+  { q: "Como se escreve 'Feitiço' em inglês?", a: "Spell", options: ["Spell", "Magic", "Charm", "Hex"], level: 1 },
+  { q: "O que significa a palavra 'Shield'?", a: "Escudo", options: ["Armadura", "Espada", "Escudo", "Capacete"], level: 1 },
+  { q: "Como se diz 'Monstro' em inglês?", a: "Monster", options: ["Creature", "Beast", "Monster", "Goblin"], level: 1 },
+  { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"], level: 2 },
+  { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"], level: 2 },
+  { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"], level: 2 },
+  { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"], level: 2 },
+  { q: "Como se diz 'Poção de Vida' em inglês?", a: "Health Potion", options: ["Life Drink", "Healing Potion", "Health Potion", "Mana Flask"], level: 2 },
+  { q: "Complete: 'I have ___ money to buy a new armor.'", a: "enough", options: ["enough", "many", "very", "too much"], level: 2 },
+  { q: "O que significa 'Quest'?", a: "Missão", options: ["Perguntar", "Missão", "Batalha", "Castelo"], level: 2 },
+  { q: "Qual é o significado de 'Darkness'?", a: "Escuridão", options: ["Luz", "Escuridão", "Morte", "Medo"], level: 2 },
+  { q: "Complete: 'If you want to defeat the slime, you ___ use fire.'", a: "should", options: ["should", "are", "do", "have"], level: 2 },
+  { q: "O que significa o verbo 'To heal'?", a: "Curar", options: ["Correr", "Curar", "Machucar", "Combater"], level: 2 },
+  { q: "Como traduzir: 'Beware of the trap'?", a: "Cuidado com a armadilha", options: ["Fuja do monstro", "Cuidado com a armadilha", "Pegue o tesouro", "Encontre a saída"], level: 2 },
+  { q: "Qual o antônimo de 'Weak' (Fraco)?", a: "Strong", options: ["Strong", "Tough", "Heavy", "Fast"], level: 2 },
+  { q: "Complete: 'I can't read this map, it is in another ___.'", a: "language", options: ["language", "country", "speak", "writing"], level: 2 },
+  { q: "Complete: 'They ___ fighting the giant boss now!'", a: "are", options: ["is", "are", "was", "were"], level: 2 },
+  { q: "Complete: 'She ___ have a sword, she uses a magic wand.'", a: "doesn't", options: ["don't", "doesn't", "isn't", "hasn't"], level: 2 },
+  { q: "Qual o significado de 'Fear'?", a: "Medo", options: ["Coragem", "Medo", "Monstro", "Raiva"], level: 2 },
+  { q: "Como se diz 'Vender' em inglês?", a: "Sell", options: ["Buy", "Sell", "Trade", "Give"], level: 2 },
+  { q: "Complete: 'There is ___ apple on the table.'", a: "an", options: ["a", "an", "the", "some"], level: 2 },
+  { q: "O que significa 'Bow' no contexto de combate/armas?", a: "Arco", options: ["Flecha", "Espada", "Arco", "Adaga"], level: 2 },
+  { q: "Como se diz 'Guerreiro' em inglês?", a: "Warrior", options: ["Mage", "Knight", "Warrior", "Thief"], level: 2 },
+  { q: "Como traduzir: 'The dragon is flying above the castle'?", a: "O dragão está voando acima do castelo", options: ["O dragão está voando acima do castelo", "O dragão está dormindo no castelo", "O dragão atacou o castelo", "O dragão fugiu do castelo"], level: 3 },
+  { q: "Qual o passado do verbo 'Buy' (Comprar)?", a: "Bought", options: ["Buyed", "Bought", "Brought", "Bin"], level: 3 },
+  { q: "Como traduzir: 'He is the king of this land'?", a: "Ele é o rei desta terra", options: ["Ele é o rei desta terra", "Ele quer reinar esta terra", "Ele protege esta terra", "Ele é o guerreiro desta terra"], level: 3 },
+  { q: "Complete: 'We must walk ___ the dark cave.'", a: "through", options: ["through", "across", "about", "above"], level: 3 },
+  { q: "Qual a tradução de 'Knight'?", a: "Cavaleiro", options: ["Noite", "Rei", "Guerreiro", "Cavaleiro"], level: 3 },
+  { q: "Qual o passado de 'Find' (Encontrar)?", a: "Found", options: ["Finded", "Found", "Founded", "Fund"], level: 3 },
+  { q: "Complete: '___ you ready to enter the dungeon?'", a: "Are", options: ["Is", "Do", "Are", "Have"], level: 3 },
+  { q: "Traduzir: 'The sun rises in the east'", a: "O sol nasce no leste", options: ["O sol nasce no leste", "O sol brilha no leste", "O sol se põe no leste", "A lua nasce no leste"], level: 3 },
+  { q: "Qual o plural de 'Wolf' (Lobo)?", a: "Wolves", options: ["Wolfs", "Wolves", "Wolfes", "Wolverines"], level: 3 },
+  { q: "Complete: 'We need to make a ___ to rest.'", a: "camp", options: ["camp", "tent", "house", "fire"], level: 3 },
+  { q: "O que significa a palavra 'Arrow'?", a: "Flecha", options: ["Arco", "Flecha", "Escudo", "Lança"], level: 3 },
+  { q: "Como se diz 'Perigo' em inglês?", a: "Danger", options: ["Safety", "Hazard", "Danger", "Risk"], level: 3 },
+  { q: "Qual o oposto de 'Light' (Claro/Luz)?", a: "Dark", options: ["Shadow", "Dark", "Heavy", "Bright"], level: 3 },
+  { q: "Complete: 'He is the ___ wizard in the school.'", a: "smartest", options: ["smartest", "smarter", "more smart", "most smart"], level: 3 },
+  { q: "Complete: 'I have never ___ a dragon before.'", a: "seen", options: ["see", "saw", "seen", "seeing"], level: 3 },
+  { q: "O que significa o verbo 'To steal'?", a: "Roubar", options: ["Comprar", "Roubar", "Pegar", "Guardar"], level: 3 },
+  { q: "Complete: 'You should not go there ___ night.'", a: "at", options: ["in", "on", "at", "during"], level: 3 },
+  { q: "Qual o passado de 'Fight' (Lutar)?", a: "Fought", options: ["Fighted", "Fought", "Foughted", "Figh"], level: 3 },
+  { q: "Complete: 'This sword is made ___ steel.'", a: "of", options: ["of", "by", "from", "with"], level: 3 },
+  { q: "O que significa 'To escape'?", a: "Escapar", options: ["Entrar", "Lutar", "Escapar", "Esconder"], level: 3 }
+];
+
+const getNewQuestion = (stage = 1) => {
+  const candidates = BATTLE_QUESTIONS.filter(q => q.level === stage);
+  if (candidates.length === 0) {
+    const idx = Math.floor(Math.random() * BATTLE_QUESTIONS.length);
+    return { idx, ...BATTLE_QUESTIONS[idx] };
+  }
+  const idxInFiltered = Math.floor(Math.random() * candidates.length);
+  const selectedQ = candidates[idxInFiltered];
+  const globalIdx = BATTLE_QUESTIONS.findIndex(q => q.q === selectedQ.q);
+  return { idx: globalIdx, ...selectedQ };
 };
 
 // Create Room
@@ -122,7 +180,7 @@ router.post('/games/join', (req, res) => {
     avatar: playerName.substring(0, 2).toUpperCase()
   };
   
-  roomState.currentQuests[playerId] = getNewQuestion();
+  roomState.currentQuests[playerId] = getNewQuestion(roomState.stage);
   roomState.combatLog.push(`${playerName} entrou no combate!`);
   roomState.lastActive = Date.now();
   
@@ -161,19 +219,6 @@ router.post('/games/action', (req, res) => {
   if (roomState.status !== 'active') {
     return res.status(400).json({ error: 'Combate já foi concluído!' });
   }
-
-  const BATTLE_QUESTIONS = [
-    { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"] },
-    { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"] },
-    { q: "Qual o antônimo de 'Happy'?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"] },
-    { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"] },
-    { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"] },
-    { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"] },
-    { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"] },
-    { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"] },
-    { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"] },
-    { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"] }
-  ];
 
   const quest = BATTLE_QUESTIONS[questionIdx];
   const player = roomState.players[playerId];
@@ -233,7 +278,7 @@ router.post('/games/action', (req, res) => {
     }
   }
   
-  roomState.currentQuests[playerId] = getNewQuestion();
+  roomState.currentQuests[playerId] = getNewQuestion(roomState.stage);
   
   res.status(200).json({ state: roomState });
 });
@@ -369,7 +414,7 @@ router.post('/games/invite/accept', verifyToken, (req, res) => {
     avatar: (guestName || 'Convidado').substring(0, 2).toUpperCase()
   };
   
-  roomState.currentQuests[guestId] = getNewQuestion();
+  roomState.currentQuests[guestId] = getNewQuestion(roomState.stage);
   roomState.combatLog.push(`${guestName} aceitou o convite e entrou no combate!`);
   roomState.lastActive = Date.now();
   
