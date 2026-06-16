@@ -1331,6 +1331,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         console.warn('Lobby sync error:', err.message);
         if (err.response?.status === 404) {
           setCoopSubState('choice');
+          setBattleStatus('menu');
           setCoopError(err.response?.data?.error || 'A sala foi fechada, o convite foi recusado ou expirou.');
           playRetroSound('defeat', soundOn);
           clearInterval(pollInterval);
