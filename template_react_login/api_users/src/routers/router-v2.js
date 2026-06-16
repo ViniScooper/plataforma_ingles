@@ -157,7 +157,8 @@ router.post('/games/create', (req, res) => {
       [playerId]: {
         name: playerName,
         hp: 100,
-        avatar: playerName.substring(0, 2).toUpperCase()
+        avatar: playerName.substring(0, 2).toUpperCase(),
+        consecutiveCorrect: 0
       }
     },
     currentQuests: {
@@ -191,7 +192,8 @@ router.post('/games/join', (req, res) => {
   roomState.players[playerId] = {
     name: playerName,
     hp: 100,
-    avatar: playerName.substring(0, 2).toUpperCase()
+    avatar: playerName.substring(0, 2).toUpperCase(),
+    consecutiveCorrect: 0
   };
   
   roomState.currentQuests[playerId] = getNewQuestion(roomState.stage);
@@ -222,7 +224,7 @@ router.get('/games/status/:roomCode', (req, res) => {
 
 // Submit Answer
 router.post('/games/action', (req, res) => {
-  const { roomCode, playerId, option, questionIdx } = req.body;
+  const { roomCode, playerId, option, questionIdx, isTimeout } = req.body;
   const upperCode = (roomCode || '').trim().toUpperCase();
   const roomState = gameRooms.get(upperCode);
   
@@ -241,7 +243,7 @@ router.post('/games/action', (req, res) => {
     return res.status(400).json({ error: 'Jogador não está na sala!' });
   }
   
-  const isCorrect = option === quest.a;
+  const isCorrect = !isTimeout && option === quest.a;
   roomState.lastActive = Date.now();
   
   if (isCorrect) {
@@ -249,14 +251,43 @@ router.post('/games/action', (req, res) => {
     roomState.monsterHp = Math.max(roomState.monsterHp - damage, 0);
     roomState.combatLog.unshift(`⚔️ ${player.name} acertou! Golpe de ${damage} no monstro.`);
     
-    roomState.actionTrigger = {
-      type: 'attack',
-      playerId,
-      playerName: player.name,
-      damage,
-      target: 'monster',
-      timestamp: Date.now()
-    };
+    // Combo Counter
+    player.consecutiveCorrect = (player.consecutiveCorrect || 0) + 1;
+    let revivedPlayerId = null;
+    let revivedPlayerName = '';
+
+    if (player.consecutiveCorrect === 4) {
+      player.consecutiveCorrect = 0; // reset
+      const deadEntry = Object.entries(roomState.players).find(([id, p]) => p.hp === 0);
+      if (deadEntry) {
+        const [deadId, deadPlayer] = deadEntry;
+        deadPlayer.hp = 50; // Revived with 50 HP!
+        deadPlayer.consecutiveCorrect = 0;
+        revivedPlayerId = deadId;
+        revivedPlayerName = deadPlayer.name;
+        roomState.combatLog.unshift(`😇 RESSURREIÇÃO! ${player.name} acertou 4 seguidas e reviveu ${deadPlayer.name} com 50 HP!`);
+      }
+    }
+
+    if (revivedPlayerId) {
+      roomState.actionTrigger = {
+        type: 'revive',
+        playerId: revivedPlayerId,
+        playerName: revivedPlayerName,
+        damage: 0,
+        target: 'player',
+        timestamp: Date.now()
+      };
+    } else {
+      roomState.actionTrigger = {
+        type: 'attack',
+        playerId,
+        playerName: player.name,
+        damage,
+        target: 'monster',
+        timestamp: Date.now()
+      };
+    }
     
     if (roomState.monsterHp === 0) {
       if (roomState.stage < 3) {
@@ -272,9 +303,17 @@ router.post('/games/action', (req, res) => {
       }
     }
   } else {
-    const damage = roomState.stage === 1 ? 15 : roomState.stage === 2 ? 20 : 25;
+    player.consecutiveCorrect = 0; // Reset combo counter on wrong answer or timeout!
+    const damage = isTimeout
+      ? (roomState.stage === 1 ? 5 : roomState.stage === 2 ? 10 : 15)
+      : (roomState.stage === 1 ? 15 : roomState.stage === 2 ? 20 : 25);
     player.hp = Math.max(player.hp - damage, 0);
-    roomState.combatLog.unshift(`💥 ${player.name} errou e recebeu ${damage} de dano.`);
+    
+    if (isTimeout) {
+      roomState.combatLog.unshift(`⏰ Tempo esgotado para ${player.name}! Recebeu ${damage} de dano do monstro.`);
+    } else {
+      roomState.combatLog.unshift(`💥 ${player.name} errou e recebeu ${damage} de dano.`);
+    }
     
     roomState.actionTrigger = {
       type: 'attack',
@@ -358,7 +397,8 @@ router.post('/games/invite', verifyToken, async (req, res) => {
       [hostId]: {
         name: hostName || 'Aluno',
         hp: 100,
-        avatar: (hostName || 'Aluno').substring(0, 2).toUpperCase()
+        avatar: (hostName || 'Aluno').substring(0, 2).toUpperCase(),
+        consecutiveCorrect: 0
       }
     },
     currentQuests: {
@@ -425,7 +465,8 @@ router.post('/games/invite/accept', verifyToken, (req, res) => {
   roomState.players[guestId] = {
     name: guestName || 'Convidado',
     hp: 100,
-    avatar: (guestName || 'Convidado').substring(0, 2).toUpperCase()
+    avatar: (guestName || 'Convidado').substring(0, 2).toUpperCase(),
+    consecutiveCorrect: 0
   };
   
   roomState.currentQuests[guestId] = getNewQuestion(roomState.stage);

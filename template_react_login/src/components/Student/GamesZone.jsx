@@ -728,6 +728,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const [currentQuestIdx, setCurrentQuestIdx] = useState(0);
   const [battleStatus, setBattleStatus] = useState('active');
   const [coopPlayers, setCoopPlayers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(13);
+  const [isTimerPaused, setIsTimerPaused] = useState(false);
 
   // --- Pixel Command Quest States ---
   const [cmdText, setCmdText] = useState('');
@@ -1066,6 +1068,82 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     return () => clearInterval(inviteInterval);
   }, [userId, activeGame, rpgMode, coopSubState, battleStatus]);
 
+  // Question Timer Effect
+  useEffect(() => {
+    if (battleStatus !== 'active' || isTimerPaused) return;
+    
+    // In co-op, if I am dead, I don't have a timer running
+    if (rpgMode === 'coop' && (coopPlayers[userId]?.hp ?? 100) === 0) return;
+
+    setTimeLeft(13);
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          handleQuestionTimeout();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [battleStatus, currentQuestIdx, rpgMode, isTimerPaused]);
+
+  const handleQuestionTimeout = async () => {
+    if (battleStatus !== 'active') return;
+    playRetroSound('hit', soundOn);
+
+    if (rpgMode === 'coop') {
+      setIsTimerPaused(true);
+      try {
+        const response = await apiClient.post('/games/action', {
+          roomCode,
+          playerId: String(userId),
+          option: null,
+          questionIdx: currentQuestIdx,
+          isTimeout: true
+        });
+        const state = response.data.state;
+        setCoopPlayers(state.players);
+        setBattleLog(state.combatLog);
+        setEnemyHp(state.monsterHp);
+        setMaxEnemyHp(state.maxMonsterHp);
+        setBattleStage(state.stage);
+        setBattleStatus(state.status);
+        
+        const myQuest = state.currentQuests?.[userId];
+        if (myQuest) {
+          setCurrentQuestIdx(myQuest.idx);
+        }
+      } catch (err) {
+        console.error('Timeout action error:', err.message);
+      } finally {
+        setIsTimerPaused(false);
+      }
+    } else {
+      // Solo Timeout
+      const damage = battleStage === 1 ? 5 : battleStage === 2 ? 10 : 15;
+      const newHeroHp = Math.max(heroHp - damage, 0);
+      setHeroHp(newHeroHp);
+      
+      triggerSoloAttackAnimation(false); // monster attacks hero
+      setBattleLog(prev => [`⏰ Tempo esgotado! Recebeu ${damage} de dano do monstro.`, ...prev]);
+
+      if (newHeroHp === 0) {
+        setBattleStatus('defeat');
+        playRetroSound('defeat', soundOn);
+      } else {
+        // Select next question
+        const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === battleStage);
+        const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
+        const globalIdx = BATTLE_QUESTIONS.findIndex(quest => quest.q === selectedQ.q);
+        setCurrentQuestIdx(globalIdx);
+      }
+    }
+  };
+
   const handleCreateCoopRoom = async () => {
     playRetroSound('select', soundOn);
     setCoopError('');
@@ -1176,7 +1254,9 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           const pIds = Object.keys(state.players);
           const isPlayer1 = pIds[0] === trigger.playerId;
           
-          if (trigger.target === 'monster') {
+          if (trigger.type === 'revive') {
+            triggerReviveSync(isPlayer1, trigger.playerName);
+          } else if (trigger.target === 'monster') {
             triggerAttackSync(true, isPlayer1, trigger.playerName, trigger.damage);
           } else {
             triggerAttackSync(false, isPlayer1, trigger.playerName, trigger.damage);
@@ -1218,6 +1298,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   // RPG Combat Submission Action (Solo vs Co-op)
   const handleRpgAnswerSubmit = async (option) => {
     if (battleStatus !== 'active') return;
+    setIsTimerPaused(true);
 
     if (rpgMode === 'coop') {
       // Send co-op action to express in-memory engine
@@ -1244,6 +1325,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
       } catch (err) {
         console.error('Action submission error:', err.message);
+      } finally {
+        setIsTimerPaused(false);
       }
     } else {
       // Solo mode logic
@@ -1269,10 +1352,16 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               setBattleLog(prev => [`🎉 Estágio ${battleStage} vencido! Nova ameaça surge...`, ...prev]);
               animRef.current.enemyX = 280;
               animRef.current.enemyState = 'stand';
+              
+              // Select next question
+              const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === nextStage);
+              const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
+              const globalIdx = BATTLE_QUESTIONS.findIndex(quest => quest.q === selectedQ.q);
+              setCurrentQuestIdx(globalIdx);
+              setIsTimerPaused(false);
             }, 1000);
           } else {
             setBattleStatus('victory');
-            state.heroState = 'victory';
             playRetroSound('victory', soundOn);
             onEarnXP(100);
           }
@@ -1404,6 +1493,42 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
       }, 25);
     }
+  };
+
+  const triggerReviveSync = (isPlayer1, pName) => {
+    const state = animRef.current;
+    playRetroSound('victory', soundOn);
+    
+    if (isPlayer1) state.hero1State = 'victory';
+    else state.hero2State = 'victory';
+    
+    const targetX = isPlayer1 ? state.hero1X : state.hero2X;
+    const targetY = isPlayer1 ? 85 : 90;
+    
+    for (let i = 0; i < 20; i++) {
+      state.particles.push({
+        x: targetX + 15 + Math.random() * 15,
+        y: targetY - 10 + Math.random() * 20,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -2 - Math.random() * 3,
+        size: 3 + Math.random() * 3,
+        color: '#48c78e',
+        life: 30 + Math.floor(Math.random() * 10)
+      });
+    }
+    
+    state.damageTexts.push({
+      text: `REVIVIDO!`,
+      x: targetX + 10,
+      y: 50,
+      color: '#48c78e',
+      life: 45
+    });
+    
+    setTimeout(() => {
+      state.hero1State = 'stand';
+      state.hero2State = 'stand';
+    }, 1500);
   };
 
   // Solo Animation Trigger
@@ -1544,14 +1669,22 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         if (p1Hp === 0) {
           p1Sprite = SPRITE_KNIGHT_STAND;
           p1Y = 85;
+          ctx.save();
+          ctx.globalAlpha = 0.4;
+          drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          ctx.restore();
+          
+          ctx.fillStyle = '#ff5a79';
+          ctx.font = 'bold 8px "Outfit", sans-serif';
+          ctx.fillText('💀 MORREU', state.hero1X + 2, p1Y - 8);
+        } else {
+          let flashP1 = state.hero1State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
+          ctx.save();
+          if (flashP1) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+          drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          ctx.restore();
         }
         
-        let flashP1 = state.hero1State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
-        ctx.save();
-        if (flashP1) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
-        drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
-        ctx.restore();
-
         // Draw Player 2 (if present)
         if (Object.keys(coopPlayers).length > 1) {
           const p2Hp = Object.values(coopPlayers)[1]?.hp ?? 100;
@@ -1561,13 +1694,21 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           if (p2Hp === 0) {
             p2Sprite = SPRITE_KNIGHT_STAND;
             p2Y = 90;
+            ctx.save();
+            ctx.globalAlpha = 0.4;
+            drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
+            ctx.restore();
+            
+            ctx.fillStyle = '#ff5a79';
+            ctx.font = 'bold 8px "Outfit", sans-serif';
+            ctx.fillText('💀 MORREU', state.hero2X + 2, p2Y - 8);
+          } else {
+            let flashP2 = state.hero2State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
+            ctx.save();
+            if (flashP2) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+            drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
+            ctx.restore();
           }
-
-          let flashP2 = state.hero2State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
-          ctx.save();
-          if (flashP2) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
-          drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
-          ctx.restore();
         }
       } else {
         // Draw Solo Knight
@@ -3055,11 +3196,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     {/* Combat HP Indicators */}
                     <Box sx={{ display: 'flex', width: '100%', maxWidth: 400, justifyContent: 'space-between', px: 1, mt: 1.2 }}>
                       {rpgMode === 'coop' ? (
-                        Object.values(coopPlayers).map((p, idx) => (
-                          <Typography key={idx} variant="caption" sx={{ fontWeight: 800, color: '#48c78e' }}>
-                            {p.name.substring(0,8).toUpperCase()}: {p.hp}/100 HP
-                          </Typography>
-                        ))
+                        Object.entries(coopPlayers).map(([id, p]) => {
+                          const isDead = p.hp === 0;
+                          return (
+                            <Typography key={id} variant="caption" sx={{ fontWeight: 800, color: isDead ? '#ff5a79' : '#48c78e' }}>
+                              {p.name.substring(0,8).toUpperCase()}: {isDead ? '💀 MORREU' : `${p.hp}/100 HP`}
+                              {!isDead && p.consecutiveCorrect > 0 && ` (Combo: ${p.consecutiveCorrect}/4 🔥)`}
+                            </Typography>
+                          );
+                        })
                       ) : (
                         <Typography variant="caption" sx={{ fontWeight: 800, color: '#48c78e' }}>
                           HERO: {heroHp} / 100 HP
@@ -3123,12 +3268,32 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 ) : (
                   <Box sx={{ animation: 'fadeIn 0.4s ease' }}>
                     <Box sx={{ p: 3, bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.05)' : 'rgba(0, 180, 216, 0.05)', borderLeft: `4px solid ${rpgMode === 'coop' ? '#b388ff' : '#00b4d8'}`, borderRadius: 3, mb: 3 }}>
-                      <Typography variant="caption" sx={{ color: rpgMode === 'coop' ? '#b388ff' : '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 1 }}>
-                        ⚔️ VOCABULARY QUEST
-                      </Typography>
-                      <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                        <Typography variant="caption" sx={{ color: rpgMode === 'coop' ? '#b388ff' : '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                          ⚔️ VOCABULARY QUEST
+                        </Typography>
+                        <Chip
+                          label={`${timeLeft}s ⏱️`}
+                          size="small"
+                          color={timeLeft <= 4 ? "error" : "default"}
+                          sx={{ 
+                            fontWeight: 800, 
+                            height: 20, 
+                            fontSize: '0.75rem',
+                            bgcolor: timeLeft <= 4 ? '#ff5a79' : 'rgba(255,255,255,0.06)',
+                            color: '#fff'
+                          }}
+                        />
+                      </Box>
+                      <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff', mb: 2.5 }}>
                         {BATTLE_QUESTIONS[currentQuestIdx].q}
                       </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={(timeLeft / 13) * 100}
+                        color={timeLeft <= 4 ? "error" : rpgMode === 'coop' ? "secondary" : "primary"}
+                        sx={{ height: 6, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.05)' }}
+                      />
                     </Box>
 
                     <Grid container spacing={2}>
