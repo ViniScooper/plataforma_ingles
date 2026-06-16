@@ -353,6 +353,21 @@ router.get('/games/active', verifyToken, verifyAdmin, (req, res) => {
   res.status(200).json(activeRooms);
 });
 
+// Admin Endpoint: Delete/Kill an active game room
+router.delete('/games/active/:roomCode', verifyToken, verifyAdmin, (req, res) => {
+  const { roomCode } = req.params;
+  const upperCode = (roomCode || '').trim().toUpperCase();
+  
+  const deleted = gameRooms.delete(upperCode);
+  gameInvites.delete(upperCode);
+  
+  if (deleted) {
+    res.status(200).json({ message: `Sala ${upperCode} encerrada com sucesso!` });
+  } else {
+    res.status(404).json({ error: 'Sala não encontrada ou já encerrada.' });
+  }
+});
+
 // Endpoint to list other students for co-op invitation
 router.get('/games/players', verifyToken, async (req, res) => {
   try {

@@ -197,6 +197,19 @@ export default function AdminPage() {
     return () => clearInterval(interval);
   }, [tab]);
 
+  const handleKillRpgRoom = async (roomCode) => {
+    if (!window.confirm(`Tem certeza que deseja encerrar a sala ${roomCode}? Os alunos serão desconectados.`)) {
+      return;
+    }
+    try {
+      await apiClient.delete(`/games/active/${roomCode}`);
+      // Refresh local list immediately
+      setActiveRpgGames(prev => prev.filter(g => g.roomCode !== roomCode));
+    } catch (err) {
+      alert('Erro ao encerrar a sala: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   // Load data
   useEffect(() => {
     loadPlans();
@@ -2269,6 +2282,31 @@ export default function AdminPage() {
                                  Nenhum evento registrado.
                                </Typography>
                              )}
+                           </Box>
+
+                           {/* Actions */}
+                           <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                             <Button
+                               size="small"
+                               variant="contained"
+                               onClick={() => handleKillRpgRoom(game.roomCode)}
+                               sx={{ 
+                                 fontWeight: 800, 
+                                 fontSize: '0.75rem',
+                                 borderRadius: 2,
+                                 textTransform: 'none',
+                                 bgcolor: 'rgba(244, 67, 54, 0.15)',
+                                 color: '#ff5a79',
+                                 border: '1px solid rgba(244, 67, 54, 0.3)',
+                                 '&:hover': {
+                                   bgcolor: '#ff5a79',
+                                   color: '#fff',
+                                   borderColor: '#ff5a79'
+                                 }
+                               }}
+                             >
+                               Encerrar Sala ❌
+                             </Button>
                            </Box>
                          </Card>
                        </Grid>

@@ -1834,7 +1834,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           ctx.fillRect(state.hero1X, 48, (p1.hp / 100) * 48, 5);
           ctx.fillStyle = '#fff';
           ctx.font = '8px monospace';
-          ctx.fillText(p1.name.substring(0,3).toUpperCase(), state.hero1X, 44);
+          ctx.fillText((p1.name || 'P1').substring(0,3).toUpperCase(), state.hero1X, 44);
         }
 
         const p2 = Object.values(coopPlayers || {})[1];
@@ -1845,7 +1845,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           ctx.fillRect(state.hero2X, 58, (p2.hp / 100) * 48, 5);
           ctx.fillStyle = '#fff';
           ctx.font = '8px monospace';
-          ctx.fillText(p2.name.substring(0,3).toUpperCase(), state.hero2X, 54);
+          ctx.fillText((p2.name || 'P2').substring(0,3).toUpperCase(), state.hero2X, 54);
         }
       } else {
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -3300,7 +3300,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                           const isDead = p.hp === 0;
                           return (
                             <Typography key={id} variant="caption" sx={{ fontWeight: 800, color: isDead ? '#ff5a79' : '#48c78e' }}>
-                              {p.name.substring(0,8).toUpperCase()}: {isDead ? '💀 MORREU' : `${p.hp}/100 HP`}
+                              {(p.name || 'Jogador').substring(0,8).toUpperCase()}: {isDead ? '💀 MORREU' : `${p.hp}/100 HP`}
                               {!isDead && p.consecutiveCorrect > 0 && ` (Combo: ${p.consecutiveCorrect}/4 🔥)`}
                             </Typography>
                           );
