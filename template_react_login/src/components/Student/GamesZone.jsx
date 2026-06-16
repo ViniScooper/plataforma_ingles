@@ -587,70 +587,25 @@ const CMD_STAGES = [
   }
 ];
 
-const preprocessScript = (scriptText, stageNum) => {
-  const lines = scriptText
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0);
+const parseScript = (lines, stageNum) => {
+  let index = 0;
 
-  const functions = new Map();
-  const mainCode = [];
-  
-  let inFunc = false;
-  let currentFuncName = '';
-  let currentFuncBody = [];
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lower = line.toLowerCase();
-    
-    if (lower.startsWith('define ')) {
-      if (stageNum < 2) {
-        throw new Error("Funções só são permitidas a partir do Estágio 2!");
-      }
-      if (inFunc) {
-        throw new Error(`Erro na linha ${i + 1}: Definição de função aninhada não permitida.`);
-      }
-      const parts = line.split(/\s+/);
-      const name = parts[1]?.toLowerCase();
-      if (!name || ['left', 'right', 'up', 'down', 'grab', 'take', 'get', 'open', 'unlock', 'repeat', 'define', 'end'].includes(name)) {
-        throw new Error(`Erro na linha ${i + 1}: Nome de função inválido ou reservado: "${name}".`);
-      }
-      inFunc = true;
-      currentFuncName = name;
-      currentFuncBody = [];
-    } else if (lower === 'end') {
-      if (inFunc) {
-        functions.set(currentFuncName, currentFuncBody);
-        inFunc = false;
-      } else {
-        mainCode.push(line);
-      }
-    } else {
-      if (inFunc) {
-        currentFuncBody.push(line);
-      } else {
-        mainCode.push(line);
-      }
-    }
-  }
-
-  if (inFunc) {
-    throw new Error(`Função "${currentFuncName}" não foi fechada com "end".`);
-  }
-
-  const expand = (cmdList, depth = 0) => {
-    if (depth > 20) {
-      throw new Error("Recursão muito profunda ou loop infinito detectado!");
-    }
-    
-    const expanded = [];
-    let i = 0;
-    
-    while (i < cmdList.length) {
-      const line = cmdList[i];
+  const parseBlock = (stopTokens = []) => {
+    const block = [];
+    while (index < lines.length) {
+      const line = lines[index];
       const lower = line.toLowerCase();
       const parts = lower.split(/\s+/);
+      
+      if (stopTokens.includes(parts[0])) {
+        break; // Stop parsing this block
+      }
+      
+      index++; // consume this line
+      
+      if (parts[0] === 'define') {
+        throw new Error("Definições de função devem ser feitas no topo do script e não podem ser aninhadas.");
+      }
       
       if (parts[0] === 'repeat') {
         if (stageNum < 6) {
@@ -660,53 +615,78 @@ const preprocessScript = (scriptText, stageNum) => {
         if (isNaN(count) || count <= 0 || count > 50) {
           throw new Error(`Número de repetições inválido: "${parts[1]}".`);
         }
-        
-        let repeatBody = [];
-        let endIdx = -1;
-        let nestedRepeats = 0;
-        
-        for (let j = i + 1; j < cmdList.length; j++) {
-          const l = cmdList[j].toLowerCase();
-          if (l.startsWith('repeat')) {
-            nestedRepeats++;
-            repeatBody.push(cmdList[j]);
-          } else if (l === 'end') {
-            if (nestedRepeats === 0) {
-              endIdx = j;
-              break;
-            } else {
-              nestedRepeats--;
-              repeatBody.push(cmdList[j]);
-            }
-          } else {
-            repeatBody.push(cmdList[j]);
-          }
-        }
-        
-        if (endIdx === -1) {
+        const body = parseBlock(['end']);
+        if (index >= lines.length || lines[index].toLowerCase() !== 'end') {
           throw new Error("Bloco 'repeat' não foi fechado com 'end'.");
         }
-        
-        const expandedBody = expand(repeatBody, depth + 1);
-        for (let r = 0; r < count; r++) {
-          expanded.push(...expandedBody);
+        index++; // consume 'end'
+        block.push({ type: 'repeat', count, body });
+      } 
+      else if (parts[0] === 'for') {
+        if (stageNum < 8) {
+          throw new Error("Loops (for) só são permitidos a partir do Estágio 8!");
         }
-        
-        i = endIdx + 1;
-      } else if (functions.has(lower)) {
-        const funcBody = functions.get(lower);
-        expanded.push(...expand(funcBody, depth + 1));
-        i++;
-      } else {
-        expanded.push(line);
-        i++;
+        const varName = parts[1];
+        let startIdx = 2;
+        if (parts[2] === 'from') startIdx = 3;
+        const startVal = parseInt(parts[startIdx], 10);
+        if (parts[startIdx + 1] !== 'to') {
+          throw new Error(`Sintaxe do 'for' inválida. Use: for ${varName || 'x'} [início] to [fim]`);
+        }
+        const endVal = parseInt(parts[startIdx + 2], 10);
+        if (isNaN(startVal) || isNaN(endVal)) {
+          throw new Error("Valores de início/fim do loop 'for' devem ser números.");
+        }
+        const body = parseBlock(['end']);
+        if (index >= lines.length || lines[index].toLowerCase() !== 'end') {
+          throw new Error("Bloco 'for' não foi fechado com 'end'.");
+        }
+        index++; // consume 'end'
+        block.push({ type: 'for', varName, start: startVal, end: endVal, body });
+      }
+      else if (parts[0] === 'while') {
+        if (stageNum < 10) {
+          throw new Error("Loops (while) só são permitidos a partir do Estágio 10!");
+        }
+        const condition = parts.slice(1).join(' ');
+        if (!condition) {
+          throw new Error("O loop 'while' precisa de uma condição. Ex: while not has key");
+        }
+        const body = parseBlock(['end']);
+        if (index >= lines.length || lines[index].toLowerCase() !== 'end') {
+          throw new Error("Bloco 'while' não foi fechado com 'end'.");
+        }
+        index++; // consume 'end'
+        block.push({ type: 'while', condition, body });
+      }
+      else if (parts[0] === 'if') {
+        if (stageNum < 4) {
+          throw new Error("Condicionais (if/else) só são permitidas a partir do Estágio 4!");
+        }
+        const condition = parts.slice(1).join(' ');
+        if (!condition) {
+          throw new Error("A condicional 'if' precisa de uma condição. Ex: if has key");
+        }
+        const thenBody = parseBlock(['else', 'end']);
+        let elseBody = [];
+        if (index < lines.length && lines[index].toLowerCase() === 'else') {
+          index++; // consume 'else'
+          elseBody = parseBlock(['end']);
+        }
+        if (index >= lines.length || lines[index].toLowerCase() !== 'end') {
+          throw new Error("Bloco 'if' não foi fechado com 'end'.");
+        }
+        index++; // consume 'end'
+        block.push({ type: 'if', condition, thenBody, elseBody });
+      }
+      else {
+        block.push({ type: 'command', line });
       }
     }
-    
-    return expanded;
+    return block;
   };
 
-  return expand(mainCode);
+  return parseBlock();
 };
 
 export default function GamesZone({ userId, userName, onEarnXP }) {
@@ -766,6 +746,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const [showCmdHelp, setShowCmdHelp] = useState(false);
   const [cmdHistory, setCmdHistory] = useState([]);
   const [cmdScriptRunning, setCmdScriptRunning] = useState(false);
+  const [cmdPlayerAnim, setCmdPlayerAnim] = useState('idle');
+  const scriptAbortControllerRef = useRef(null);
   const currentStageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
 
   const canvasRef = useRef(null);
@@ -987,6 +969,13 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       setBattleLog(data.state.combatLog);
       setEnemyHp(data.state.monsterHp);
       setMaxEnemyHp(data.state.maxMonsterHp);
+      setBattleStage(data.state.stage || 1);
+      setBattleStatus('active');
+      
+      const pQuests = data.state.currentQuests || {};
+      const myQuest = pQuests[userId] || { idx: 0 };
+      setCurrentQuestIdx(myQuest.idx);
+
       setCoopSubState('create');
     } catch (err) {
       setCoopError('Falha ao enviar convite. ' + (err.response?.data?.error || err.message));
@@ -1056,7 +1045,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
   // Poll pending invites
   useEffect(() => {
-    if (activeGame !== 'battle' || battleStatus !== 'active' || (rpgMode === 'coop' && coopSubState === 'play')) return;
+    if (!userId) return;
+    
+    // Don't show invites if user is actively playing a game
+    if (activeGame === 'wordsearch' || activeGame === 'command') return;
+    if (activeGame === 'battle' && battleStatus === 'active' && (rpgMode !== 'coop' || coopSubState === 'play')) return;
 
     const checkInvites = async () => {
       try {
@@ -1070,7 +1063,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     checkInvites();
     const inviteInterval = setInterval(checkInvites, 3000);
     return () => clearInterval(inviteInterval);
-  }, [activeGame, rpgMode, coopSubState, battleStatus]);
+  }, [userId, activeGame, rpgMode, coopSubState, battleStatus]);
 
   const handleCreateCoopRoom = async () => {
     playRetroSound('select', soundOn);
@@ -1086,9 +1079,34 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       setBattleLog(data.state.combatLog);
       setEnemyHp(data.state.monsterHp);
       setMaxEnemyHp(data.state.maxMonsterHp);
+      setBattleStage(data.state.stage || 1);
+      setBattleStatus('active');
+      
+      const pQuests = data.state.currentQuests || {};
+      const myQuest = pQuests[userId] || { idx: 0 };
+      setCurrentQuestIdx(myQuest.idx);
+
       setCoopSubState('create');
     } catch (err) {
       setCoopError('Falha ao criar sala. ' + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleCancelCoopRoom = async () => {
+    playRetroSound('select', soundOn);
+    try {
+      if (roomCode) {
+        await apiClient.post('/games/invite/decline', {
+          roomCode
+        });
+      }
+    } catch (err) {
+      console.warn('Error cancelling room:', err);
+    } finally {
+      setRoomCode('');
+      setCoopPlayers({});
+      setBattleStatus('menu');
+      setCoopSubState('choice');
     }
   };
 
@@ -1184,6 +1202,12 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       } catch (err) {
         console.warn('Lobby sync error:', err.message);
+        if (err.response?.status === 404) {
+          setCoopSubState('choice');
+          setCoopError(err.response?.data?.error || 'A sala foi fechada, o convite foi recusado ou expirou.');
+          playRetroSound('defeat', soundOn);
+          clearInterval(pollInterval);
+        }
       }
     }, 1500);
 
@@ -1669,6 +1693,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setCoopSubState('choice');
     setRoomCode('');
     setCoopError('');
+    setBattleStatus('menu');
     setActiveGame('battle');
   };
 
@@ -1680,6 +1705,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setCmdHasKey(false);
     setCmdScriptRunning(false);
     setCmdText('');
+    setCmdPlayerAnim('idle');
     
     let currentLives = cmdLives;
     if (initialLives !== null) {
@@ -1767,21 +1793,136 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     return { success: false, log: `❌ Algo deu errado.` };
   };
 
-  const runCommandScript = (scriptText) => {
+  const runCommandScript = async (scriptText) => {
     if (cmdScriptRunning || cmdStatus !== 'playing') return;
     setCmdScriptRunning(true);
     setCmdLog(prev => [...prev, `⚡ Compilando e executando script...`]);
 
-    let expandedLines;
+    // Set up abort state
+    if (scriptAbortControllerRef.current) {
+      scriptAbortControllerRef.current.abort = true;
+    }
+    const abortState = { abort: false };
+    scriptAbortControllerRef.current = abortState;
+
+    const evaluateCondition = (cond, currentPos, hasKey) => {
+      const c = cond.trim().toLowerCase();
+      
+      if (c === 'has key' || c === 'haskey' || c === 'tenho chave' || c === 'tem chave') {
+        return hasKey;
+      }
+      if (c === 'not has key' || c === 'not haskey' || c === 'no key' || c === 'nao tenho chave' || c === 'sem chave') {
+        return !hasKey;
+      }
+      if (c === 'on key' || c === 'em cima da chave' || c === 'na chave') {
+        return currentPos.x === cmdKeyPos.x && currentPos.y === cmdKeyPos.y;
+      }
+      if (c === 'on chest' || c === 'em cima do bau' || c === 'no bau') {
+        return currentPos.x === cmdChestPos.x && currentPos.y === cmdChestPos.y;
+      }
+      
+      // Directions free checks
+      if (c === 'free right' || c === 'livre direita') {
+        const nextX = currentPos.x + 1;
+        return nextX <= 5 && !cmdObstacles.some(obs => obs.x === nextX && obs.y === currentPos.y);
+      }
+      if (c === 'free left' || c === 'livre esquerda') {
+        const nextX = currentPos.x - 1;
+        return nextX >= 0 && !cmdObstacles.some(obs => obs.x === nextX && obs.y === currentPos.y);
+      }
+      if (c === 'free up' || c === 'livre cima') {
+        const nextY = currentPos.y - 1;
+        return nextY >= 0 && !cmdObstacles.some(obs => obs.x === currentPos.x && obs.y === nextY);
+      }
+      if (c === 'free down' || c === 'livre baixo') {
+        const nextY = currentPos.y + 1;
+        return nextY <= 5 && !cmdObstacles.some(obs => obs.x === currentPos.x && obs.y === nextY);
+      }
+
+      // Danger checks
+      if (c === 'danger right' || c === 'perigo direita') {
+        const nextX = currentPos.x + 1;
+        return cmdDangers.some(dang => dang.x === nextX && dang.y === currentPos.y);
+      }
+      if (c === 'danger left' || c === 'perigo esquerda') {
+        const nextX = currentPos.x - 1;
+        return cmdDangers.some(dang => dang.x === nextX && dang.y === currentPos.y);
+      }
+      if (c === 'danger up' || c === 'perigo cima') {
+        const nextY = currentPos.y - 1;
+        return cmdDangers.some(dang => dang.x === currentPos.x && dang.y === nextY);
+      }
+      if (c === 'danger down' || c === 'perigo baixo') {
+        const nextY = currentPos.y + 1;
+        return cmdDangers.some(dang => dang.x === currentPos.x && dang.y === nextY);
+      }
+      if (c === 'on danger' || c === 'no perigo') {
+        return cmdDangers.some(dang => dang.x === currentPos.x && dang.y === currentPos.y);
+      }
+
+      return false;
+    };
+
+    let statements;
     try {
-      expandedLines = preprocessScript(scriptText, cmdStage);
+      const lines = scriptText
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0);
+      
+      const functions = new Map();
+      const mainLines = [];
+      let inFunc = false;
+      let currentFuncName = '';
+      let currentFuncBody = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lower = line.toLowerCase();
+        
+        if (lower.startsWith('define ')) {
+          if (cmdStage < 2) {
+            throw new Error("Funções só são permitidas a partir do Estágio 2!");
+          }
+          if (inFunc) {
+            throw new Error(`Erro na linha ${i + 1}: Definição de função aninhada não permitida.`);
+          }
+          const parts = line.split(/\s+/);
+          const name = parts[1]?.toLowerCase();
+          if (!name || ['left', 'right', 'up', 'down', 'grab', 'take', 'get', 'open', 'unlock', 'repeat', 'define', 'end', 'if', 'else', 'while', 'for'].includes(name)) {
+            throw new Error(`Erro na linha ${i + 1}: Nome de função inválido ou reservado: "${name}".`);
+          }
+          inFunc = true;
+          currentFuncName = name;
+          currentFuncBody = [];
+        } else if (lower === 'end') {
+          if (inFunc) {
+            functions.set(currentFuncName, currentFuncBody);
+            inFunc = false;
+          } else {
+            mainLines.push(line);
+          }
+        } else {
+          if (inFunc) {
+            currentFuncBody.push(line);
+          } else {
+            mainLines.push(line);
+          }
+        }
+      }
+
+      if (inFunc) {
+        throw new Error(`Função "${currentFuncName}" não foi fechada com "end".`);
+      }
+
+      statements = parseScript(mainLines, cmdStage);
     } catch (err) {
       setCmdLog(prev => [...prev, `❌ Erro de Compilação: ${err.message}`]);
       setCmdScriptRunning(false);
       return;
     }
 
-    if (expandedLines.length === 0) {
+    if (statements.length === 0) {
       setCmdLog(prev => [...prev, `❌ Script vazio ou sem comandos executáveis.`]);
       setCmdScriptRunning(false);
       return;
@@ -1789,87 +1930,155 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
     let currentPos = { ...cmdPlayerPos };
     let hasKey = cmdHasKey;
-    let step = 0;
 
-    const executeNextStep = () => {
-      if (step >= expandedLines.length) {
-        setCmdLog(prev => [...prev, `🏁 Script executado com sucesso.`]);
-        setCmdScriptRunning(false);
-        return;
+    const runBlock = async (stmtList, depth = 0) => {
+      if (depth > 30) {
+        throw new Error("Recursão muito profunda detectada!");
       }
 
-      const rawCmd = expandedLines[step];
-      const result = processCommandText(rawCmd, currentPos, hasKey);
+      for (const stmt of stmtList) {
+        if (abortState.abort) return;
 
-      setCmdLog(prev => [...prev, `> ${rawCmd}`, result.log]);
+        if (stmt.type === 'command') {
+          const rawCmd = stmt.line;
+          const lower = rawCmd.trim().toLowerCase();
 
-      if (result.success) {
-        if (result.newPos) {
-          currentPos = result.newPos;
-          setCmdPlayerPos(currentPos);
-          playRetroSound('select', soundOn);
-        }
-        if (result.grabKey) {
-          hasKey = true;
-          setCmdHasKey(true);
-          playRetroSound('victory', soundOn);
-        }
+          if (functions.has(lower)) {
+            const funcBodyLines = functions.get(lower);
+            const funcStmts = parseScript(funcBodyLines, cmdStage);
+            await runBlock(funcStmts, depth + 1);
+          } else {
+            const result = processCommandText(rawCmd, currentPos, hasKey);
+            setCmdLog(prev => [...prev, `> ${rawCmd}`, result.log]);
 
-        // Check if player stepped on a danger tile (fire or pit)
-        const isDanger = cmdDangers.some(dang => dang.x === currentPos.x && dang.y === currentPos.y);
-        if (isDanger) {
-          playRetroSound('defeat', soundOn);
-          setCmdLives(prevLives => {
-            const nextLives = prevLives - 1;
-            const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
-            const hazardMsg = stageData.dangerType === 'pit' 
-              ? `🕳️ Calabouço fatal! Você caiu no abismo.` 
-              : `🔥 Rio de fogo! Você se queimou nas chamas.`;
-            
-            if (nextLives === 0) {
-              setCmdLog(prevLog => [
-                ...prevLog,
-                `${hazardMsg} 💀 MORTE! Você perdeu todos os corações ❤️. Voltando para o Estágio 1...`
-              ]);
-              setTimeout(() => {
-                startCommandQuest(1, 3);
-              }, 1200);
+            if (result.success) {
+              if (result.newPos) {
+                currentPos = result.newPos;
+                setCmdPlayerPos(currentPos);
+                playRetroSound('select', soundOn);
+              }
+              if (result.grabKey) {
+                hasKey = true;
+                setCmdHasKey(true);
+                setCmdPlayerAnim('grab');
+                playRetroSound('victory', soundOn);
+                await new Promise(resolve => setTimeout(resolve, 650));
+                setCmdPlayerAnim('idle');
+              }
+
+              // Check danger
+              const isDanger = cmdDangers.some(dang => dang.x === currentPos.x && dang.y === currentPos.y);
+              if (isDanger) {
+                const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
+                const isPit = stageData.dangerType === 'pit';
+                
+                setCmdPlayerAnim(isPit ? 'fall' : 'burn');
+                playRetroSound('defeat', soundOn);
+
+                await new Promise(resolve => setTimeout(resolve, 1200));
+                setCmdPlayerAnim('idle');
+
+                setCmdLives(prevLives => {
+                  const nextLives = prevLives - 1;
+                  const hazardMsg = isPit 
+                    ? `🕳️ Calabouço fatal! Você caiu no abismo.` 
+                    : `🔥 Rio de fogo! Você se queimou nas chamas.`;
+                  
+                  if (nextLives === 0) {
+                    setCmdLog(prevLog => [
+                      ...prevLog,
+                      `${hazardMsg} 💀 MORTE! Você perdeu todos os corações ❤️. Voltando para o Estágio 1...`
+                    ]);
+                    setTimeout(() => {
+                      startCommandQuest(1, 3);
+                    }, 1200);
+                  } else {
+                    setCmdLog(prevLog => [
+                      ...prevLog,
+                      `${hazardMsg} Perdeu 1 vida. Vidas restantes: ${'❤️ '.repeat(nextLives)}`
+                    ]);
+                    setCmdPlayerPos({ ...stageData.player });
+                    setCmdHasKey(false);
+                  }
+                  return nextLives === 0 ? 3 : nextLives;
+                });
+
+                abortState.abort = true;
+                setCmdScriptRunning(false);
+                return;
+              }
+
+              if (result.win) {
+                setCmdStatus('victory');
+                setCmdPlayerAnim('victory');
+                setCmdScriptRunning(false);
+                playRetroSound('victory', soundOn);
+                onEarnXP(100);
+                abortState.abort = true;
+                return;
+              }
             } else {
-              setCmdLog(prevLog => [
-                ...prevLog,
-                `${hazardMsg} Perdeu 1 vida. Vidas restantes: ${'❤️ '.repeat(nextLives)}`
-              ]);
-              setCmdPlayerPos({ ...stageData.player });
-              setCmdHasKey(false);
+              playRetroSound('select', soundOn);
+              setCmdLog(prev => [...prev, `❌ Script parado devido a erro.`]);
+              setCmdScriptRunning(false);
+              abortState.abort = true;
+              return;
             }
-            return nextLives === 0 ? 3 : nextLives;
-          });
-          setCmdScriptRunning(false);
-          return;
-        }
 
-        if (result.win) {
-          setCmdStatus('victory');
-          setCmdScriptRunning(false);
-          playRetroSound('victory', soundOn);
-          onEarnXP(100);
-          return;
+            await new Promise(resolve => setTimeout(resolve, 600));
+          }
         }
-      } else {
-        playRetroSound('select', soundOn);
-        setCmdLog(prev => [...prev, `❌ Script parado devido a erro.`]);
-        setCmdScriptRunning(false);
-        return;
+        else if (stmt.type === 'repeat') {
+          for (let r = 0; r < stmt.count; r++) {
+            if (abortState.abort) return;
+            await runBlock(stmt.body, depth + 1);
+          }
+        }
+        else if (stmt.type === 'for') {
+          const startVal = stmt.start;
+          const endVal = stmt.end;
+          let count = Math.abs(endVal - startVal) + 1;
+          if (count > 50) count = 50;
+
+          for (let r = 0; r < count; r++) {
+            if (abortState.abort) return;
+            await runBlock(stmt.body, depth + 1);
+          }
+        }
+        else if (stmt.type === 'while') {
+          let safety = 0;
+          while (evaluateCondition(stmt.condition, currentPos, hasKey)) {
+            if (abortState.abort) return;
+            if (safety++ > 100) {
+              throw new Error("Loop infinito detectado no bloco 'while'!");
+            }
+            await runBlock(stmt.body, depth + 1);
+          }
+        }
+        else if (stmt.type === 'if') {
+          const isTrue = evaluateCondition(stmt.condition, currentPos, hasKey);
+          if (isTrue) {
+            await runBlock(stmt.thenBody, depth + 1);
+          } else if (stmt.elseBody && stmt.elseBody.length > 0) {
+            await runBlock(stmt.elseBody, depth + 1);
+          }
+        }
       }
-
-      step++;
-      setTimeout(executeNextStep, 600);
     };
 
-    executeNextStep();
+    try {
+      await runBlock(statements);
+      if (!abortState.abort) {
+        setCmdLog(prev => [...prev, `🏁 Script executado com sucesso.`]);
+        setCmdScriptRunning(false);
+      }
+    } catch (err) {
+      setCmdLog(prev => [...prev, `❌ Erro de Execução: ${err.message}`]);
+      setCmdScriptRunning(false);
+    }
   };
 
-  const handleSingleCommandSubmit = (e) => {
+  const handleSingleCommandSubmit = async (e) => {
     e.preventDefault();
     if (!cmdText.trim() || cmdScriptRunning || cmdStatus !== 'playing') return;
     
@@ -1889,17 +2098,26 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       }
       if (result.grabKey) {
         setCmdHasKey(true);
+        setCmdPlayerAnim('grab');
         playRetroSound('victory', soundOn);
+        await new Promise(resolve => setTimeout(resolve, 650));
+        setCmdPlayerAnim('idle');
       }
 
-      // Check if player stepped on a danger tile (fire or pit)
+      // Check danger
       const isDanger = cmdDangers.some(dang => dang.x === newPos.x && dang.y === newPos.y);
       if (isDanger) {
+        const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
+        const isPit = stageData.dangerType === 'pit';
+
+        setCmdPlayerAnim(isPit ? 'fall' : 'burn');
         playRetroSound('defeat', soundOn);
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        setCmdPlayerAnim('idle');
+
         setCmdLives(prevLives => {
           const nextLives = prevLives - 1;
-          const stageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
-          const hazardMsg = stageData.dangerType === 'pit' 
+          const hazardMsg = isPit 
             ? `🕳️ Calabouço fatal! Você caiu no abismo.` 
             : `🔥 Rio de fogo! Você se queimou nas chamas.`;
           
@@ -1926,6 +2144,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       if (result.win) {
         setCmdStatus('victory');
+        setCmdPlayerAnim('victory');
         playRetroSound('victory', soundOn);
         onEarnXP(100);
       }
@@ -1940,6 +2159,38 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       @keyframes floatArcade {
         0%, 100% { transform: translateY(0); }
         50% { transform: translateY(-8px); }
+      }
+      @keyframes shakeBurn {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); filter: drop-shadow(0 0 10px #ff3c3c) saturate(1.8); }
+        20% { transform: translate(-2px, 2px) rotate(-1deg); }
+        40% { transform: translate(2px, -2px) rotate(1deg); }
+        60% { transform: translate(-2px, -2px) rotate(-1deg); }
+        80% { transform: translate(2px, 2px) rotate(1deg); }
+      }
+      @keyframes fallPit {
+        0% { transform: scale(1) rotate(0deg); opacity: 1; }
+        100% { transform: scale(0) rotate(360deg); opacity: 0; filter: blur(3px); }
+      }
+      @keyframes popVictory {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px gold); }
+        50% { transform: scale(1.25); filter: drop-shadow(0 0 24px orange); }
+      }
+      @keyframes grabKeyPop {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3) translateY(-8px); filter: drop-shadow(0 0 12px yellow); }
+        100% { transform: scale(1); }
+      }
+      .anim-burn {
+        animation: shakeBurn 0.1s infinite;
+      }
+      .anim-fall {
+        animation: fallPit 0.8s forwards;
+      }
+      .anim-victory-glow {
+        animation: popVictory 1.2s infinite ease-in-out;
+      }
+      .anim-key-grab {
+        animation: grabKeyPop 0.6s ease-out;
       }
       .ws-grid-cell {
         aspect-ratio: 1;
@@ -2729,11 +2980,32 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Typography>
               </Box>
 
-              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
-                <CircularProgress size={24} sx={{ color: '#00b4d8' }} />
-                <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 650 }}>
-                  Aguardando conexão...
-                </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+                  <CircularProgress size={24} sx={{ color: '#00b4d8' }} />
+                  <Typography variant="body2" sx={{ color: '#94a3b8', fontWeight: 650 }}>
+                    Aguardando conexão...
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  onClick={handleCancelCoopRoom}
+                  sx={{
+                    mt: 2,
+                    color: 'rgba(255,255,255,0.6)',
+                    borderColor: 'rgba(255,255,255,0.2)',
+                    borderRadius: 2.5,
+                    fontWeight: 700,
+                    textTransform: 'none',
+                    '&:hover': {
+                      borderColor: '#ff5a79',
+                      color: '#ff5a79',
+                      bgcolor: 'rgba(255, 90, 121, 0.05)'
+                    }
+                  }}
+                >
+                  Cancelar Batalha ❌
+                </Button>
               </Box>
             </Box>
           )}
@@ -3066,18 +3338,28 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                         >
                           {/* Element rendering */}
                           {isPlayer ? (
-                            <Box sx={{ 
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              animation: 'pulsePlayer 2s infinite ease-in-out',
-                              '@keyframes pulsePlayer': {
-                                '0%, 100%': { transform: 'scale(1)' },
-                                '50%': { transform: 'scale(1.18)' }
+                            <Box 
+                              className={
+                                cmdPlayerAnim === 'burn' ? 'anim-burn' :
+                                cmdPlayerAnim === 'fall' ? 'anim-fall' :
+                                cmdPlayerAnim === 'victory' ? 'anim-victory-glow' :
+                                cmdPlayerAnim === 'grab' ? 'anim-key-grab' : ''
                               }
-                            }}>
+                              sx={{ 
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                ...(cmdPlayerAnim === 'idle' ? {
+                                  animation: 'pulsePlayer 2s infinite ease-in-out',
+                                  '@keyframes pulsePlayer': {
+                                    '0%, 100%': { transform: 'scale(1)' },
+                                    '50%': { transform: 'scale(1.18)' }
+                                  }
+                                } : {})
+                              }}
+                            >
                               🧙‍♂️
                             </Box>
                           ) : (
@@ -3369,10 +3651,24 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 end
 turn`}
                                 </pre>
-                                Defina com <code>define nome</code>, coloque as ações, feche com <code>end</code> e depois chame <code>nome</code>!
+                                Defina com <code>define nome</code>, coloque as ações, feche com <code>end</code> e chame pelo nome!
                               </span>
                             )}
-                            {cmdStage >= 3 && cmdStage < 6 && "Use Funções para planejar caminhos eficientes, desviando dos blocos de muro 🧱. Escreva seu código no Console Multilinhas e aperte Executar Script!"}
+                            {cmdStage === 3 && "Use Funções para planejar caminhos eficientes, desviando dos blocos de muro 🧱. Escreva seu código no Console Multilinhas e aperte Executar Script!"}
+                            {cmdStage === 4 && (
+                              <span>
+                                <strong>Condicionais (Fase 4+):</strong> Tome decisões no código com <code>if</code> e <code>else</code>!
+                                <pre style={{ margin: '6px 0', padding: '6px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: 6, fontFamily: 'monospace', color: '#a5d6a7', fontSize: '0.75rem' }}>
+{`if on key
+  grab key
+else
+  right
+end`}
+                                </pre>
+                                Condições válidas: <code>has key</code>, <code>on key</code>, <code>on chest</code>, <code>free right/left/up/down</code>.
+                              </span>
+                            )}
+                            {cmdStage === 5 && "Combine Condicionais! Verifique se uma direção está livre antes de se mover. Ex: 'if free down' ... 'end'."}
                             {cmdStage === 6 && (
                               <span>
                                 <strong>Loops de Repetição (Fase 6+):</strong> Escreva menos linhas repetindo comandos! Escreva:
@@ -3381,11 +3677,36 @@ turn`}
   right
 end`}
                                 </pre>
-                                Isso fará o mago andar 4 passos para a direita. Use <code>repeat [contagem]</code>, as ações, e feche com <code>end</code>!
+                                Isso fará o mago andar 4 passos para a direita. Use <code>repeat [vezes]</code> e feche com <code>end</code>!
                               </span>
                             )}
-                            {cmdStage > 6 && cmdStage < 11 && "Combine Funções e Loops! Você pode colocar um 'repeat' dentro de uma função. Crie comandos de atalho para cruzar as salas rapidamente!"}
-                            {cmdStage >= 11 && "Calabouço Final! Cuidado extremo com a lava 🔥 e os abismos 🕳️. Lembre-se: se você perder todas as 3 vidas (❤️), voltará direto ao Estágio 1!"}
+                            {cmdStage === 7 && "Combine Funções, Loops e Condicionais! Crie comandos inteligentes para navegar com segurança e eficiência."}
+                            {cmdStage === 8 && (
+                              <span>
+                                <strong>Loops com Variáveis (Fase 8+):</strong> Faça loops de contagem clássicos com <code>for</code>!
+                                <pre style={{ margin: '6px 0', padding: '6px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: 6, fontFamily: 'monospace', color: '#a5d6a7', fontSize: '0.75rem' }}>
+{`for x 1 to 5
+  right
+end`}
+                                </pre>
+                                Isso repetirá o bloco 5 vezes.
+                              </span>
+                            )}
+                            {cmdStage === 9 && "Use Loops com For! Isso ajuda a modularizar o número de passos que você quer que o Mago execute em retas compridas."}
+                            {cmdStage === 10 && (
+                              <span>
+                                <strong>Loops Condicionais (Fase 10+):</strong> Repita ações baseando-se no cenário com <code>while</code>!
+                                <pre style={{ margin: '6px 0', padding: '6px 10px', background: 'rgba(0,0,0,0.3)', borderRadius: 6, fontFamily: 'monospace', color: '#a5d6a7', fontSize: '0.75rem' }}>
+{`while not has key
+  right
+end
+grab key`}
+                                </pre>
+                                O mago andará para a direita repetidamente até estar sobre a chave para coletá-la!
+                              </span>
+                            )}
+                            {cmdStage > 10 && cmdStage < 20 && "Estágio Avançado! Use todas as estruturas aprendidas (functions, repeat, if/else, for e while) para desviar das lava e poços com o menor número de linhas possível."}
+                            {cmdStage === 20 && "O DESAFIO FINAL! Use funções, condicionais e loops combinados para coletar a chave e escapar de vez do abismo do mago!"}
                           </Typography>
                         </Box>
                       )}
@@ -3430,13 +3751,32 @@ end`}
                         <Box>
                           <strong style={{ color: '#fff' }}>2. Funções (Fase 2+):</strong>
                           <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                            <code>define [nome]</code> ... <code>end</code>
+                            <code>define [nome]</code> ... <code>end</code> — Criar função.
                           </div>
                         </Box>
                         <Box>
-                          <strong style={{ color: '#fff' }}>3. Loops (Fase 6+):</strong>
+                          <strong style={{ color: '#fff' }}>3. Condicionais (Fase 4+):</strong>
                           <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                            <code>repeat [vezes]</code> ... <code>end</code>
+                            <code>if [condição]</code> ... <code>else</code> ... <code>end</code><br />
+                            <em>Condições:</em> <code>has key</code>, <code>on key</code>, <code>on chest</code>, <code>free right/left/up/down</code>, <code>danger right/left/up/down</code>.
+                          </div>
+                        </Box>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>4. Loops Repeat (Fase 6+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>repeat [vezes]</code> ... <code>end</code> — Repetir bloco.
+                          </div>
+                        </Box>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>5. Loops For (Fase 8+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>for x 1 to [vezes]</code> ... <code>end</code> — Contagem clássica.
+                          </div>
+                        </Box>
+                        <Box>
+                          <strong style={{ color: '#fff' }}>6. Loops While (Fase 10+):</strong>
+                          <div style={{ paddingLeft: 8, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                            <code>while [condição]</code> ... <code>end</code> — Repetir enquanto verdade.
                           </div>
                         </Box>
                       </Box>

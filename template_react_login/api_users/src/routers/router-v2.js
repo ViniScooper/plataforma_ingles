@@ -423,18 +423,36 @@ router.post('/games/invite/accept', verifyToken, (req, res) => {
   res.status(200).json({ roomCode: upperCode, state: roomState });
 });
 
-// Decline invite
+// Decline or cancel invite/room
 router.post('/games/invite/decline', verifyToken, (req, res) => {
   const { roomCode } = req.body;
-  const guestId = String(req.user.id);
+  const userId = String(req.user.id);
   const upperCode = (roomCode || '').trim().toUpperCase();
   
   const invite = gameInvites.get(upperCode);
-  if (invite && invite.guestId === guestId) {
-    invite.status = 'declined';
-    gameInvites.delete(upperCode);
-    gameRooms.delete(upperCode);
+  const room = gameRooms.get(upperCode);
+
+  if (invite) {
+    if (invite.guestId === userId || invite.hostId === userId) {
+      invite.status = 'declined';
+      gameInvites.delete(upperCode);
+      gameRooms.delete(upperCode);
+      return res.status(200).json({ message: 'Sala e convite removidos com sucesso.' });
+    }
+  } else if (room) {
+    // If it's a room created without direct invite (code sharing)
+    // and the player is the host (the only player in the room)
+    const isHost = room.players[userId] !== undefined && Object.keys(room.players).length === 1;
+    if (isHost) {
+      gameRooms.delete(upperCode);
+      return res.status(200).json({ message: 'Sala removida com sucesso.' });
+    }
   }
   
-  res.status(200).json({ message: 'Convite recusado com sucesso.' });
+  // Also, if room exists, we can delete it if it has only the host
+  if (room && Object.keys(room.players).length === 1 && room.players[userId]) {
+    gameRooms.delete(upperCode);
+  }
+
+  res.status(200).json({ message: 'Operação concluída.' });
 });

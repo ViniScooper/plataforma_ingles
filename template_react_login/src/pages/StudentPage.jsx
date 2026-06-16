@@ -1073,7 +1073,7 @@ export default function StudentPage() {
               {dashboardTab === 1 && (
                 // TAB 1: GAMES ZONE
                 <Box>
-                  <GamesZone onEarnXP={handleEarnBonusXP} />
+                  <GamesZone userId={user?.id} userName={user?.name} onEarnXP={handleEarnBonusXP} />
                 </Box>
               )}
 
