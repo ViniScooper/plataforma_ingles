@@ -2960,7 +2960,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       {/* ────────────────── GAME 3: PIXEL COMMAND QUEST ────────────────── */}
       {activeGame === 'command' && (
-        <Card sx={{ p: { xs: 1.5, sm: 3, md: 4 }, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)', mb: 4 }}>
+        <Card sx={{ p: { xs: 1, sm: 3, md: 4 }, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)', mb: { xs: '320px', sm: 4 } }}>
           {/* Header Bar */}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mb: 3, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, gap: 2 }}>
             <Box>
@@ -2997,11 +2997,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
             <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <Box sx={{
                 bgcolor: 'rgba(0,0,0,0.3)',
-                p: { xs: 0.75, sm: 2 },
+                p: { xs: 0.5, sm: 2 },
                 borderRadius: 4,
                 border: '1.5px solid rgba(255,255,255,0.06)',
                 width: '100%',
-                maxWidth: { xs: '100%', sm: 460, md: 520 },
+                maxWidth: { xs: '100%', sm: 500, md: 520 },
                 boxSizing: 'border-box',
                 mx: 'auto'
               }}>
@@ -3021,8 +3021,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       const isObstacle = cmdObstacles.some(obs => obs.x === x && obs.y === y);
                       const isDanger = cmdDangers.some(dang => dang.x === x && dang.y === y);
 
-                      let bg = 'rgba(255,255,255,0.02)';
-                      let border = '1px solid rgba(255,255,255,0.04)';
+                      let bg = 'rgba(0, 180, 216, 0.08)';
+                      let border = '1px solid rgba(0, 180, 216, 0.18)';
                       let shadow = 'none';
 
                       if (isObstacle) {
@@ -3030,8 +3030,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                         border = '1px solid rgba(255,255,255,0.15)';
                       } else if (isDanger) {
                         const isPit = currentStageData.dangerType === 'pit';
-                        bg = isPit ? 'rgba(0,0,0,0.45)' : 'rgba(255, 90, 121, 0.15)';
-                        border = isPit ? '1px solid rgba(255,255,255,0.1)' : '1px solid #ff5a79';
+                        bg = isPit ? 'rgba(5, 12, 24, 0.65)' : 'rgba(255, 90, 121, 0.15)';
+                        border = isPit ? '1px solid rgba(0, 180, 216, 0.25)' : '1px solid #ff5a79';
                       } else if (isPlayer) {
                         bg = 'rgba(72, 199, 142, 0.15)';
                         border = '1px solid #48c78e';
@@ -3058,9 +3058,9 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                             alignItems: 'center',
                             justifyContent: 'center',
                             transition: 'all 0.25s ease',
-                            fontSize: { xs: '1.6rem', sm: '1.9rem', md: '2.3rem' },
+                            fontSize: { xs: '2.0rem', sm: '2.1rem', md: '2.3rem' },
                             '&:hover': {
-                              bgcolor: isPlayer ? bg : 'rgba(255,255,255,0.05)'
+                              bgcolor: isPlayer ? bg : 'rgba(0, 180, 216, 0.18)'
                             }
                           }}
                         >
@@ -3129,48 +3129,18 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Box>
               </Box>
 
-              {/* Status / Win Message */}
-              {cmdStatus === 'victory' && (
-                <Box sx={{ mt: 3, p: 2.5, bgcolor: 'rgba(72, 199, 142, 0.08)', border: '1px solid rgba(72, 199, 142, 0.25)', borderRadius: 3.5, width: '100%', maxWidth: 400, textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
-                  <Typography variant="h6" sx={{ color: '#48c78e', fontWeight: 900, mb: 1 }}>
-                    🏆 Missão Concluída!
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2 }}>
-                    Você usou os comandos perfeitamente e abriu o baú! Recebeu +100 XP extras.
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
-                    <Button 
-                      variant="contained" 
-                      size="small"
-                      onClick={() => {
-                        if (cmdStage < 20) startCommandQuest(cmdStage + 1);
-                        else startCommandQuest(1);
-                      }}
-                      sx={{ bgcolor: '#48c78e', '&:hover': { bgcolor: '#38a374' }, fontWeight: 800, borderRadius: 2.5 }}
-                    >
-                      {cmdStage < 20 ? `Próximo Estágio (${cmdStage + 1}) ➡️` : "Reiniciar Jogo"}
-                    </Button>
-                    <Button 
-                      variant="outlined" 
-                      size="small"
-                      onClick={() => setActiveGame(null)}
-                      sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
-                    >
-                      Sair
-                    </Button>
-                  </Box>
-                </Box>
-              )}
+              {/* Status / Win Message moved below Option B */}
+              <Box sx={{ display: 'none' }} />
             </Grid>
 
             {/* COLUMN 2: OPTION B (SCRIPT EDITOR) */}
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Card sx={{ 
                 p: 3, 
                 bgcolor: 'rgba(0,0,0,0.2)', 
                 border: '1.5px solid rgba(255,255,255,0.06)', 
                 borderRadius: 4,
-                height: '100%',
+                height: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between'
@@ -3180,13 +3150,14 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     💻 OPÇÃO B: Escrever um Script Completo (Múltiplas Linhas)
                   </Typography>
                   <Box sx={{ position: 'relative', flexGrow: 1, display: 'flex', flexDirection: 'column', mb: 1.5 }}>
-                    <textarea
+                    <Box
+                      component="textarea"
                       id="cmd-script-editor"
                       placeholder={`Digite um comando por linha. Ex:\nright\nright\ndown\ngrab key`}
                       disabled={cmdScriptRunning || cmdStatus !== 'playing'}
-                      style={{
+                      sx={{
                         width: '100%',
-                        height: '240px',
+                        height: { xs: '120px', md: '180px' },
                         backgroundColor: 'rgba(0,0,0,0.3)',
                         border: '1px solid rgba(255,255,255,0.08)',
                         borderRadius: '12px',
@@ -3283,6 +3254,69 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   </Box>
                 </Box>
               </Card>
+
+              {/* Status / Win Message */}
+              {cmdStatus === 'victory' ? (
+                <Box sx={{ p: 2.5, bgcolor: 'rgba(72, 199, 142, 0.08)', border: '1px solid rgba(72, 199, 142, 0.25)', borderRadius: 3.5, width: '100%', maxWidth: '100%', textAlign: 'center', animation: 'fadeIn 0.4s ease' }}>
+                  <Typography variant="h6" sx={{ color: '#48c78e', fontWeight: 900, mb: 1 }}>
+                    🏆 Missão Concluída!
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2 }}>
+                    Você usou os comandos perfeitamente e abriu o baú! Recebeu +100 XP extras.
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                    <Button 
+                      variant="contained" 
+                      size="small"
+                      onClick={() => {
+                        if (cmdStage < 20) startCommandQuest(cmdStage + 1);
+                        else startCommandQuest(1);
+                      }}
+                      sx={{ bgcolor: '#48c78e', '&:hover': { bgcolor: '#38a374' }, fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      {cmdStage < 20 ? `Próximo Estágio (${cmdStage + 1}) ➡️` : "Reiniciar Jogo"}
+                    </Button>
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      onClick={() => setActiveGame(null)}
+                      sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
+                    >
+                      Sair
+                    </Button>
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ p: 2.5, bgcolor: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: 3.5, width: '100%', maxWidth: '100%', textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ color: '#00b4d8', fontWeight: 900, mb: 1 }}>
+                    {cmdScriptRunning ? "⚡ Executando Instruções..." : "🧙‍♂️ Mago Pronto"}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#cbd5e1', mb: 2 }}>
+                    {cmdScriptRunning 
+                      ? "O mago está executando os comandos enviados na ordem correta." 
+                      : "Escreva instruções na OPÇÃO A ou OPÇÃO B ao lado para controlar o mago."}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center' }}>
+                    <Button 
+                      variant="outlined" 
+                      size="small"
+                      disabled
+                      sx={{ 
+                        borderColor: 'rgba(0, 180, 216, 0.25)', 
+                        color: '#00b4d8', 
+                        fontWeight: 800, 
+                        borderRadius: 2.5,
+                        "&.Mui-disabled": {
+                          borderColor: 'rgba(0, 180, 216, 0.25)',
+                          color: '#00b4d8'
+                        }
+                      }}
+                    >
+                      Estágio {cmdStage} / 20
+                    </Button>
+                  </Box>
+                </Box>
+              )}
             </Grid>
 
             {/* ROW 2: LOG, TUTORIAL, OPTION A, AND OTHER CONTROLS */}
