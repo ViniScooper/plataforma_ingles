@@ -511,3 +511,18 @@ router.post('/games/invite/decline', verifyToken, (req, res) => {
 
   res.status(200).json({ message: 'Operação concluída.' });
 });
+
+// Leave active coop room
+router.post('/games/leave', verifyToken, (req, res) => {
+  const { roomCode } = req.body;
+  const upperCode = (roomCode || '').trim().toUpperCase();
+  const roomState = gameRooms.get(upperCode);
+  
+  if (roomState) {
+    // Delete the room and invite so it clears memory and triggers 404 for other player
+    gameRooms.delete(upperCode);
+    gameInvites.delete(upperCode);
+  }
+  
+  res.status(200).json({ message: 'Você saiu da partida e a sala foi encerrada.' });
+});

@@ -1189,6 +1189,34 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     }
   };
 
+  const handleLeaveRpgMatch = async (exitToHub = false) => {
+    playRetroSound('select', soundOn);
+    if (rpgMode === 'coop') {
+      try {
+        if (roomCode) {
+          await apiClient.post('/games/leave', { roomCode });
+        }
+      } catch (err) {
+        console.warn('Error leaving room:', err);
+      } finally {
+        setRoomCode('');
+        setCoopPlayers({});
+        setCoopSubState('choice');
+        if (exitToHub) {
+          setActiveGame(null);
+        } else {
+          setBattleStatus('menu');
+        }
+      }
+    } else {
+      if (exitToHub) {
+        setActiveGame(null);
+      } else {
+        setBattleStatus('menu');
+      }
+    }
+  };
+
   const handleJoinCoopRoom = async (codeToJoin) => {
     playRetroSound('select', soundOn);
     setCoopError('');
@@ -1294,6 +1322,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
     return () => clearInterval(pollInterval);
   }, [activeGame, rpgMode, coopSubState, roomCode, battleStatus]);
+
+  // Cleanup active coop room on component unmount
+  useEffect(() => {
+    return () => {
+      if (rpgMode === 'coop' && roomCode) {
+        apiClient.post('/games/leave', { roomCode }).catch(() => {});
+      }
+    };
+  }, [rpgMode, roomCode]);
 
   // RPG Combat Submission Action (Solo vs Co-op)
   const handleRpgAnswerSubmit = async (option) => {
@@ -1662,7 +1699,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       if (rpgMode === 'coop') {
         // Draw Player 1
-        const p1Hp = Object.values(coopPlayers)[0]?.hp ?? 100;
+        const p1Hp = Object.values(coopPlayers || {})[0]?.hp ?? 100;
         let p1Y = 60 + (state.hero1State === 'stand' ? bob : 0);
         let p1Sprite = SPRITE_KNIGHT_STAND;
         if (state.hero1State === 'attack') p1Sprite = SPRITE_KNIGHT_ATTACK;
@@ -1680,14 +1717,20 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         } else {
           let flashP1 = state.hero1State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
           ctx.save();
-          if (flashP1) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+          if (flashP1) {
+            try {
+              ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+            } catch (e) {
+              ctx.globalAlpha = 0.5;
+            }
+          }
           drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
           ctx.restore();
         }
         
         // Draw Player 2 (if present)
-        if (Object.keys(coopPlayers).length > 1) {
-          const p2Hp = Object.values(coopPlayers)[1]?.hp ?? 100;
+        if (Object.keys(coopPlayers || {}).length > 1) {
+          const p2Hp = Object.values(coopPlayers || {})[1]?.hp ?? 100;
           let p2Y = 68 + (state.hero2State === 'stand' ? -bob : 0);
           let p2Sprite = SPRITE_KNIGHT_STAND;
           if (state.hero2State === 'attack') p2Sprite = SPRITE_KNIGHT_ATTACK;
@@ -1705,7 +1748,13 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           } else {
             let flashP2 = state.hero2State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
             ctx.save();
-            if (flashP2) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+            if (flashP2) {
+              try {
+                ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+              } catch (e) {
+                ctx.globalAlpha = 0.5;
+              }
+            }
             drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
             ctx.restore();
           }
@@ -1715,14 +1764,20 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         let heroY = 60 + (state.heroState === 'stand' ? bob : 0);
         let heroSprite = SPRITE_KNIGHT_STAND;
         if (state.heroState === 'attack') heroSprite = SPRITE_KNIGHT_ATTACK;
-        if (state.heroState === 'defeat') {
+        if (heroHp === 0) {
           heroSprite = SPRITE_KNIGHT_STAND;
           heroY = 85;
         }
         
         let flashHero = state.heroState === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
         ctx.save();
-        if (flashHero) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+        if (flashHero) {
+          try {
+            ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+          } catch (e) {
+            ctx.globalAlpha = 0.5;
+          }
+        }
         drawSprite(ctx, heroSprite, state.heroX, heroY, 3.5, false);
         ctx.restore();
       }
@@ -1736,7 +1791,13 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
         let flashEnemy = state.enemyState === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
         ctx.save();
-        if (flashEnemy) ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+        if (flashEnemy) {
+          try {
+            ctx.filter = 'brightness(2) drop-shadow(0px 0px 5px #ff5a79)';
+          } catch (e) {
+            ctx.globalAlpha = 0.5;
+          }
+        }
         drawSprite(ctx, enemySprite, state.enemyX, enemyY, 3.5, true);
         ctx.restore();
         
@@ -1749,7 +1810,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       // Draw Player HP Bars above characters
       if (rpgMode === 'coop') {
-        const p1 = Object.values(coopPlayers)[0];
+        const p1 = Object.values(coopPlayers || {})[0];
         if (p1) {
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
           ctx.fillRect(state.hero1X, 48, 48, 5);
@@ -1760,7 +1821,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           ctx.fillText(p1.name.substring(0,3).toUpperCase(), state.hero1X, 44);
         }
 
-        const p2 = Object.values(coopPlayers)[1];
+        const p2 = Object.values(coopPlayers || {})[1];
         if (p2) {
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
           ctx.fillRect(state.hero2X, 58, 48, 5);
@@ -3163,15 +3224,38 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   </Typography>
                   {rpgMode === 'coop' && (
                     <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 700, display: 'block', mt: 0.5 }}>
-                      👥 Jogando em Dupla: {Object.values(coopPlayers).map(p => p.name).join(' & ')}
+                      👥 Jogando em Dupla: {Object.values(coopPlayers || {}).map(p => p.name).join(' & ')}
                     </Typography>
                   )}
                 </Box>
-                <Chip
-                  label={`Monstro: ${battleStage === 1 ? '🟢 Slime' : battleStage === 2 ? '💀 Skeleton' : '👿 Shadow Dragon'}`}
-                  color={rpgMode === 'coop' ? "secondary" : "primary"}
-                  sx={{ fontWeight: 900 }}
-                />
+                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                  <Chip
+                    label={`Monstro: ${battleStage === 1 ? '🟢 Slime' : battleStage === 2 ? '💀 Skeleton' : '👿 Shadow Dragon'}`}
+                    color={rpgMode === 'coop' ? "secondary" : "primary"}
+                    sx={{ fontWeight: 900 }}
+                  />
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    color="error"
+                    onClick={() => handleLeaveRpgMatch(false)}
+                    sx={{ 
+                      borderRadius: 2, 
+                      fontWeight: 800, 
+                      borderColor: 'rgba(255, 90, 121, 0.3)',
+                      color: '#ff5a79',
+                      bgcolor: 'rgba(255, 90, 121, 0.05)',
+                      textTransform: 'none',
+                      height: 32,
+                      '&:hover': {
+                        borderColor: '#ff5a79',
+                        bgcolor: 'rgba(255, 90, 121, 0.12)'
+                      }
+                    }}
+                  >
+                    Abandonar ❌
+                  </Button>
+                </Box>
               </Box>
 
               <Grid container spacing={3.5}>
@@ -3196,7 +3280,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     {/* Combat HP Indicators */}
                     <Box sx={{ display: 'flex', width: '100%', maxWidth: 400, justifyContent: 'space-between', px: 1, mt: 1.2 }}>
                       {rpgMode === 'coop' ? (
-                        Object.entries(coopPlayers).map(([id, p]) => {
+                        Object.entries(coopPlayers || {}).map(([id, p]) => {
                           const isDead = p.hp === 0;
                           return (
                             <Typography key={id} variant="caption" sx={{ fontWeight: 800, color: isDead ? '#ff5a79' : '#48c78e' }}>
@@ -3357,7 +3441,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     ) : (
                       <Button
                         variant="contained"
-                        onClick={startCoopBattleChoice}
+                        onClick={() => handleLeaveRpgMatch(false)}
                         sx={{ bgcolor: '#b388ff', '&:hover': { bgcolor: '#9c27b0' }, fontWeight: 900, borderRadius: 2.5 }}
                       >
                         Voltar ao Lobby Co-op 👥
@@ -3365,7 +3449,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     )}
                     <Button
                       variant="outlined"
-                      onClick={() => setActiveGame(null)}
+                      onClick={() => handleLeaveRpgMatch(true)}
                       sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
                     >
                       Voltar ao Menu
@@ -3396,7 +3480,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     ) : (
                       <Button
                         variant="contained"
-                        onClick={startCoopBattleChoice}
+                        onClick={() => handleLeaveRpgMatch(false)}
                         sx={{ bgcolor: '#b388ff', '&:hover': { bgcolor: '#9c27b0' }, fontWeight: 900, borderRadius: 2.5 }}
                       >
                         Voltar ao Lobby Co-op 👥
@@ -3404,7 +3488,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     )}
                     <Button
                       variant="outlined"
-                      onClick={() => setActiveGame(null)}
+                      onClick={() => handleLeaveRpgMatch(true)}
                       sx={{ borderColor: 'rgba(255,255,255,0.15)', color: '#fff', fontWeight: 800, borderRadius: 2.5 }}
                     >
                       Voltar ao Menu
