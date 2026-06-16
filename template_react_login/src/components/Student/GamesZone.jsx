@@ -1206,6 +1206,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
   const handleLeaveRpgMatch = async (exitToHub = false) => {
     playRetroSound('select', soundOn);
+    setBattleStatus('menu');
     if (rpgMode === 'coop') {
       try {
         if (roomCode) {
@@ -1219,6 +1220,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         setCoopSubState('choice');
         if (exitToHub) {
           setActiveGame(null);
+          setRpgMode(null);
         } else {
           setBattleStatus('menu');
         }
@@ -1226,6 +1228,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     } else {
       if (exitToHub) {
         setActiveGame(null);
+        setRpgMode(null);
       } else {
         setBattleStatus('menu');
       }
@@ -2483,8 +2486,18 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               size="small"
               onClick={() => {
                 playRetroSound('select', soundOn);
-                setActiveGame(null);
-                setRpgMode(null);
+                if (activeGame === 'battle') {
+                  handleLeaveRpgMatch(true);
+                } else {
+                  if (activeGame === 'command') {
+                    if (scriptAbortControllerRef.current) {
+                      scriptAbortControllerRef.current.abort();
+                    }
+                    setCmdScriptRunning(false);
+                  }
+                  setActiveGame(null);
+                  setRpgMode(null);
+                }
               }}
               sx={{
                 borderColor: 'rgba(255,255,255,0.15)',
