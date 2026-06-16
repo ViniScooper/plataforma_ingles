@@ -1007,6 +1007,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       
       setRpgMode('coop');
       setCoopSubState('play');
+      setActiveGame('battle');
       setPendingInvites([]);
     } catch (err) {
       setCoopError('Falha ao aceitar convite. ' + (err.response?.data?.error || err.message));
@@ -3100,45 +3101,66 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               <Divider sx={{ my: 3.5, borderColor: 'rgba(255,255,255,0.07)' }} />
 
               {battleStatus === 'active' && (
-                <Box sx={{ animation: 'fadeIn 0.4s ease' }}>
-                  <Box sx={{ p: 3, bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.05)' : 'rgba(0, 180, 216, 0.05)', borderLeft: `4px solid ${rpgMode === 'coop' ? '#b388ff' : '#00b4d8'}`, borderRadius: 3, mb: 3 }}>
-                    <Typography variant="caption" sx={{ color: rpgMode === 'coop' ? '#b388ff' : '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 1 }}>
-                      ⚔️ VOCABULARY QUEST
+                rpgMode === 'coop' && (coopPlayers[userId]?.hp ?? 100) === 0 ? (
+                  <Box sx={{ 
+                    textAlign: 'center', 
+                    py: 5, 
+                    px: 3,
+                    animation: 'fadeIn 0.4s ease', 
+                    bgcolor: 'rgba(255, 90, 121, 0.04)', 
+                    border: '1px dashed rgba(255, 90, 121, 0.2)', 
+                    borderRadius: 4,
+                    mb: 3
+                  }}>
+                    <Typography fontSize={48} sx={{ mb: 1.5 }}>💀</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#ff5a79' }}>
+                      Você foi Derrotado!
                     </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff' }}>
-                      {BATTLE_QUESTIONS[currentQuestIdx].q}
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', maxWidth: 450, mx: 'auto', lineHeight: 1.6 }}>
+                      Seu HP chegou a 0. Você não pode mais responder perguntas nesta batalha. Aguarde seu parceiro derrotar o monstro para vencerem juntos!
                     </Typography>
                   </Box>
+                ) : (
+                  <Box sx={{ animation: 'fadeIn 0.4s ease' }}>
+                    <Box sx={{ p: 3, bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.05)' : 'rgba(0, 180, 216, 0.05)', borderLeft: `4px solid ${rpgMode === 'coop' ? '#b388ff' : '#00b4d8'}`, borderRadius: 3, mb: 3 }}>
+                      <Typography variant="caption" sx={{ color: rpgMode === 'coop' ? '#b388ff' : '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 1 }}>
+                        ⚔️ VOCABULARY QUEST
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff' }}>
+                        {BATTLE_QUESTIONS[currentQuestIdx].q}
+                      </Typography>
+                    </Box>
 
-                  <Grid container spacing={2}>
-                    {BATTLE_QUESTIONS[currentQuestIdx].options.map((opt) => (
-                      <Grid item xs={12} sm={6} key={opt}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          onClick={() => handleRpgAnswerSubmit(opt)}
-                          sx={{
-                            p: 2,
-                            borderRadius: 3.5,
-                            fontWeight: 800,
-                            bgcolor: 'rgba(255, 255, 255, 0.03)',
-                            border: '1.5px solid rgba(255, 255, 255, 0.07)',
-                            color: '#cbd5e1',
-                            '&:hover': {
-                              bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
-                              borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8',
-                              color: '#fff',
-                              boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-                              transform: 'translateY(-2px)'
-                            }
-                          }}
-                        >
-                          {opt}
-                        </Button>
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
+                    <Grid container spacing={2}>
+                      {BATTLE_QUESTIONS[currentQuestIdx].options.map((opt) => (
+                        <Grid item xs={12} sm={6} key={opt}>
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            onClick={() => handleRpgAnswerSubmit(opt)}
+                            sx={{
+                              p: 2,
+                              borderRadius: 3.5,
+                              fontWeight: 800,
+                              bgcolor: 'rgba(255, 255, 255, 0.03)',
+                              border: '1.5px solid rgba(255, 255, 255, 0.07)',
+                              color: '#cbd5e1',
+                              '&:hover': {
+                                bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
+                                borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8',
+                                color: '#fff',
+                                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                                transform: 'translateY(-2px)'
+                              }
+                            }}
+                          >
+                            {opt}
+                          </Button>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )
               )}
 
               {/* Victory View */}

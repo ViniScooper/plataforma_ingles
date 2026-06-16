@@ -72,6 +72,11 @@ const BATTLE_QUESTIONS = [
   { q: "Como se escreve 'Feitiço' em inglês?", a: "Spell", options: ["Spell", "Magic", "Charm", "Hex"], level: 1 },
   { q: "O que significa a palavra 'Shield'?", a: "Escudo", options: ["Armadura", "Espada", "Escudo", "Capacete"], level: 1 },
   { q: "Como se diz 'Monstro' em inglês?", a: "Monster", options: ["Creature", "Beast", "Monster", "Goblin"], level: 1 },
+  { q: "Qual a tradução de 'Left'?", a: "Esquerda", options: ["Direita", "Esquerda", "Acima", "Abaixo"], level: 1 },
+  { q: "Qual a tradução de 'Right'?", a: "Direita", options: ["Direita", "Esquerda", "Antes", "Depois"], level: 1 },
+  { q: "O que significa a palavra 'Before'?", a: "Antes", options: ["Depois", "Antes", "Atrás", "Frente"], level: 1 },
+  { q: "O que significa a palavra 'After'?", a: "Depois", options: ["Antes", "Depois", "Lado", "Dentro"], level: 1 },
+  
   { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"], level: 2 },
   { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"], level: 2 },
   { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"], level: 2 },
@@ -92,6 +97,11 @@ const BATTLE_QUESTIONS = [
   { q: "Complete: 'There is ___ apple on the table.'", a: "an", options: ["a", "an", "the", "some"], level: 2 },
   { q: "O que significa 'Bow' no contexto de combate/armas?", a: "Arco", options: ["Flecha", "Espada", "Arco", "Adaga"], level: 2 },
   { q: "Como se diz 'Guerreiro' em inglês?", a: "Warrior", options: ["Mage", "Knight", "Warrior", "Thief"], level: 2 },
+  { q: "Como se diz 'Vire à esquerda' em inglês?", a: "Turn left", options: ["Turn right", "Turn left", "Go straight", "Go back"], level: 2 },
+  { q: "Como se diz 'Vire à direita' em inglês?", a: "Turn right", options: ["Turn right", "Turn left", "Go straight", "Go back"], level: 2 },
+  { q: "Complete: 'Tuesday comes ___ Monday.'", a: "after", options: ["before", "after", "between", "next"], level: 2 },
+  { q: "Complete: 'Monday comes ___ Tuesday.'", a: "before", options: ["before", "after", "between", "next"], level: 2 },
+  
   { q: "Como traduzir: 'The dragon is flying above the castle'?", a: "O dragão está voando acima do castelo", options: ["O dragão está voando acima do castelo", "O dragão está dormindo no castelo", "O dragão atacou o castelo", "O dragão fugiu do castelo"], level: 3 },
   { q: "Qual o passado do verbo 'Buy' (Comprar)?", a: "Bought", options: ["Buyed", "Bought", "Brought", "Bin"], level: 3 },
   { q: "Como traduzir: 'He is the king of this land'?", a: "Ele é o rei desta terra", options: ["Ele é o rei desta terra", "Ele quer reinar esta terra", "Ele protege esta terra", "Ele é o guerreiro desta terra"], level: 3 },
@@ -111,7 +121,11 @@ const BATTLE_QUESTIONS = [
   { q: "Complete: 'You should not go there ___ night.'", a: "at", options: ["in", "on", "at", "during"], level: 3 },
   { q: "Qual o passado de 'Fight' (Lutar)?", a: "Fought", options: ["Fighted", "Fought", "Foughted", "Figh"], level: 3 },
   { q: "Complete: 'This sword is made ___ steel.'", a: "of", options: ["of", "by", "from", "with"], level: 3 },
-  { q: "O que significa 'To escape'?", a: "Escapar", options: ["Entrar", "Lutar", "Escapar", "Esconder"], level: 3 }
+  { q: "O que significa 'To escape'?", a: "Escapar", options: ["Entrar", "Lutar", "Escapar", "Esconder"], level: 3 },
+  { q: "Ordene as palavras para formar a frase: 'like / English / I'", a: "I like English", options: ["I like English", "English I like", "Like I English", "I English like"], level: 3 },
+  { q: "Ordene as palavras para formar a frase: 'is / dragon / the / big'", a: "The dragon is big", options: ["Dragon the is big", "The is big dragon", "The dragon is big", "Is the big dragon"], level: 3 },
+  { q: "Ordene as palavras para formar a frase: 'go / left / turn / and'", a: "Turn left and go", options: ["Go and turn left", "Turn left and go", "Left turn and go", "Go left and turn"], level: 3 },
+  { q: "Ordene as palavras para formar a frase: 'she / before / eats / study'", a: "She eats before studying", options: ["She eats before studying", "She before studying eats", "Before studying she eats", "Eats she before studying"], level: 3 }
 ];
 
 const getNewQuestion = (stage = 1) => {
