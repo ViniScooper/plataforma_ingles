@@ -29,6 +29,7 @@ import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import apiClient from '../../utils/apiClient';
+import { getAvatarGrid } from './StudentAvatar';
 
 // ─── Sprite Data 16x16 Matrices ──────────────────────────────────────────────────
 
@@ -225,6 +226,38 @@ const drawSprite = (ctx, sprite, x, y, scale = 4, isFlipped = false) => {
   }
 };
 
+const drawStudentSprite = (ctx, avatar, isAttacking, x, y, scale = 4, isFlipped = false) => {
+  if (!avatar || !avatar.hairstyle) return false;
+  const gridObj = getAvatarGrid(avatar);
+  const colorMap = {
+    'H': avatar.hairColor, 'S': avatar.skinTone, 'E': avatar.eyeColor || '#111111', 
+    'W': '#ffffff', 'M': '#8b4513', 'R': avatar.clothingColor, 'D': avatar.pantsColor,
+    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b'
+  };
+
+  for (let r = 0; r < 16; r++) {
+    for (let c = 0; c < 16; c++) {
+      const char = gridObj[r]?.[c] || '0';
+      if (char !== '0') {
+        ctx.fillStyle = colorMap[char];
+        const drawX = isFlipped ? x + (15 - c) * scale : x + c * scale;
+        ctx.fillRect(drawX, y + r * scale, scale, scale);
+      }
+    }
+  }
+
+  if (isAttacking) {
+    const swordX = isFlipped ? x - 6 * scale : x + 12 * scale;
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillRect(swordX, y + 8 * scale, scale * 6, scale);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(swordX, y + 7 * scale, scale * 6, scale);
+    ctx.fillStyle = '#b45309';
+    ctx.fillRect(isFlipped ? swordX + 5 * scale : swordX - scale, y + 7 * scale, scale, scale * 3);
+  }
+  return true;
+};
+
 // ─── 1. Word Search Dynamic Generation ──────────────────────────────────────────
 
 const WORD_SEARCH_THEMES = {
@@ -301,9 +334,9 @@ const generateWordGrid = (words, size = 10) => {
 
 const BATTLE_QUESTIONS = [
   { q: "Qual a tradução de 'Book'?", a: "Livro", options: ["Livro", "Caderno", "Caneta", "Mesa"], level: 1 },
-  { q: "Qual o antônimo de 'Happy' (Feliz)?", a: "Sad", options: ["Angry", "Glad", "Sad", "Tired"], level: 1 },
-  { q: "Como se escreve 'Maçã' em inglês?", a: "Apple", options: ["Peach", "Apple", "Grape", "Orange"], level: 1 },
-  { q: "Traduzir: 'Thank you'", a: "Obrigado", options: ["Por favor", "De nada", "Obrigado", "Olá"], level: 1 },
+  { q: "Traduza a palavra 'Gato' para o inglês (escreva):", a: "cat", type: "input", level: 1 },
+  { q: "Ouça a palavra em inglês e selecione a tradução correta:", a: "Maçã", options: ["Maçã", "Laranja", "Uva", "Pêssego"], wordToSpeak: "apple", type: "listening", level: 1 },
+  { q: "Traduza a palavra 'Cachorro' para o inglês (escreva):", a: "dog", type: "input", level: 1 },
   { q: "Qual o significado de 'Run'?", a: "Correr", options: ["Pular", "Correr", "Andar", "Dançar"], level: 1 },
   { q: "Como se diz 'Quinta-feira' em inglês?", a: "Thursday", options: ["Tuesday", "Thursday", "Wednesday", "Friday"], level: 1 },
   { q: "Qual a palavra correta para 'Espada'?", a: "Sword", options: ["Shield", "Sword", "Spear", "Bow"], level: 1 },
@@ -325,8 +358,8 @@ const BATTLE_QUESTIONS = [
   { q: "O que significa a palavra 'Before'?", a: "Antes", options: ["Depois", "Antes", "Atrás", "Frente"], level: 1 },
   { q: "O que significa a palavra 'After'?", a: "Depois", options: ["Antes", "Depois", "Lado", "Dentro"], level: 1 },
   
-  { q: "Complete a frase: 'She ___ English very well.'", a: "speaks", options: ["speak", "speaks", "speaking", "spoke"], level: 2 },
-  { q: "Complete com a palavra correta: 'He is a ___ teacher.'", a: "good", options: ["well", "good", "better", "best"], level: 2 },
+  { q: "Traduza para inglês: 'Ela fala inglês muito bem'", a: "She speaks English very well", options: ["well", "She", "English", "speaks", "very"], type: "build", level: 2 },
+  { q: "Traduza para inglês: 'Ele é um bom professor'", a: "He is a good teacher", options: ["teacher", "He", "is", "good", "a"], type: "build", level: 2 },
   { q: "Qual o plural de 'Child'?", a: "Children", options: ["Childs", "Childrens", "Children", "Childes"], level: 2 },
   { q: "Qual é o passado do verbo 'Go'?", a: "Went", options: ["Goed", "Gone", "Went", "Goes"], level: 2 },
   { q: "Como se diz 'Poção de Vida' em inglês?", a: "Health Potion", options: ["Life Drink", "Healing Potion", "Health Potion", "Mana Flask"], level: 2 },
@@ -373,7 +406,20 @@ const BATTLE_QUESTIONS = [
   { q: "Ordene as palavras para formar a frase: 'like / English / I'", a: "I like English", options: ["I like English", "English I like", "Like I English", "I English like"], level: 3 },
   { q: "Ordene as palavras para formar a frase: 'is / dragon / the / big'", a: "The dragon is big", options: ["Dragon the is big", "The is big dragon", "The dragon is big", "Is the big dragon"], level: 3 },
   { q: "Ordene as palavras para formar a frase: 'go / left / turn / and'", a: "Turn left and go", options: ["Go and turn left", "Turn left and go", "Left turn and go", "Go left and turn"], level: 3 },
-  { q: "Ordene as palavras para formar a frase: 'she / before / eats / study'", a: "She eats before studying", options: ["She eats before studying", "She before studying eats", "Before studying she eats", "Eats she before studying"], level: 3 }
+  { q: "Ordene as palavras para formar a frase: 'she / before / eats / study'", a: "She eats before studying", options: ["She eats before studying", "She before studying eats", "Before studying she eats", "Eats she before studying"], level: 3 },
+  { q: "Fale no microfone a frase: 'I am ready'", a: "I am ready", type: "speaking", level: 1 },
+  { q: "Fale no microfone a frase: 'The dragon is big'", a: "The dragon is big", type: "speaking", level: 2 },
+  { q: "Fale no microfone a palavra: 'Shield'", a: "Shield", type: "speaking", level: 1 },
+  { q: "Fale no microfone a frase: 'I need a health potion'", a: "I need a health potion", type: "speaking", level: 2 },
+  { q: "Fale no microfone a palavra: 'Knight'", a: "Knight", type: "speaking", level: 3 },
+  { q: "Como se diz 'Magia' em inglês?", a: "Magic", options: ["Magic", "Sword", "Shield", "Potion"], level: 1 },
+  { q: "Complete: 'The ___ is very dark.'", a: "cave", options: ["cave", "sun", "sky", "light"], level: 1 },
+  { q: "Como traduzir 'Correr'?", a: "Run", options: ["Run", "Walk", "Jump", "Fly"], level: 1 },
+  { q: "Qual o passado de 'Run'?", a: "Ran", options: ["Runned", "Ran", "Running", "Run"], level: 2 },
+  { q: "O que significa 'To heal'?", a: "Curar", options: ["Lutar", "Andar", "Dormir", "Curar"], level: 2 },
+  { q: "Qual a tradução de 'Ouro'?", a: "Gold", options: ["Silver", "Gold", "Diamond", "Iron"], level: 1 },
+  { q: "Ordene as palavras: 'a / I / found / sword'", a: "I found a sword", options: ["I found a sword", "Found I a sword", "A sword I found", "Sword a I found"], level: 2 },
+  { q: "Fale no microfone a frase: 'We must defeat the monster'", a: "We must defeat the monster", type: "speaking", level: 3 }
 ];
 
 const CMD_STAGES = [
@@ -742,9 +788,24 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const [battleLog, setBattleLog] = useState([]);
   const [currentQuestIdx, setCurrentQuestIdx] = useState(0);
   const [battleStatus, setBattleStatus] = useState('active');
+  const [failedQuestions, setFailedQuestions] = useState([]);
+  const [isListening, setIsListening] = useState(false);
+  const [spokenText, setSpokenText] = useState('');
   const [coopPlayers, setCoopPlayers] = useState({});
   const [timeLeft, setTimeLeft] = useState(13);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
+
+  // --- Local Scores and Records ---
+  const [soloScore, setSoloScore] = useState(0);
+  const [soloRecord, setSoloRecord] = useState(() => {
+    return Number(localStorage.getItem('pixel_word_battle_record') || 0);
+  });
+  const [soloCombo, setSoloCombo] = useState(0);
+  const [wsScore, setWsScore] = useState(0);
+  const [wsRecord, setWsRecord] = useState(() => {
+    return Number(localStorage.getItem('word_search_record') || 0);
+  });
+  const [rpgBuildSelection, setRpgBuildSelection] = useState([]);
 
   // --- Pixel Command Quest States ---
   const [cmdText, setCmdText] = useState('');
@@ -804,6 +865,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setWsCompleted(false);
     setWsGrid(generateWordGrid(theme.words, 10));
     setShowWsTutorial(true);
+    setWsScore(0);
     setActiveGame('wordsearch');
   };
 
@@ -869,6 +931,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
         if (foundWordMatch) {
           playRetroSound('victory', soundOn);
+          setWsScore(prev => {
+            const added = wsWords.length === (wsFoundWords.length + 1) ? 120 : 20;
+            const nextScore = prev + added;
+            if (nextScore > wsRecord) {
+              setWsRecord(nextScore);
+              localStorage.setItem('word_search_record', String(nextScore));
+            }
+            return nextScore;
+          });
           setWsFoundWords(prev => {
             const next = [...prev, foundWordMatch];
             if (next.length === wsWords.length) {
@@ -942,6 +1013,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
     if (foundWordMatch) {
       playRetroSound('victory', soundOn);
+      setWsScore(prev => {
+        const added = wsWords.length === (wsFoundWords.length + 1) ? 120 : 20;
+        const nextScore = prev + added;
+        if (nextScore > wsRecord) {
+          setWsRecord(nextScore);
+          localStorage.setItem('word_search_record', String(nextScore));
+        }
+        return nextScore;
+      });
       setWsFoundWords(prev => {
         const next = [...prev, foundWordMatch];
         if (next.length === wsWords.length) {
@@ -1226,12 +1306,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
       }
     } else {
-      if (exitToHub) {
-        setActiveGame(null);
-        setRpgMode(null);
-      } else {
-        setBattleStatus('menu');
-      }
+      setActiveGame(null);
+      setRpgMode(null);
     }
   };
 
@@ -1351,6 +1427,42 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     };
   }, [rpgMode, roomCode]);
 
+  const handleToggleListening = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+    if (isListening) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    
+    recognition.onstart = () => {
+      setIsListening(true);
+      setSpokenText('Ouvindo...');
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSpokenText(transcript);
+      handleRpgAnswerSubmit(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      setSpokenText('Erro ao ouvir.');
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
   // RPG Combat Submission Action (Solo vs Co-op)
   const handleRpgAnswerSubmit = async (option) => {
     if (battleStatus !== 'active') return;
@@ -1389,16 +1501,65 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       const q = BATTLE_QUESTIONS[currentQuestIdx];
       if (!q) return;
       const state = animRef.current;
+      const isCorrect = option && option.trim().toLowerCase().replace(/[.,!?:;]/g, '') === q.a.trim().toLowerCase().replace(/[.,!?:;]/g, '');
 
-      if (option === q.a) {
-        triggerSoloAttackAnimation(true);
-        const damage = battleStage === 3 ? 30 : 20;
+      if (!isCorrect) {
+        setFailedQuestions(prev => {
+          if (!prev.includes(currentQuestIdx)) return [...prev, currentQuestIdx];
+          return prev;
+        });
+      }
+
+      let isCriticalVal = false;
+      if (isCorrect) {
+        const newCombo = soloCombo + 1;
+        setSoloCombo(newCombo);
+        isCriticalVal = timeLeft >= 10 || newCombo >= 3;
+        
+        const baseDamage = battleStage === 3 ? 30 : 20;
+        const damage = isCriticalVal ? Math.round(baseDamage * 1.5) : baseDamage;
         const newEnemyHp = Math.max(enemyHp - damage, 0);
         setEnemyHp(newEnemyHp);
-        setBattleLog(prev => [`⚔️ Você acertou! Desferiu golpe de ${damage} no monstro.`, ...prev]);
+
+        // Score points calculation
+        const points = 10 + (newCombo * 5) + (timeLeft * 2);
+        setSoloScore(prev => {
+          const nextScore = prev + points;
+          if (nextScore > soloRecord) {
+            setSoloRecord(nextScore);
+            localStorage.setItem('pixel_word_battle_record', String(nextScore));
+          }
+          return nextScore;
+        });
+
+        // Heal 10 HP if combo >= 2
+        let triggerHeal = false;
+        if (newCombo >= 2) {
+          triggerHeal = true;
+          setHeroHp(prev => Math.min(prev + 10, 100));
+        }
+
+        triggerSoloAttackAnimation(true, isCriticalVal, false);
+        if (triggerHeal) {
+          setTimeout(() => {
+            triggerSoloAttackAnimation(true, false, true);
+          }, 600);
+        }
+
+        const hitDesc = isCriticalVal ? `💥 CRÍTICO! ` : `⚔️ `;
+        const healDesc = triggerHeal ? ` (+10 HP de Cura 💚)` : ``;
+        setBattleLog(prev => [`${hitDesc}Você acertou! Desferiu golpe de ${damage} no monstro.${healDesc}`, ...prev]);
 
         if (newEnemyHp === 0) {
           if (battleStage < 3) {
+            setSoloScore(prev => {
+              const nextScore = prev + 50;
+              if (nextScore > soloRecord) {
+                setSoloRecord(nextScore);
+                localStorage.setItem('pixel_word_battle_record', String(nextScore));
+              }
+              return nextScore;
+            });
             setTimeout(() => {
               const nextStage = battleStage + 1;
               const nextMaxHp = nextStage === 2 ? 80 : 120;
@@ -1406,7 +1567,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               setEnemyHp(nextMaxHp);
               setMaxEnemyHp(nextMaxHp);
               playRetroSound('victory', soundOn);
-              setBattleLog(prev => [`🎉 Estágio ${battleStage} vencido! Nova ameaça surge...`, ...prev]);
+              setBattleLog(prev => [`🎉 Estágio ${battleStage} vencido! Nova ameaça surge... (+50 pts)`, ...prev]);
               animRef.current.enemyX = 280;
               animRef.current.enemyState = 'stand';
               
@@ -1418,17 +1579,26 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               setIsTimerPaused(false);
             }, 1000);
           } else {
+            setSoloScore(prev => {
+              const nextScore = prev + 150;
+              if (nextScore > soloRecord) {
+                setSoloRecord(nextScore);
+                localStorage.setItem('pixel_word_battle_record', String(nextScore));
+              }
+              return nextScore;
+            });
             setBattleStatus('victory');
             playRetroSound('victory', soundOn);
             onEarnXP(100);
           }
         }
       } else {
-        triggerSoloAttackAnimation(false);
+        setSoloCombo(0);
+        triggerSoloAttackAnimation(false, false, false);
         const damage = battleStage === 1 ? 15 : battleStage === 2 ? 20 : 25;
         const newHeroHp = Math.max(heroHp - damage, 0);
         setHeroHp(newHeroHp);
-        setBattleLog(prev => [`💥 Resposta errada! Monstro causou ${damage} de dano.`, ...prev]);
+        setBattleLog(prev => [`💥 Resposta errada! Monstro causou ${damage} de dano. (Combo resetado)`, ...prev]);
 
         if (newHeroHp === 0) {
           setBattleStatus('defeat');
@@ -1437,14 +1607,20 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
       }
 
-      const isEnemyDefeated = (option === q.a && Math.max(enemyHp - (battleStage === 3 ? 30 : 20), 0) === 0);
+      const isEnemyDefeated = (isCorrect && enemyHp <= (isCriticalVal ? Math.round((battleStage === 3 ? 30 : 20) * 1.5) : (battleStage === 3 ? 30 : 20)));
       const activeStageForNextQuestion = isEnemyDefeated 
         ? Math.min(battleStage + 1, 3) 
         : battleStage;
 
       const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === activeStageForNextQuestion);
       let nextIdx;
-      if (candidates.length > 0) {
+      
+      const failedInThisLevel = failedQuestions.filter(idx => BATTLE_QUESTIONS[idx] && BATTLE_QUESTIONS[idx].level === activeStageForNextQuestion && idx !== currentQuestIdx);
+      
+      if (failedInThisLevel.length > 0 && Math.random() < 0.4) {
+        nextIdx = failedInThisLevel[Math.floor(Math.random() * failedInThisLevel.length)];
+        setFailedQuestions(prev => prev.filter(id => id !== nextIdx));
+      } else if (candidates.length > 0) {
         do {
           const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
           nextIdx = BATTLE_QUESTIONS.findIndex(quest => quest.q === selectedQ.q);
@@ -1589,10 +1765,43 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   };
 
   // Solo Animation Trigger
-  const triggerSoloAttackAnimation = (isHeroAttacking) => {
+  const triggerSoloAttackAnimation = (isHeroAttacking, isCritical = false, isHeal = false) => {
     const state = animRef.current;
+    if (isHeal) {
+      playRetroSound('victory', soundOn);
+      const targetX = state.heroX;
+      for (let i = 0; i < 20; i++) {
+        state.particles.push({
+          x: targetX + 15 + Math.random() * 20,
+          y: 80 + Math.random() * 30,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -2 - Math.random() * 3,
+          size: 3 + Math.random() * 3,
+          color: '#48c78e',
+          life: 25 + Math.floor(Math.random() * 10)
+        });
+      }
+      state.damageTexts.push({
+        text: `+10 HP (Cura! 💚)`,
+        x: targetX + 5,
+        y: 40,
+        color: '#48c78e',
+        life: 40
+      });
+      state.heroState = 'attack';
+      setTimeout(() => {
+        state.heroState = 'stand';
+      }, 450);
+      return;
+    }
+
     if (isHeroAttacking) {
-      playRetroSound('slash', soundOn);
+      if (isCritical) {
+        playRetroSound('victory', soundOn);
+        state.shakeAmount = 25;
+      } else {
+        playRetroSound('slash', soundOn);
+      }
       state.heroState = 'attack';
       
       let step = 0;
@@ -1603,23 +1812,29 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         } else if (step <= 10) {
           if (step === 7) {
             state.enemyState = 'hurt';
-            for (let i = 0; i < 20; i++) {
+            const pColor = isCritical ? '#ffb74d' : '#00b4d8';
+            const pCount = isCritical ? 35 : 20;
+            const pSpeed = isCritical ? 9 : 7;
+            for (let i = 0; i < pCount; i++) {
               state.particles.push({
                 x: state.enemyX + 24,
                 y: 75 + Math.random() * 30,
-                vx: (Math.random() - 0.5) * 7,
-                vy: (Math.random() - 0.5) * 7,
-                size: 3 + Math.random() * 3,
-                color: '#00b4d8',
+                vx: (Math.random() - 0.5) * pSpeed,
+                vy: (Math.random() - 0.5) * pSpeed,
+                size: (isCritical ? 4 : 3) + Math.random() * (isCritical ? 5 : 3),
+                color: pColor,
                 life: 15 + Math.floor(Math.random() * 12)
               });
             }
+            const dmgText = isCritical 
+              ? `💥 CRITICAL! -${battleStage === 3 ? 45 : 30} HP` 
+              : `-${battleStage === 3 ? 30 : 20} HP`;
             state.damageTexts.push({
-              text: `-${battleStage === 3 ? 30 : 20} HP`,
-              x: state.enemyX + 10,
+              text: dmgText,
+              x: state.enemyX - (isCritical ? 25 : 0) + 10,
               y: 50,
-              color: '#ff5a79',
-              life: 35
+              color: isCritical ? '#ffb74d' : '#ff5a79',
+              life: isCritical ? 45 : 35
             });
           }
         } else if (step <= 16) {
@@ -1680,6 +1895,12 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     let animationId;
+
+    let myAvatar = null;
+    const savedAvatar = localStorage.getItem('student_custom_avatar');
+    if (savedAvatar) {
+      try { myAvatar = JSON.parse(savedAvatar); } catch(e){}
+    }
 
     const renderLoop = () => {
       const state = animRef.current;
@@ -1745,7 +1966,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               ctx.globalAlpha = 0.5;
             }
           }
-          drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          if (myAvatar && myAvatar.hairstyle) {
+            drawStudentSprite(ctx, myAvatar, state.hero1State === 'attack', state.hero1X, p1Y, 3.6, false);
+          } else {
+            drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          }
           ctx.restore();
         }
         
@@ -1799,7 +2024,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
             ctx.globalAlpha = 0.5;
           }
         }
-        drawSprite(ctx, heroSprite, state.heroX, heroY, 3.5, false);
+        if (myAvatar && myAvatar.hairstyle) {
+          drawStudentSprite(ctx, myAvatar, state.heroState === 'attack', state.heroX, heroY, 4, false);
+        } else {
+          drawSprite(ctx, heroSprite, state.heroX, heroY, 3.5, false);
+        }
         ctx.restore();
       }
 
@@ -1896,6 +2125,9 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     setMaxEnemyHp(60);
     setBattleStage(1);
     setBattleStatus('active');
+    setSoloScore(0);
+    setSoloCombo(0);
+    setRpgBuildSelection([]);
     setBattleLog(['⚔️ Combate solo iniciado! Defenda seu reino contra o SLIME.']);
     const candidates = BATTLE_QUESTIONS.filter(quest => quest.level === 1);
     const selectedQ = candidates[Math.floor(Math.random() * candidates.length)];
@@ -2757,11 +2989,16 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Button>
               </Box>
             </Box>
-            <Chip
-              label={`${wsFoundWords.length} / ${wsWords.length} Encontradas`}
-              color={wsCompleted ? "success" : "primary"}
-              sx={{ fontWeight: 900 }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5, flexWrap: 'wrap' }}>
+              <Typography variant="subtitle2" sx={{ color: '#00b4d8', fontWeight: 900, letterSpacing: 0.5 }}>
+                SCORE: <span style={{ color: '#fff' }}>{wsScore}</span> | RECORDE: <span style={{ color: '#fff' }}>{wsRecord}</span>
+              </Typography>
+              <Chip
+                label={`${wsFoundWords.length} / ${wsWords.length} Encontradas`}
+                color={wsCompleted ? "success" : "primary"}
+                sx={{ fontWeight: 900 }}
+              />
+            </Box>
           </Box>
 
           {showWsTutorial ? (
@@ -3258,6 +3495,27 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       👥 Jogando em Dupla: {Object.values(coopPlayers || {}).map(p => p.name).join(' & ')}
                     </Typography>
                   )}
+                  {rpgMode === 'solo' && (
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5, flexWrap: 'wrap' }}>
+                      <Typography variant="caption" sx={{ color: '#ffb74d', fontWeight: 900, letterSpacing: 0.5 }}>
+                        🏆 SCORE: <span style={{ color: '#fff' }}>{soloScore}</span> | RECORDE: <span style={{ color: '#fff' }}>{soloRecord}</span>
+                      </Typography>
+                      {soloCombo > 0 && (
+                        <Chip
+                          label={`COMBO: ${soloCombo} 🔥`}
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255, 183, 77, 0.15)',
+                            color: '#ffb74d',
+                            fontWeight: 950,
+                            height: 18,
+                            fontSize: '0.68rem',
+                            border: '1px solid rgba(255, 183, 77, 0.3)'
+                          }}
+                        />
+                      )}
+                    </Box>
+                  )}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                   <Chip
@@ -3411,34 +3669,267 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       />
                     </Box>
 
-                    <Grid container spacing={2}>
-                      {(BATTLE_QUESTIONS[currentQuestIdx]?.options || []).map((opt) => (
-                        <Grid item xs={12} sm={6} key={opt}>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={() => handleRpgAnswerSubmit(opt)}
-                            sx={{
-                              p: 2,
-                              borderRadius: 3.5,
-                              fontWeight: 800,
-                              bgcolor: 'rgba(255, 255, 255, 0.03)',
-                              border: '1.5px solid rgba(255, 255, 255, 0.07)',
-                              color: '#cbd5e1',
-                              '&:hover': {
-                                bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
-                                borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8',
-                                color: '#fff',
-                                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
-                                transform: 'translateY(-2px)'
-                              }
-                            }}
+                    {(() => {
+                      const qType = BATTLE_QUESTIONS[currentQuestIdx]?.type;
+                      const qOptions = BATTLE_QUESTIONS[currentQuestIdx]?.options || [];
+                      
+                      if (qType === 'listening') {
+                        return (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', gap: 2 }}>
+                            <Button
+                              variant="contained"
+                              color="secondary"
+                              onClick={() => {
+                                try {
+                                  const utterance = new SpeechSynthesisUtterance(BATTLE_QUESTIONS[currentQuestIdx]?.wordToSpeak);
+                                  utterance.lang = 'en-US';
+                                  utterance.rate = 0.85;
+                                  window.speechSynthesis.speak(utterance);
+                                } catch (e) {
+                                  console.warn("Speech API error:", e);
+                                }
+                              }}
+                              startIcon={<VolumeUpIcon />}
+                              sx={{
+                                py: 1.5,
+                                px: 4,
+                                borderRadius: 3,
+                                bgcolor: '#7c4dff',
+                                fontWeight: 900,
+                                textTransform: 'none',
+                                '&:hover': { bgcolor: '#b388ff' },
+                                mb: 1
+                              }}
+                            >
+                              🔊 Ouvir Palavra (Listening)
+                            </Button>
+                            <Grid container spacing={2}>
+                              {qOptions.map((opt) => (
+                                <Grid item xs={12} sm={6} key={opt}>
+                                  <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={() => handleRpgAnswerSubmit(opt)}
+                                    sx={{
+                                      p: 2,
+                                      borderRadius: 3.5,
+                                      fontWeight: 800,
+                                      bgcolor: 'rgba(255, 255, 255, 0.03)',
+                                      border: '1.5px solid rgba(255, 255, 255, 0.07)',
+                                      color: '#cbd5e1',
+                                      '&:hover': {
+                                        bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
+                                        borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8',
+                                        color: '#fff',
+                                        boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                                        transform: 'translateY(-2px)'
+                                      }
+                                    }}
+                                  >
+                                    {opt}
+                                  </Button>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </Box>
+                        );
+                      }
+
+                      if (qType === 'speaking') {
+                        return (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, mt: 1 }}>
+                            <Button
+                              variant="contained"
+                              onClick={handleToggleListening}
+                              sx={{
+                                bgcolor: isListening ? '#ff5a79' : '#00b4d8',
+                                '&:hover': { bgcolor: isListening ? '#ff3b5c' : '#0077b6' },
+                                borderRadius: 5,
+                                py: 2,
+                                px: 4,
+                                fontWeight: 900
+                              }}
+                            >
+                              {isListening ? '🎙️ Ouvindo...' : '🎙️ Clique para Falar'}
+                            </Button>
+                            {spokenText && (
+                              <Typography variant="body2" sx={{ color: '#fff', fontStyle: 'italic', fontWeight: 600 }}>
+                                Você disse: "{spokenText}"
+                              </Typography>
+                            )}
+                          </Box>
+                        );
+                      }
+
+                      if (qType === 'input') {
+                        return (
+                          <Box 
+                            component="form" 
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              const val = e.target.answerInput.value;
+                              handleRpgAnswerSubmit(val);
+                              e.target.answerInput.value = '';
+                            }} 
+                            sx={{ display: 'flex', gap: 2, width: '100%', mt: 1 }}
                           >
-                            {opt}
-                          </Button>
+                            <TextField
+                              name="answerInput"
+                              placeholder="Digite a tradução em inglês..."
+                              fullWidth
+                              autoFocus
+                              autoComplete="off"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  bgcolor: 'rgba(0,0,0,0.25)',
+                                  borderRadius: 3,
+                                  color: '#fff',
+                                  fontWeight: 800,
+                                  border: '1.5px solid rgba(255, 255, 255, 0.08)',
+                                  '& fieldset': { borderColor: 'transparent' },
+                                  '&:hover fieldset': { borderColor: 'transparent' },
+                                  '&.Mui-focused fieldset': { borderColor: 'transparent' },
+                                  '&.Mui-focused': { borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8' }
+                                }
+                              }}
+                            />
+                            <Button 
+                              type="submit" 
+                              variant="contained" 
+                              sx={{
+                                px: 4,
+                                borderRadius: 3,
+                                fontWeight: 900,
+                                bgcolor: rpgMode === 'coop' ? '#7c4dff' : '#00b4d8',
+                                '&:hover': { bgcolor: rpgMode === 'coop' ? '#b388ff' : '#0077b6' }
+                              }}
+                            >
+                              Atacar ⚔️
+                            </Button>
+                          </Box>
+                        );
+                      }
+
+                      if (qType === 'build') {
+                        return (
+                          <Box sx={{ width: '100%' }}>
+                            <Box sx={{ 
+                              minHeight: 52, 
+                              p: 2, 
+                              mb: 2.5, 
+                              border: '2px dashed rgba(255,255,255,0.12)', 
+                              borderRadius: 3.5, 
+                              display: 'flex', 
+                              flexWrap: 'wrap', 
+                              gap: 1.2, 
+                              alignItems: 'center', 
+                              bgcolor: 'rgba(0,0,0,0.25)' 
+                            }}>
+                              {rpgBuildSelection.length === 0 && (
+                                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>
+                                  Clique nas palavras abaixo para construir a tradução...
+                                </Typography>
+                              )}
+                              {rpgBuildSelection.map((word, idx) => (
+                                <Chip
+                                  key={idx}
+                                  label={word}
+                                  onClick={() => {
+                                    setRpgBuildSelection(prev => prev.filter((_, i) => i !== idx));
+                                  }}
+                                  sx={{
+                                    bgcolor: rpgMode === 'coop' ? '#7c4dff' : '#00b4d8',
+                                    color: '#fff',
+                                    fontWeight: 900,
+                                    borderRadius: 2.5,
+                                    cursor: 'pointer'
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                            
+                            <Box sx={{ display: 'flex', gap: 1.2, flexWrap: 'wrap', mb: 3 }}>
+                              {qOptions.filter(opt => !rpgBuildSelection.includes(opt)).map((opt) => (
+                                <Chip
+                                  key={opt}
+                                  label={opt}
+                                  onClick={() => setRpgBuildSelection([...rpgBuildSelection, opt])}
+                                  variant="outlined"
+                                  sx={{
+                                    color: '#eee',
+                                    borderColor: 'rgba(255,255,255,0.15)',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    fontWeight: 700,
+                                    borderRadius: 2.5,
+                                    cursor: 'pointer',
+                                    '&:hover': { bgcolor: 'rgba(255,255,255,0.06)' }
+                                  }}
+                                />
+                              ))}
+                            </Box>
+
+                            <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'flex-end' }}>
+                              <Button 
+                                variant="outlined"
+                                color="error"
+                                onClick={() => setRpgBuildSelection([])}
+                                sx={{ borderRadius: 2.5, fontWeight: 800, textTransform: 'none' }}
+                              >
+                                Limpar
+                              </Button>
+                              <Button 
+                                variant="contained"
+                                onClick={() => {
+                                  handleRpgAnswerSubmit(rpgBuildSelection.join(' '));
+                                  setRpgBuildSelection([]);
+                                }}
+                                disabled={rpgBuildSelection.length === 0}
+                                sx={{ 
+                                  borderRadius: 2.5, 
+                                  fontWeight: 900, 
+                                  textTransform: 'none',
+                                  bgcolor: rpgMode === 'coop' ? '#7c4dff' : '#00b4d8',
+                                  '&:hover': { bgcolor: rpgMode === 'coop' ? '#b388ff' : '#0077b6' }
+                                }}
+                              >
+                                Confirmar e Atacar ⚔️
+                              </Button>
+                            </Box>
+                          </Box>
+                        );
+                      }
+
+                      return (
+                        <Grid container spacing={2}>
+                          {qOptions.map((opt) => (
+                            <Grid item xs={12} sm={6} key={opt}>
+                              <Button
+                                fullWidth
+                                variant="contained"
+                                onClick={() => handleRpgAnswerSubmit(opt)}
+                                sx={{
+                                  p: 2,
+                                  borderRadius: 3.5,
+                                  fontWeight: 800,
+                                  bgcolor: 'rgba(255, 255, 255, 0.03)',
+                                  border: '1.5px solid rgba(255, 255, 255, 0.07)',
+                                  color: '#cbd5e1',
+                                  '&:hover': {
+                                    bgcolor: rpgMode === 'coop' ? 'rgba(179, 136, 255, 0.1)' : 'rgba(0, 180, 216, 0.1)',
+                                    borderColor: rpgMode === 'coop' ? '#b388ff' : '#00b4d8',
+                                    color: '#fff',
+                                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2)',
+                                    transform: 'translateY(-2px)'
+                                  }
+                                }}
+                              >
+                                {opt}
+                              </Button>
+                            </Grid>
+                          ))}
                         </Grid>
-                      ))}
-                    </Grid>
+                      );
+                    })()}
                   </Box>
                 )
               )}

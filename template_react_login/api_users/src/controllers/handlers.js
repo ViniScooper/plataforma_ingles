@@ -351,16 +351,24 @@ export const updateExercise = async (req, res) => {
 
 export const deleteExercise = async (req, res) => {
   const { id } = req.params;
-
   try {
     await prisma.exercise.delete({
       where: { id: parseInt(id) }
     });
-
     return res.status(200).json({ message: 'Exercise deleted successfully' });
   } catch (error) {
     console.error('Error deleting exercise:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Error deleting exercise' });
+  }
+};
+
+export const deleteAllExercises = async (req, res) => {
+  try {
+    await prisma.exercise.deleteMany({});
+    return res.status(200).json({ message: 'All exercises deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting all exercises:', error);
+    return res.status(500).json({ error: 'Error deleting all exercises' });
   }
 };
 
@@ -650,13 +658,13 @@ export const updateExerciseStatus = async (req, res) => {
 
 export const resetExerciseStatus = async (req, res) => {
   const { userId, exerciseId } = req.body;
-
+  
   if (!userId || !exerciseId) {
     return res.status(400).json({ error: 'User ID and Exercise ID are required' });
   }
 
   try {
-    const update = await prisma.student_exercise.update({
+    await prisma.student_exercise.update({
       where: {
         userId_exerciseId: {
           userId: parseInt(userId),
@@ -671,14 +679,20 @@ export const resetExerciseStatus = async (req, res) => {
         completedAt: null
       }
     });
-
-    return res.status(200).json({
-      message: 'Exercise reset successfully',
-      update
-    });
+    return res.status(200).json({ message: 'Exercise status reset to assigned' });
   } catch (error) {
     console.error('Error resetting exercise status:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Error resetting exercise status' });
+  }
+};
+
+export const resetAllProgress = async (req, res) => {
+  try {
+    await prisma.student_exercise.deleteMany({});
+    return res.status(200).json({ message: 'All student progress reset successfully' });
+  } catch (error) {
+    console.error('Error resetting all progress:', error);
+    return res.status(500).json({ error: 'Error resetting all progress' });
   }
 };
 

@@ -24,6 +24,8 @@ router.get('/exercises', handlers.getExercises);
 router.post('/exercises', verifyToken, verifyAdmin, handlers.createExercise);
 router.patch('/exercises/:id', verifyToken, verifyAdmin, handlers.updateExercise);
 router.delete('/exercises/:id', verifyToken, verifyAdmin, handlers.deleteExercise);
+router.delete('/exercises-all', verifyToken, verifyAdmin, handlers.deleteAllExercises);
+router.delete('/progress-all', verifyToken, verifyAdmin, handlers.resetAllProgress);
 router.post('/exercises/import', verifyToken, verifyAdmin, handlers.importExercises);
 
 // Enrollments

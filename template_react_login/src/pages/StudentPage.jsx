@@ -42,6 +42,7 @@ import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/apiClient';
 import ExerciseCard from '../components/Student/ExerciseCard';
 import GamesZone from '../components/Student/GamesZone';
+import { StudentAvatar } from '../components/Student/StudentAvatar';
 
 const TYPE_LABELS = {
   quiz: '🧠 Quiz',
@@ -787,18 +788,9 @@ export default function StudentPage() {
                     zIndex: 0
                   }} />
                   <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Avatar sx={{
-                      width: 80, height: 80,
-                      mb: 2,
-                      border: '3px solid #00b4d8',
-                      boxShadow: '0 0 20px rgba(0, 180, 216, 0.3)',
-                      background: 'linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 100%)',
-                      fontSize: '1.8rem',
-                      fontWeight: 800,
-                      color: '#00b4d8'
-                    }}>
-                      {user?.name ? user.name.substring(0, 2).toUpperCase() : 'ST'}
-                    </Avatar>
+                    <Box sx={{ mb: 2 }}>
+                      <StudentAvatar editable={true} size={90} />
+                    </Box>
                     <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', mb: 0.5 }}>
                       Student Account
                     </Typography>

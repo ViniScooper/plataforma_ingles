@@ -771,6 +771,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteAllExercises = async () => {
+    if (window.confirm('⚠️ CUIDADO: Tem certeza que deseja APAGAR TODAS AS ATIVIDADES do sistema? Esta ação é irreversível e removerá as atividades de todos os alunos.')) {
+      try {
+        await apiClient.delete('/exercises-all');
+        alert('Todas as atividades foram apagadas com sucesso.');
+        loadAllExercises();
+        loadStudents();
+      } catch (err) {
+        alert('Erro ao apagar atividades: ' + (err.response?.data?.error || err.message));
+      }
+    }
+  };
+
+  const handleResetAllProgress = async () => {
+    if (window.confirm('⚠️ CUIDADO: Tem certeza que deseja ZERAR O PROGRESSO de todos os alunos? As atividades continuarão no banco, mas estarão desmarcadas para todos.')) {
+      try {
+        await apiClient.delete('/progress-all');
+        alert('Todo o progresso foi zerado com sucesso.');
+        loadAllExercises();
+        loadStudents();
+      } catch (err) {
+        alert('Erro ao zerar progresso: ' + (err.response?.data?.error || err.message));
+      }
+    }
+  };
+
   const handleAssignExercise = async () => {
     try {
       setError('');
@@ -1149,6 +1175,36 @@ export default function AdminPage() {
             }}
           >
             Importar JSON
+          </Button>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Button 
+            variant="outlined" 
+            color="warning"
+            onClick={handleResetAllProgress}
+            sx={{ 
+              borderRadius: 3, 
+              px: 3, 
+              fontWeight: 800,
+              textTransform: 'none',
+            }}
+          >
+            Zerar Progressos
+          </Button>
+          <Button 
+            variant="contained" 
+            color="error"
+            startIcon={<DeleteIcon />} 
+            onClick={handleDeleteAllExercises}
+            sx={{ 
+              borderRadius: 3, 
+              px: 3, 
+              fontWeight: 800,
+              textTransform: 'none',
+            }}
+          >
+            Apagar Tudo
           </Button>
         </Box>
         <TableContainer component={Paper} elevation={0} sx={{ 
