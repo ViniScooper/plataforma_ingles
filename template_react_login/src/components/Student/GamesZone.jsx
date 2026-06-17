@@ -130,10 +130,22 @@ const SPRITE_DRAGON = [
 
 // ─── Web Audio API Sound FX Synth ───────────────────────────────────────────────
 
+let globalAudioCtx = null;
+
+const getAudioContext = () => {
+  if (!globalAudioCtx) {
+    globalAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (globalAudioCtx.state === 'suspended') {
+    globalAudioCtx.resume();
+  }
+  return globalAudioCtx;
+};
+
 const playRetroSound = (type, soundOn = true) => {
   if (!soundOn) return;
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioContext();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -229,10 +241,27 @@ const drawSprite = (ctx, sprite, x, y, scale = 4, isFlipped = false) => {
 const drawStudentSprite = (ctx, avatar, isAttacking, x, y, scale = 4, isFlipped = false) => {
   if (!avatar || !avatar.hairstyle) return false;
   const gridObj = getAvatarGrid(avatar);
+  const darkenColor = (color, percent) => {
+    if (!color || typeof color !== 'string') return '#000000';
+    let hex = color.replace(/^#/, '');
+    if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
+    if (hex.length !== 6) return color;
+    const num = parseInt(hex, 16);
+    const r = Math.floor((num >> 16) * (1 - percent));
+    const g = Math.floor(((num >> 8) & 0x00FF) * (1 - percent));
+    const b = Math.floor((num & 0x0000FF) * (1 - percent));
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  };
+
   const colorMap = {
     'H': avatar.hairColor, 'S': avatar.skinTone, 'E': avatar.eyeColor || '#111111', 
     'W': '#ffffff', 'M': '#8b4513', 'R': avatar.clothingColor, 'D': avatar.pantsColor,
-    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b'
+    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b',
+    'h': darkenColor(avatar.hairColor, 0.25),
+    's': darkenColor(avatar.skinTone, 0.15),
+    'r': darkenColor(avatar.clothingColor, 0.25),
+    'd': darkenColor(avatar.pantsColor, 0.25),
+    'c': darkenColor(avatar.shoesColor || '#1e293b', 0.25)
   };
 
   for (let r = 0; r < 16; r++) {
@@ -807,6 +836,32 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   });
   const [rpgBuildSelection, setRpgBuildSelection] = useState([]);
 
+  // --- Memory Match States ---
+  const [memoryCards, setMemoryCards] = useState([]);
+  const [memoryFlipped, setMemoryFlipped] = useState([]);
+  const [memoryMatched, setMemoryMatched] = useState([]);
+  const [memoryTheme, setMemoryTheme] = useState('');
+  const [memoryLock, setMemoryLock] = useState(false);
+  const [memoryScore, setMemoryScore] = useState(0);
+  const [memoryRecord, setMemoryRecord] = useState(() => {
+    return Number(localStorage.getItem('memory_match_record') || 0);
+  });
+  const memoryTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+    };
+  }, [activeGame]);
+
+  const MEMORY_THEMES = {
+    animals: { name: 'Animals', pairs: [{eng: 'DOG', pt: 'Cachorro'}, {eng: 'CAT', pt: 'Gato'}, {eng: 'LION', pt: 'Leão'}, {eng: 'FISH', pt: 'Peixe'}, {eng: 'BIRD', pt: 'Pássaro'}, {eng: 'BEAR', pt: 'Urso'}, {eng: 'MONKEY', pt: 'Macaco'}, {eng: 'TIGER', pt: 'Tigre'}] },
+    food: { name: 'Food', pairs: [{eng: 'APPLE', pt: 'Maçã'}, {eng: 'BREAD', pt: 'Pão'}, {eng: 'MEAT', pt: 'Carne'}, {eng: 'CHEESE', pt: 'Queijo'}, {eng: 'EGG', pt: 'Ovo'}, {eng: 'MILK', pt: 'Leite'}, {eng: 'WATER', pt: 'Água'}, {eng: 'CAKE', pt: 'Bolo'}] },
+    colors: { name: 'Colors', pairs: [{eng: 'RED', pt: 'Vermelho'}, {eng: 'BLUE', pt: 'Azul'}, {eng: 'GREEN', pt: 'Verde'}, {eng: 'YELLOW', pt: 'Amarelo'}, {eng: 'BLACK', pt: 'Preto'}, {eng: 'WHITE', pt: 'Branco'}, {eng: 'PINK', pt: 'Rosa'}, {eng: 'ORANGE', pt: 'Laranja'}] },
+    verbs: { name: 'Verbs', pairs: [{eng: 'RUN', pt: 'Correr'}, {eng: 'JUMP', pt: 'Pular'}, {eng: 'EAT', pt: 'Comer'}, {eng: 'DRINK', pt: 'Beber'}, {eng: 'SLEEP', pt: 'Dormir'}, {eng: 'SPEAK', pt: 'Falar'}, {eng: 'READ', pt: 'Ler'}, {eng: 'WRITE', pt: 'Escrever'}] },
+    adjectives: { name: 'Adjectives', pairs: [{eng: 'FAST', pt: 'Rápido'}, {eng: 'SLOW', pt: 'Lento'}, {eng: 'BIG', pt: 'Grande'}, {eng: 'SMALL', pt: 'Pequeno'}, {eng: 'HOT', pt: 'Quente'}, {eng: 'COLD', pt: 'Frio'}, {eng: 'HAPPY', pt: 'Feliz'}, {eng: 'SAD', pt: 'Triste'}] }
+  };
+
   // --- Pixel Command Quest States ---
   const [cmdText, setCmdText] = useState('');
   const [cmdLog, setCmdLog] = useState([]);
@@ -850,6 +905,74 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const showFeedback = (text, severity = 'info') => {
     setWsMessage(text);
     setWsMessageSeverity(severity);
+  };
+
+  // --- Memory Game Logic ---
+  const startMemoryGame = (themeKey) => {
+    setActiveGame('memory');
+    setMemoryTheme(themeKey);
+    setMemoryScore(0);
+    setMemoryMatched([]);
+    setMemoryFlipped([]);
+    setMemoryLock(false);
+    if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+    
+    const allPairs = [...MEMORY_THEMES[themeKey].pairs].sort(() => 0.5 - Math.random());
+    const selectedPairs = allPairs.slice(0, 6);
+    
+    let deck = [];
+    selectedPairs.forEach((pair, idx) => {
+      deck.push({ id: `eng-${idx}`, text: pair.eng, pairId: idx, type: 'eng' });
+      deck.push({ id: `pt-${idx}`, text: pair.pt, pairId: idx, type: 'pt' });
+    });
+    
+    deck = deck.sort(() => 0.5 - Math.random());
+    setMemoryCards(deck);
+    playRetroSound('select', soundOn);
+  };
+
+  const handleMemoryCardClick = (index) => {
+    if (memoryLock) return;
+    if (memoryMatched.includes(memoryCards[index].pairId)) return;
+    if (memoryFlipped.includes(index)) return;
+
+    const newFlipped = [...memoryFlipped, index];
+    setMemoryFlipped(newFlipped);
+    playRetroSound('hit', soundOn);
+
+    if (newFlipped.length === 2) {
+      setMemoryLock(true);
+      const card1 = memoryCards[newFlipped[0]];
+      const card2 = memoryCards[newFlipped[1]];
+
+      if (card1.pairId === card2.pairId) {
+        if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+        memoryTimeoutRef.current = setTimeout(() => {
+          playRetroSound('victory', soundOn);
+          const isComplete = memoryMatched.length + 1 === 6;
+          setMemoryMatched(prev => [...prev, card1.pairId]);
+          if (isComplete) {
+            onEarnXP(50);
+            const finalScore = memoryScore + 20;
+            setMemoryRecord(prevRecord => {
+              const newRec = Math.max(prevRecord, finalScore);
+              localStorage.setItem('memory_match_record', newRec.toString());
+              return newRec;
+            });
+          }
+          setMemoryScore(prev => prev + 20);
+          setMemoryFlipped([]);
+          setMemoryLock(false);
+        }, 600);
+      } else {
+        if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+        memoryTimeoutRef.current = setTimeout(() => {
+          playRetroSound('defeat', soundOn);
+          setMemoryFlipped([]);
+          setMemoryLock(false);
+        }, 1000);
+      }
+    }
   };
 
   // Start Word Search
@@ -940,17 +1063,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
             }
             return nextScore;
           });
-          setWsFoundWords(prev => {
-            const next = [...prev, foundWordMatch];
-            if (next.length === wsWords.length) {
-              setWsCompleted(true);
-              onEarnXP(100);
-              showFeedback('🏆 Parabéns! Você encontrou todas as palavras e ganhou +100 XP!', 'success');
-            } else {
-              showFeedback(`Perfeito! Você achou a palavra "${foundWordMatch}"!`, 'success');
-            }
-            return next;
-          });
+          const isComplete = wsFoundWords.length + 1 === wsWords.length;
+          setWsFoundWords(prev => [...prev, foundWordMatch]);
+          if (isComplete) {
+            setWsCompleted(true);
+            onEarnXP(100);
+            showFeedback('🏆 Parabéns! Você encontrou todas as palavras e ganhou +100 XP!', 'success');
+          } else {
+            showFeedback(`Perfeito! Você achou a palavra "${foundWordMatch}"!`, 'success');
+          }
           setWsFoundCells(prev => [...prev, ...cellsInLine]);
         } else {
           playRetroSound('hit', soundOn);
@@ -1022,17 +1143,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         }
         return nextScore;
       });
-      setWsFoundWords(prev => {
-        const next = [...prev, foundWordMatch];
-        if (next.length === wsWords.length) {
-          setWsCompleted(true);
-          onEarnXP(100);
-          showFeedback('🏆 Sensacional! Você encontrou todas as palavras e ganhou +100 XP!', 'success');
-        } else {
-          showFeedback(`Boa! Você encontrou a palavra "${foundWordMatch}"!`, 'success');
-        }
-        return next;
-      });
+      const isComplete = wsFoundWords.length + 1 === wsWords.length;
+      setWsFoundWords(prev => [...prev, foundWordMatch]);
+      if (isComplete) {
+        setWsCompleted(true);
+        onEarnXP(100);
+        showFeedback('🏆 Sensacional! Você encontrou todas as palavras e ganhou +100 XP!', 'success');
+      } else {
+        showFeedback(`Boa! Você encontrou a palavra "${foundWordMatch}"!`, 'success');
+      }
       const formattedCellCoords = wsSelectedCells.map(cell => `${cell.r}-${cell.c}`);
       setWsFoundCells(prev => [...prev, ...formattedCellCoords]);
     } else {
@@ -1463,7 +1582,6 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     recognition.start();
   };
 
-  // RPG Combat Submission Action (Solo vs Co-op)
   const handleRpgAnswerSubmit = async (option) => {
     if (battleStatus !== 'active') return;
     setIsTimerPaused(true);
@@ -2728,6 +2846,9 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     }
                     setCmdScriptRunning(false);
                   }
+                  if (activeGame === 'memory') {
+                    if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+                  }
                   setActiveGame(null);
                   setRpgMode(null);
                 }
@@ -2750,7 +2871,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       {activeGame === null && (
         <Grid container spacing={3.5}>
           {/* Card 1: Word Search */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{
               p: 3.5,
               height: '100%',
@@ -2766,7 +2887,10 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               }
             }}>
               <Box>
-                <Typography fontSize={48} sx={{ mb: 1.5 }}>🔍</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Typography fontSize={48}>🔍</Typography>
+                  {wsRecord > 0 && <Chip label={`🏆 Record: ${wsRecord}`} size="small" sx={{ bgcolor: 'rgba(0,180,216,0.1)', color: '#00b4d8', fontWeight: 800, border: '1px solid rgba(0,180,216,0.3)' }} />}
+                </Box>
                 <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#00b4d8' }}>
                   Caça-Palavras
                 </Typography>
@@ -2804,7 +2928,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           </Grid>
 
           {/* Card 2: Pixel RPG Battle */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{
               p: 3.5,
               height: '100%',
@@ -2820,7 +2944,10 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               }
             }}>
               <Box>
-                <Typography fontSize={48} sx={{ mb: 1.5 }}>⚔️</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Typography fontSize={48}>⚔️</Typography>
+                  {soloRecord > 0 && <Chip label={`🏆 Record: ${soloRecord}`} size="small" sx={{ bgcolor: 'rgba(179, 136, 255, 0.1)', color: '#b388ff', fontWeight: 800, border: '1px solid rgba(179, 136, 255, 0.3)' }} />}
+                </Box>
                 <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#b388ff' }}>
                   Pixel Word Battle
                 </Typography>
@@ -2873,7 +3000,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           </Grid>
 
           {/* Card 3: Pixel Command Quest */}
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Card sx={{
               p: 3.5,
               height: '100%',
@@ -2957,6 +3084,63 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 >
                   Jogar Estágio {selectedStageMenu} ➡️
                 </Button>
+              </Box>
+            </Card>
+          </Grid>
+
+          {/* Card 4: Memory Match */}
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Card sx={{
+              p: 3.5,
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.4), rgba(255, 152, 0, 0.05))',
+              border: '1px solid rgba(255, 152, 0, 0.2)',
+              '&:hover': {
+                border: '1px solid #ff9800',
+                boxShadow: '0 8px 30px rgba(255, 152, 0, 0.15)',
+                transform: 'translateY(-4px)'
+              }
+            }}>
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Typography fontSize={48}>🃏</Typography>
+                  {memoryRecord > 0 && <Chip label={`🏆 Record: ${memoryRecord}`} size="small" sx={{ bgcolor: 'rgba(255, 152, 0, 0.1)', color: '#ff9800', fontWeight: 800, border: '1px solid rgba(255, 152, 0, 0.3)' }} />}
+                </Box>
+                <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#ff9800' }}>
+                  Memory Match
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', mb: 3.5, lineHeight: 1.6 }}>
+                  Find the matching pairs between English and Portuguese words! Train your memory and learn new vocabulary while having fun.
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: 0.5 }}>
+                  Choose a theme to play:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {Object.entries(MEMORY_THEMES).map(([key, value]) => (
+                    <Button
+                      key={key}
+                      variant="outlined"
+                      size="small"
+                      onClick={() => startMemoryGame(key)}
+                      sx={{
+                        borderRadius: 2.5,
+                        borderColor: 'rgba(255, 152, 0, 0.3)',
+                        color: '#eee',
+                        fontWeight: 800,
+                        textTransform: 'none',
+                        '&:hover': { borderColor: '#ff9800', bgcolor: 'rgba(255,152,0,0.06)' }
+                      }}
+                    >
+                      {value.name}
+                    </Button>
+                  ))}
+                </Box>
               </Box>
             </Card>
           </Grid>
@@ -3104,7 +3288,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               </Box>
 
               <Grid container spacing={{ xs: 2, md: 4 }}>
-                <Grid item xs={12} md={7} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Grid size={{ xs: 12, md: 7 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <Box sx={{
                     bgcolor: 'rgba(0,0,0,0.25)',
                     p: { xs: 1, sm: 2, md: 2.5 },
@@ -3249,7 +3433,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   )}
                 </Grid>
 
-                <Grid item xs={12} md={5}>
+                <Grid size={{ xs: 12, md: 5 }}>
                   <Card sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.15)', height: '100%', display: 'flex', flexDirection: 'column', justifyBetween: 'space-between' }}>
                     <Box>
                       <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', display: 'block', mb: 2, letterSpacing: 0.5 }}>
@@ -3297,6 +3481,153 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   </Card>
                 </Grid>
               </Grid>
+            </Box>
+          )}
+        </Card>
+      )}
+
+      {/* ────────────────── GAME 4: MEMORY MATCH ────────────────── */}
+      {activeGame === 'memory' && (
+        <Card sx={{ p: 4, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: '#ff9800' }}>
+                Memory Match: {MEMORY_THEMES[memoryTheme]?.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                Find the pairs: English and Portuguese
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Button 
+                variant="outlined" 
+                color="error" 
+                size="small"
+                onClick={() => {
+                  playRetroSound('select', soundOn);
+                  setMemoryRecord(prevRecord => {
+                    const newRec = Math.max(prevRecord, memoryScore);
+                    localStorage.setItem('memory_match_record', newRec.toString());
+                    return newRec;
+                  });
+                  if (memoryTimeoutRef.current) clearTimeout(memoryTimeoutRef.current);
+                  setActiveGame(null);
+                }}
+                sx={{ borderRadius: 2, fontWeight: 800, textTransform: 'none' }}
+              >
+                🛑 Encerrar Jogo
+              </Button>
+              <Box sx={{ textAlign: 'right' }}>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800 }}>SCORE</Typography>
+                <Typography variant="h4" sx={{ fontWeight: 900, color: '#fcd34d', fontFamily: "'Outfit', sans-serif", lineHeight: 1 }}>
+                  {memoryScore}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+          
+          {memoryMatched.length === 6 ? (
+            <Box sx={{ textAlign: 'center', py: 6, animation: 'fadeIn 0.5s ease' }}>
+              <Typography fontSize={64} sx={{ mb: 2 }}>🏆</Typography>
+              <Typography variant="h3" sx={{ fontWeight: 900, color: '#4ade80', mb: 2 }}>You Won!</Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.7)', mb: 4 }}>+50 XP earned for the victory!</Typography>
+              <Button variant="contained" onClick={() => startMemoryGame(memoryTheme)} sx={{ bgcolor: '#ff9800', fontWeight: 800, py: 1.5, px: 4, '&:hover': {bgcolor: '#f57c00'} }}>Play Again</Button>
+            </Box>
+          ) : (
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(4, 1fr)' }, 
+              gap: { xs: 1.5, sm: 2.5 }, 
+              maxWidth: 700, 
+              mx: 'auto',
+              p: { xs: 2, sm: 4 },
+              borderRadius: 4,
+              background: 'radial-gradient(circle at center, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%)',
+              boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)',
+              border: '4px solid #1e293b'
+            }}>
+              {memoryCards.map((card, idx) => {
+                const isFlipped = memoryFlipped.includes(idx) || memoryMatched.includes(card.pairId);
+                const isMatched = memoryMatched.includes(card.pairId);
+                
+                return (
+                  <Box
+                    key={card.id}
+                    onClick={() => handleMemoryCardClick(idx)}
+                    sx={{
+                      aspectRatio: '3/4',
+                      perspective: '1000px',
+                      cursor: isMatched ? 'default' : 'pointer',
+                      transform: isMatched ? 'scale(0.95)' : 'scale(1)',
+                      transition: 'transform 0.3s'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        position: 'relative',
+                        transition: 'transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)',
+                        transformStyle: 'preserve-3d',
+                        transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                      }}
+                    >
+                      {/* Front (Cover) */}
+                      <Box sx={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        backfaceVisibility: 'hidden',
+                        background: 'repeating-linear-gradient(45deg, #f59e0b, #f59e0b 10px, #d97706 10px, #d97706 20px)',
+                        border: '4px solid #fff',
+                        borderRadius: 3,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 6px 0 #b45309, 0 8px 15px rgba(0,0,0,0.4)',
+                        '&:hover': { transform: isMatched ? 'none' : 'translateY(-4px)', boxShadow: isMatched ? '' : '0 10px 0 #b45309, 0 12px 20px rgba(0,0,0,0.5)' },
+                        transition: 'all 0.2s'
+                      }}>
+                        <Typography fontSize={{ xs: 24, sm: 36 }} sx={{ 
+                          color: '#fff', 
+                          fontWeight: 900, 
+                          textShadow: '0 2px 0 #b45309' 
+                        }}>
+                          ?
+                        </Typography>
+                      </Box>
+                      
+                      {/* Back (Word) */}
+                      <Box sx={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        backfaceVisibility: 'hidden',
+                        background: isMatched ? '#10b981' : '#f8fafc',
+                        border: '4px solid #fff',
+                        borderRadius: 3,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transform: 'rotateY(180deg)',
+                        boxShadow: isMatched ? '0 6px 0 #059669' : '0 6px 0 #cbd5e1',
+                        p: 1
+                      }}>
+                        <Typography variant="body1" sx={{ 
+                          fontWeight: 900, 
+                          color: isMatched ? '#fff' : (card.type === 'eng' ? '#3b82f6' : '#f59e0b'),
+                          textAlign: 'center',
+                          wordBreak: 'break-word',
+                          fontSize: { xs: card.text.length > 8 ? '0.75rem' : '0.9rem', sm: card.text.length > 8 ? '0.9rem' : '1.2rem' },
+                          fontFamily: "'Outfit', sans-serif"
+                        }}>
+                          {card.text}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
             </Box>
           )}
         </Card>
@@ -3370,7 +3701,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               {availablePlayers.length > 0 ? (
                 <Grid container spacing={2} sx={{ maxWidth: 600, mx: 'auto', justifyContent: 'center', mt: 1 }}>
                   {availablePlayers.map((player) => (
-                    <Grid item xs={12} sm={6} key={player.id}>
+                    <Grid size={{ xs: 12, sm: 6 }} key={player.id}>
                       <Card sx={{
                         p: 2,
                         display: 'flex',
@@ -3549,7 +3880,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
               <Grid container spacing={3.5}>
                 {/* HTML5 Canvas retro render */}
-                <Grid item xs={12} md={7}>
+                <Grid size={{ xs: 12, md: 7 }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <canvas
                       ref={canvasRef}
@@ -3591,7 +3922,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Grid>
 
                 {/* Combat Log Box */}
-                <Grid item xs={12} md={5}>
+                <Grid size={{ xs: 12, md: 5 }}>
                   <Card sx={{ p: 2.5, bgcolor: 'rgba(0,0,0,0.25)', height: 170, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                     <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block', mb: 1, letterSpacing: 0.5 }}>
                       🛡️ Log de Combate:
@@ -3705,7 +4036,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                             </Button>
                             <Grid container spacing={2}>
                               {qOptions.map((opt) => (
-                                <Grid item xs={12} sm={6} key={opt}>
+                                <Grid size={{ xs: 12, sm: 6 }} key={opt}>
                                   <Button
                                     fullWidth
                                     variant="contained"
@@ -3902,7 +4233,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       return (
                         <Grid container spacing={2}>
                           {qOptions.map((opt) => (
-                            <Grid item xs={12} sm={6} key={opt}>
+                            <Grid size={{ xs: 12, sm: 6 }} key={opt}>
                               <Button
                                 fullWidth
                                 variant="contained"
@@ -4059,7 +4390,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
           <Grid container spacing={{ xs: 2, md: 4 }}>
             {/* GRID MAP AREA */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <Box sx={{
                 bgcolor: 'rgba(0,0,0,0.3)',
                 p: { xs: 0.5, sm: 2 },
@@ -4209,7 +4540,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
             </Grid>
 
             {/* COLUMN 2: OPTION B (SCRIPT EDITOR) */}
-            <Grid item xs={12} md={6} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Grid size={{ xs: 12, md: 6 }} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Card sx={{ 
                 p: 3, 
                 bgcolor: 'rgba(0,0,0,0.2)', 
@@ -4395,10 +4726,10 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
             </Grid>
 
             {/* ROW 2: LOG, TUTORIAL, OPTION A, AND OTHER CONTROLS */}
-            <Grid item xs={12}>
+            <Grid size={{ xs: 12 }}>
               <Grid container spacing={3.5}>
                 {/* Column 1 of Row 2: Tutorial & Syntax Guide */}
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Card sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, height: '100%' }}>
                     {/* Collapsible dynamic tutorial */}
                     <Box sx={{
@@ -4578,7 +4909,7 @@ grab key`}
                 </Grid>
 
                 {/* Column 2 of Row 2: Log, Option A & Bottom Controls */}
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <Card sx={{ p: 3, bgcolor: 'rgba(0,0,0,0.15)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <Box>
                       <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 1.5, letterSpacing: 0.5 }}>
