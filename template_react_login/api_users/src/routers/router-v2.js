@@ -50,6 +50,105 @@ router.delete('/attendance/:id', verifyToken, verifyAdmin, handlers.deleteAttend
 
 // ─── Multiplayer Co-op RPG Battle Game Server Engine ──────────────────────────
 
+// PvP Backend Routes
+export const pvpGameRooms = new Map();
+
+router.post('/games/pvp/create', (req, res) => {
+  const { playerId, playerName, playerAvatar } = req.body;
+  const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const initialQuest = getNewQuestion(1);
+  const roomState = {
+    roomCode,
+    status: 'waiting',
+    currentQuest: initialQuest,
+    players: {
+      [playerId]: { name: playerName, hp: 100, avatar: playerAvatar || playerName.substring(0, 2).toUpperCase() }
+    },
+    combatLog: [`Duelo ${roomCode} criado por ${playerName}. Aguardando oponente...`],
+    actionTrigger: null,
+    lastActive: Date.now(),
+    winner: null
+  };
+  pvpGameRooms.set(roomCode, roomState);
+  res.status(200).json({ roomCode, state: roomState });
+});
+
+router.post('/games/pvp/join', (req, res) => {
+  const { roomCode, playerId, playerName, playerAvatar } = req.body;
+  const upperCode = (roomCode || '').trim().toUpperCase();
+  const roomState = pvpGameRooms.get(upperCode);
+  if (!roomState) return res.status(404).json({ error: 'Sala não encontrada!' });
+  if (roomState.status !== 'waiting') return res.status(400).json({ error: 'Sala já está cheia ou em andamento!' });
+
+  roomState.players[playerId] = { name: playerName, hp: 100, avatar: playerAvatar || playerName.substring(0, 2).toUpperCase() };
+  roomState.status = 'active';
+  roomState.combatLog.unshift(`${playerName} entrou na arena! O Duelo Começou!`);
+  roomState.lastActive = Date.now();
+  res.status(200).json({ roomCode: upperCode, state: roomState });
+});
+
+router.get('/games/pvp/status/:roomCode', (req, res) => {
+  const { roomCode } = req.params;
+  const upperCode = roomCode.toUpperCase();
+  const roomState = pvpGameRooms.get(upperCode);
+  if (!roomState) return res.status(404).json({ error: 'Sala não encontrada!' });
+  
+  if (Date.now() - roomState.lastActive > 1800000) {
+    pvpGameRooms.delete(upperCode);
+    return res.status(404).json({ error: 'Sala expirou por inatividade!' });
+  }
+  res.status(200).json({ state: roomState });
+});
+
+router.post('/games/pvp/action', (req, res) => {
+  const { roomCode, playerId, option, questionIdx, isTimeout } = req.body;
+  const upperCode = (roomCode || '').trim().toUpperCase();
+  const roomState = pvpGameRooms.get(upperCode);
+  if (!roomState) return res.status(404).json({ error: 'Sala não encontrada!' });
+  if (roomState.status !== 'active') return res.status(400).json({ error: 'Duelo já foi concluído!' });
+
+  const quest = BATTLE_QUESTIONS[questionIdx];
+  const player = roomState.players[playerId];
+  if (!player) return res.status(400).json({ error: 'Jogador não está na sala!' });
+
+  const opponentId = Object.keys(roomState.players).find(id => id !== playerId);
+  const opponent = roomState.players[opponentId];
+  
+  // se o questionIdx da requisição não é o atual da sala, ele respondeu atrasado.
+  if (roomState.currentQuest.idx !== questionIdx) {
+    return res.status(200).json({ state: roomState });
+  }
+
+  const isCorrect = !isTimeout && option === quest.a;
+  roomState.lastActive = Date.now();
+
+  if (isCorrect) {
+    opponent.hp = Math.max(opponent.hp - 20, 0);
+    roomState.combatLog.unshift(`⚔️ ${player.name} foi mais rápido e acertou! -20 HP em ${opponent.name}.`);
+    roomState.actionTrigger = { type: 'attack', playerId, damage: 20, timestamp: Date.now() };
+    
+    if (opponent.hp === 0) {
+      roomState.status = 'finished';
+      roomState.winner = playerId;
+      roomState.combatLog.unshift(`🏆 ${player.name} venceu o duelo!`);
+    } else {
+      roomState.currentQuest = getNewQuestion(Math.floor(Math.random() * 3) + 1);
+    }
+  } else {
+    player.hp = Math.max(player.hp - 10, 0);
+    roomState.combatLog.unshift(`❌ ${player.name} errou e sofreu 10 de dano por distração!`);
+    roomState.actionTrigger = { type: 'hurt', playerId, damage: 10, timestamp: Date.now() };
+    
+    if (player.hp === 0) {
+      roomState.status = 'finished';
+      roomState.winner = opponentId;
+      roomState.combatLog.unshift(`🏆 ${opponent.name} venceu o duelo!`);
+    }
+  }
+
+  res.status(200).json({ state: roomState });
+});
+
 const gameRooms = new Map();
 const gameInvites = new Map();
 
@@ -144,7 +243,7 @@ const getNewQuestion = (stage = 1) => {
 
 // Create Room
 router.post('/games/create', (req, res) => {
-  const { playerId, playerName } = req.body;
+  const { playerId, playerName, playerAvatar } = req.body;
   const roomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
   
   const initialQuest = getNewQuestion();
@@ -159,7 +258,7 @@ router.post('/games/create', (req, res) => {
       [playerId]: {
         name: playerName,
         hp: 100,
-        avatar: playerName.substring(0, 2).toUpperCase(),
+        avatar: playerAvatar || playerName.substring(0, 2).toUpperCase(),
         consecutiveCorrect: 0
       }
     },
@@ -178,7 +277,7 @@ router.post('/games/create', (req, res) => {
 
 // Join Room
 router.post('/games/join', (req, res) => {
-  const { roomCode, playerId, playerName } = req.body;
+  const { roomCode, playerId, playerName, playerAvatar } = req.body;
   const upperCode = (roomCode || '').trim().toUpperCase();
   const roomState = gameRooms.get(upperCode);
   
@@ -194,7 +293,7 @@ router.post('/games/join', (req, res) => {
   roomState.players[playerId] = {
     name: playerName,
     hp: 100,
-    avatar: playerName.substring(0, 2).toUpperCase(),
+    avatar: playerAvatar || playerName.substring(0, 2).toUpperCase(),
     consecutiveCorrect: 0
   };
   

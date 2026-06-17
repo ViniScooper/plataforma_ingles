@@ -933,7 +933,7 @@ export default function AdminPage() {
             {/* Tab 0: Visão Geral */}
             <TabPanel value={tab} index={0}>
               <Grid container spacing={3}>
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <DashboardCard
                     icon={<PeopleIcon />}
                     title="TOTAL DE ALUNOS"
@@ -942,7 +942,7 @@ export default function AdminPage() {
                     color="#667eea"
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <DashboardCard
                     icon={<AttachMoneyIcon />}
                     title="FATURAMENTO ESTIMADO"
@@ -951,7 +951,7 @@ export default function AdminPage() {
                     color="#43a047"
                   />
                 </Grid>
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                   <DashboardCard
                     icon={<EventAvailableIcon />}
                     title="AULAS ESTE MÊS"
@@ -1662,7 +1662,7 @@ export default function AdminPage() {
                     />
                     <Grid container spacing={2}>
                       {[0, 1, 2, 3].map(optIdx => (
-                        <Grid item xs={12} sm={6} key={optIdx}>
+                        <Grid size={{ xs: 12, sm: 6 }} key={optIdx}>
                           <TextField
                             label={`Alternativa ${String.fromCharCode(65 + optIdx)}`}
                             fullWidth size="small"
@@ -2086,21 +2086,21 @@ export default function AdminPage() {
             </Box>
 
             <Grid container spacing={3}>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <Card sx={{ p: 3, textAlign: 'center', backgroundColor: '#e3f2fd' }}>
                   <AssignmentIcon sx={{ fontSize: 40, mb: 1, color: '#1976d2' }} />
                   <Typography variant="h6">Enviadas</Typography>
                   <Typography variant="h4">{studentProgress.length}</Typography>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <Card sx={{ p: 3, textAlign: 'center', backgroundColor: '#e8f5e9' }}>
                   <CheckCircleIcon sx={{ fontSize: 40, mb: 1, color: '#2e7d32' }} />
                   <Typography variant="h6">Finalizadas</Typography>
                   <Typography variant="h4">{studentProgress.filter(p => p.status === 'completed').length}</Typography>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <Card sx={{ p: 3, textAlign: 'center', backgroundColor: '#fff3e0' }}>
                   <ActivityIcon sx={{ fontSize: 40, mb: 1, color: '#ef6c00' }} />
                   <Typography variant="h6">Acertos</Typography>
@@ -2109,7 +2109,7 @@ export default function AdminPage() {
                   </Typography>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={3}>
+              <Grid size={{ xs: 12, md: 3 }}>
                 <Card sx={{ p: 3, textAlign: 'center', backgroundColor: '#f3e5f5' }}>
                   <EventAvailableIcon sx={{ fontSize: 40, mb: 1, color: '#7b1fa2' }} />
                   <Typography variant="h6">Aulas Realizadas</Typography>
@@ -2246,7 +2246,7 @@ export default function AdminPage() {
                      const hpPercent = Math.round((game.monsterHp / game.maxMonsterHp) * 100);
 
                      return (
-                       <Grid item xs={12} md={6} key={game.roomCode}>
+                       <Grid size={{ xs: 12, md: 6 }} key={game.roomCode}>
                          <Card sx={{
                            p: 2.5,
                            background: 'rgba(255, 255, 255, 0.04)',

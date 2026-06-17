@@ -28,6 +28,7 @@ import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import StarIcon from '@mui/icons-material/Star';
 import apiClient from '../../utils/apiClient';
 import { getAvatarGrid } from './StudentAvatar';
 
@@ -143,7 +144,7 @@ const getAudioContext = () => {
 };
 
 const playRetroSound = (type, soundOn = true) => {
-  if (!soundOn) return;
+  if (!soundOn || (typeof document !== 'undefined' && document.hidden)) return;
   try {
     const ctx = getAudioContext();
     const osc = ctx.createOscillator();
@@ -1266,7 +1267,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     
     // Don't show invites if user is actively playing a game
     if (activeGame === 'wordsearch' || activeGame === 'command') return;
-    if (activeGame === 'battle' && battleStatus === 'active' && (rpgMode !== 'coop' || coopSubState === 'play')) return;
+    if (activeGame === 'battle' && battleStatus === 'active' && ((rpgMode !== 'coop' && rpgMode !== 'pvp') || coopSubState === 'play')) return;
 
     const checkInvites = async () => {
       try {
@@ -1362,22 +1363,38 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     playRetroSound('select', soundOn);
     setCoopError('');
     try {
-      const response = await apiClient.post('/games/create', {
+      let myAvatar = null;
+      try {
+        const saved = localStorage.getItem(`student_custom_avatar_${userId}`);
+        if (saved) myAvatar = JSON.parse(saved);
+      } catch(e) {}
+
+      const endpoint = rpgMode === 'pvp' ? '/games/pvp/create' : '/games/create';
+      const response = await apiClient.post(endpoint, {
         playerId: String(userId),
-        playerName: userName || 'Aluno'
+        playerName: userName || 'Aluno',
+        playerAvatar: myAvatar
       });
       const data = response.data;
       setRoomCode(data.roomCode);
-      setCoopPlayers(data.state.players);
-      setBattleLog(data.state.combatLog);
-      setEnemyHp(data.state.monsterHp);
-      setMaxEnemyHp(data.state.maxMonsterHp);
-      setBattleStage(data.state.stage || 1);
-      setBattleStatus('active');
       
-      const pQuests = data.state.currentQuests || {};
-      const myQuest = pQuests[userId] || { idx: 0 };
-      setCurrentQuestIdx(myQuest.idx);
+      if (rpgMode === 'pvp') {
+        setCoopPlayers(data.state.players);
+        setBattleLog(data.state.combatLog);
+        setCurrentQuestIdx(data.state.currentQuest.idx);
+        setBattleStatus(data.state.status);
+      } else {
+        setCoopPlayers(data.state.players);
+        setBattleLog(data.state.combatLog);
+        setEnemyHp(data.state.monsterHp);
+        setMaxEnemyHp(data.state.maxMonsterHp);
+        setBattleStage(data.state.stage || 1);
+        setBattleStatus('active');
+        
+        const pQuests = data.state.currentQuests || {};
+        const myQuest = pQuests[userId] || { idx: 0 };
+        setCurrentQuestIdx(myQuest.idx);
+      }
 
       setCoopSubState('create');
     } catch (err) {
@@ -1406,7 +1423,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const handleLeaveRpgMatch = async (exitToHub = false) => {
     playRetroSound('select', soundOn);
     setBattleStatus('menu');
-    if (rpgMode === 'coop') {
+    if (rpgMode === 'coop' || rpgMode === 'pvp') {
       try {
         if (roomCode) {
           await apiClient.post('/games/leave', { roomCode });
@@ -1438,23 +1455,39 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       return;
     }
     try {
-      const response = await apiClient.post('/games/join', {
+      let myAvatar = null;
+      try {
+        const saved = localStorage.getItem(`student_custom_avatar_${userId}`);
+        if (saved) myAvatar = JSON.parse(saved);
+      } catch(e) {}
+
+      const endpoint = rpgMode === 'pvp' ? '/games/pvp/join' : '/games/join';
+      const response = await apiClient.post(endpoint, {
         roomCode: codeToJoin.trim().toUpperCase(),
         playerId: String(userId),
-        playerName: userName || 'Aluno'
+        playerName: userName || 'Aluno',
+        playerAvatar: myAvatar
       });
       const data = response.data;
       setRoomCode(data.roomCode);
-      setCoopPlayers(data.state.players);
-      setBattleLog(data.state.combatLog);
-      setEnemyHp(data.state.monsterHp);
-      setMaxEnemyHp(data.state.maxMonsterHp);
-      setBattleStage(data.state.stage);
-      setBattleStatus(data.state.status);
       
-      const pQuests = data.state.currentQuests || {};
-      const myQuest = pQuests[userId] || { idx: 0 };
-      setCurrentQuestIdx(myQuest.idx);
+      if (rpgMode === 'pvp') {
+        setCoopPlayers(data.state.players);
+        setBattleLog(data.state.combatLog);
+        setCurrentQuestIdx(data.state.currentQuest.idx);
+        setBattleStatus(data.state.status);
+      } else {
+        setCoopPlayers(data.state.players);
+        setBattleLog(data.state.combatLog);
+        setEnemyHp(data.state.monsterHp);
+        setMaxEnemyHp(data.state.maxMonsterHp);
+        setBattleStage(data.state.stage);
+        setBattleStatus(data.state.status);
+        
+        const pQuests = data.state.currentQuests || {};
+        const myQuest = pQuests[userId] || { idx: 0 };
+        setCurrentQuestIdx(myQuest.idx);
+      }
       
       setCoopSubState('play');
     } catch (err) {
@@ -1466,24 +1499,26 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
   // Co-op Polling Status Loop
   useEffect(() => {
-    if (activeGame !== 'battle' || rpgMode !== 'coop' || coopSubState === 'choice' || battleStatus !== 'active') return;
+    if (activeGame !== 'battle' || (rpgMode !== 'coop' && rpgMode !== 'pvp') || coopSubState === 'choice' || (battleStatus !== 'active' && battleStatus !== 'waiting')) return;
 
     let pollInterval = setInterval(async () => {
       try {
-        const response = await apiClient.get(`/games/status/${roomCode}`);
+        const endpoint = rpgMode === 'pvp' ? `/games/pvp/status/${roomCode}` : `/games/status/${roomCode}`;
+        const response = await apiClient.get(endpoint);
         const state = response.data.state;
 
         setCoopPlayers(state.players);
         setBattleLog(state.combatLog);
-        setEnemyHp(state.monsterHp);
-        setMaxEnemyHp(state.maxMonsterHp);
-        setBattleStage(state.stage);
         setBattleStatus(state.status);
 
-        // Fetch my current question
-        const myQuest = state.currentQuests?.[userId];
-        if (myQuest) {
-          setCurrentQuestIdx(myQuest.idx);
+        if (rpgMode === 'pvp') {
+          setCurrentQuestIdx(state.currentQuest.idx);
+        } else {
+          setEnemyHp(state.monsterHp);
+          setMaxEnemyHp(state.maxMonsterHp);
+          setBattleStage(state.stage);
+          const myQuest = state.currentQuests?.[userId];
+          if (myQuest) setCurrentQuestIdx(myQuest.idx);
         }
 
         // Sync visual trigger events on screen
@@ -1491,20 +1526,38 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         if (trigger && trigger.timestamp > lastProcessedTriggerTime.current) {
           lastProcessedTriggerTime.current = trigger.timestamp;
           
-          // Animate attack locally
           const pIds = Object.keys(state.players);
           const isPlayer1 = pIds[0] === trigger.playerId;
           
-          if (trigger.type === 'revive') {
-            triggerReviveSync(isPlayer1, trigger.playerName);
-          } else if (trigger.target === 'monster') {
-            triggerAttackSync(true, isPlayer1, trigger.playerName, trigger.damage);
+          if (rpgMode === 'pvp') {
+             if (trigger.type === 'attack') {
+                 triggerAttackSync(true, isPlayer1, null, trigger.damage);
+             } else {
+                 triggerAttackSync(false, isPlayer1, null, trigger.damage);
+             }
           } else {
-            triggerAttackSync(false, isPlayer1, trigger.playerName, trigger.damage);
+            if (trigger.type === 'revive') {
+              triggerReviveSync(isPlayer1, trigger.playerName);
+            } else if (trigger.target === 'monster') {
+              triggerAttackSync(true, isPlayer1, trigger.playerName, trigger.damage);
+            } else {
+              triggerAttackSync(false, isPlayer1, trigger.playerName, trigger.damage);
+            }
           }
         }
 
-        if (state.status === 'victory') {
+        if (state.status === 'finished' && rpgMode === 'pvp') {
+           const iWon = state.winner === String(userId);
+           animRef.current.hero1State = iWon && state.players[Object.keys(state.players)[0]].hp > 0 ? 'victory' : 'defeat';
+           animRef.current.hero2State = iWon && state.players[Object.keys(state.players)[1]].hp > 0 ? 'victory' : 'defeat';
+           if (iWon) {
+             playRetroSound('victory', soundOn);
+             onEarnXP(150);
+           } else {
+             playRetroSound('defeat', soundOn);
+           }
+           clearInterval(pollInterval);
+        } else if (state.status === 'victory') {
           animRef.current.hero1State = 'victory';
           animRef.current.hero2State = 'victory';
           playRetroSound('victory', soundOn);
@@ -1537,7 +1590,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     return () => clearInterval(pollInterval);
   }, [activeGame, rpgMode, coopSubState, roomCode, battleStatus]);
 
-  // Cleanup active coop room on component unmount
+  // Cleanup active room on component unmount
   useEffect(() => {
     return () => {
       if (rpgMode === 'coop' && roomCode) {
@@ -1586,10 +1639,10 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
     if (battleStatus !== 'active') return;
     setIsTimerPaused(true);
 
-    if (rpgMode === 'coop') {
-      // Send co-op action to express in-memory engine
+    if (rpgMode === 'coop' || rpgMode === 'pvp') {
       try {
-        const response = await apiClient.post('/games/action', {
+        const endpoint = rpgMode === 'pvp' ? '/games/pvp/action' : '/games/action';
+        const response = await apiClient.post(endpoint, {
           roomCode,
           playerId: String(userId),
           option,
@@ -1599,15 +1652,18 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         
         setCoopPlayers(state.players);
         setBattleLog(state.combatLog);
-        setEnemyHp(state.monsterHp);
-        setMaxEnemyHp(state.maxMonsterHp);
-        setBattleStage(state.stage);
         setBattleStatus(state.status);
         
-        // Fetch new question from response immediately
-        const myQuest = state.currentQuests?.[userId];
-        if (myQuest) {
-          setCurrentQuestIdx(myQuest.idx);
+        if (rpgMode === 'pvp') {
+          setCurrentQuestIdx(state.currentQuest.idx);
+        } else {
+          setEnemyHp(state.monsterHp);
+          setMaxEnemyHp(state.maxMonsterHp);
+          setBattleStage(state.stage);
+          const myQuest = state.currentQuests?.[userId];
+          if (myQuest) {
+            setCurrentQuestIdx(myQuest.idx);
+          }
         }
       } catch (err) {
         console.error('Action submission error:', err.message);
@@ -2008,14 +2064,14 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
   // Canvas loop registration
   useEffect(() => {
-    if (activeGame !== 'battle' || !canvasRef.current || (rpgMode === 'coop' && coopSubState === 'choice')) return;
+    if (activeGame !== 'battle' || !canvasRef.current || ((rpgMode === 'coop' || rpgMode === 'pvp') && coopSubState === 'choice')) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     let animationId;
 
     let myAvatar = null;
-    const savedAvatar = localStorage.getItem('student_custom_avatar');
+    const savedAvatar = localStorage.getItem(`student_custom_avatar_${userId}`);
     if (savedAvatar) {
       try { myAvatar = JSON.parse(savedAvatar); } catch(e){}
     }
@@ -2057,9 +2113,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
       const bob = Math.sin(Date.now() / 150) * 3;
 
-      if (rpgMode === 'coop') {
+      if (rpgMode === 'coop' || rpgMode === 'pvp') {
         // Draw Player 1
-        const p1Hp = Object.values(coopPlayers || {})[0]?.hp ?? 100;
+        const p1Data = Object.values(coopPlayers || {})[0] || {};
+        const p1Hp = p1Data.hp ?? 100;
+        const p1Avatar = p1Data.avatar;
         let p1Y = 60 + (state.hero1State === 'stand' ? bob : 0);
         let p1Sprite = SPRITE_KNIGHT_STAND;
         if (state.hero1State === 'attack') p1Sprite = SPRITE_KNIGHT_ATTACK;
@@ -2068,7 +2126,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           p1Y = 85;
           ctx.save();
           ctx.globalAlpha = 0.4;
-          drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          if (p1Avatar && p1Avatar.hairstyle) {
+            drawStudentSprite(ctx, p1Avatar, false, state.hero1X, p1Y, 3.6, false);
+          } else {
+            drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
+          }
           ctx.restore();
           
           ctx.fillStyle = '#ff5a79';
@@ -2084,8 +2146,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
               ctx.globalAlpha = 0.5;
             }
           }
-          if (myAvatar && myAvatar.hairstyle) {
-            drawStudentSprite(ctx, myAvatar, state.hero1State === 'attack', state.hero1X, p1Y, 3.6, false);
+          if (p1Avatar && p1Avatar.hairstyle) {
+            drawStudentSprite(ctx, p1Avatar, state.hero1State === 'attack', state.hero1X, p1Y, 3.6, false);
           } else {
             drawSprite(ctx, p1Sprite, state.hero1X, p1Y, 3.2, false);
           }
@@ -2094,21 +2156,31 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         
         // Draw Player 2 (if present)
         if (Object.keys(coopPlayers || {}).length > 1) {
-          const p2Hp = Object.values(coopPlayers || {})[1]?.hp ?? 100;
+          const p2Data = Object.values(coopPlayers || {})[1] || {};
+          const p2Hp = p2Data.hp ?? 100;
+          const p2Avatar = p2Data.avatar;
           let p2Y = 68 + (state.hero2State === 'stand' ? -bob : 0);
           let p2Sprite = SPRITE_KNIGHT_STAND;
           if (state.hero2State === 'attack') p2Sprite = SPRITE_KNIGHT_ATTACK;
+          // In PvP, p2 should be on the right
+          const targetP2X = rpgMode === 'pvp' ? 280 : state.hero2X;
+          const p2Flipped = rpgMode === 'pvp';
+
           if (p2Hp === 0) {
             p2Sprite = SPRITE_KNIGHT_STAND;
             p2Y = 90;
             ctx.save();
             ctx.globalAlpha = 0.4;
-            drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
+            if (p2Avatar && p2Avatar.hairstyle) {
+              drawStudentSprite(ctx, p2Avatar, false, targetP2X, p2Y, 3.6, p2Flipped);
+            } else {
+              drawSprite(ctx, p2Sprite, targetP2X, p2Y, 3.2, p2Flipped);
+            }
             ctx.restore();
             
             ctx.fillStyle = '#ff5a79';
             ctx.font = 'bold 8px "Outfit", sans-serif';
-            ctx.fillText('💀 MORREU', state.hero2X + 2, p2Y - 8);
+            ctx.fillText('💀 MORREU', targetP2X + 2, p2Y - 8);
           } else {
             let flashP2 = state.hero2State === 'hurt' && Math.floor(Date.now() / 50) % 2 === 0;
             ctx.save();
@@ -2119,7 +2191,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 ctx.globalAlpha = 0.5;
               }
             }
-            drawSprite(ctx, p2Sprite, state.hero2X, p2Y, 3.2, false);
+            if (p2Avatar && p2Avatar.hairstyle) {
+              drawStudentSprite(ctx, p2Avatar, state.hero2State === 'attack', targetP2X, p2Y, 3.6, p2Flipped);
+            } else {
+              drawSprite(ctx, p2Sprite, targetP2X, p2Y, 3.2, p2Flipped);
+            }
             ctx.restore();
           }
         }
@@ -2151,7 +2227,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       }
 
       // Draw Monster
-      if (enemyHp > 0) {
+      if (enemyHp > 0 && rpgMode !== 'pvp') {
         let enemyY = 65 + (state.enemyState === 'stand' ? -bob : 0);
         let enemySprite = SPRITE_SLIME;
         if (battleStage === 2) enemySprite = SPRITE_SKELETON;
@@ -2177,7 +2253,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       }
 
       // Draw Player HP Bars above characters
-      if (rpgMode === 'coop') {
+      if (rpgMode === 'coop' || rpgMode === 'pvp') {
         const p1 = Object.values(coopPlayers || {})[0];
         if (p1) {
           ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -2264,6 +2340,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
 
   const startCoopBattleChoice = () => {
     setRpgMode('coop');
+    setCoopSubState('choice');
+    setRoomCode('');
+    setCoopError('');
+    setBattleStatus('menu');
+    setActiveGame('battle');
+  };
+
+  const startPvPBattleChoice = () => {
+    setRpgMode('pvp');
     setCoopSubState('choice');
     setRoomCode('');
     setCoopError('');
@@ -2798,10 +2883,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       position: 'fixed',
       top: 0,
       left: 0,
-      width: '100vw',
-      height: '100vh',
+      right: 0,
+      bottom: 0,
       zIndex: 9999,
       overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
       bgcolor: '#0a0d1a',
       backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(124, 77, 255, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.05) 0%, transparent 40%)',
       p: { xs: 1, sm: 2, md: 4 },
@@ -2994,6 +3080,25 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   startIcon={<SportsEsportsIcon />}
                 >
                   Jogar Co-op 👥 (Convidar Amigo)
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={startPvPBattleChoice}
+                  sx={{
+                    borderColor: 'rgba(255, 90, 121, 0.4)',
+                    color: '#fff',
+                    borderRadius: 3.5,
+                    fontWeight: 800,
+                    textTransform: 'none',
+                    '&:hover': {
+                      borderColor: '#ff5a79',
+                      bgcolor: 'rgba(255, 90, 121, 0.06)'
+                    }
+                  }}
+                  startIcon={<StarIcon />}
+                >
+                  Arena PvP (Duelo) 🤺
                 </Button>
               </Box>
             </Card>
@@ -3637,15 +3742,17 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       {activeGame === 'battle' && (
         <Card sx={{ p: 4, background: 'rgba(13, 27, 42, 0.3)', border: '1px solid rgba(255,255,255,0.06)' }}>
           
-          {/* LOBBY LOBBY CHOICE FOR CO-OP */}
-          {rpgMode === 'coop' && coopSubState === 'choice' && (
+          {/* LOBBY LOBBY CHOICE FOR CO-OP OR PVP */}
+          {(rpgMode === 'coop' || rpgMode === 'pvp') && coopSubState === 'choice' && (
             <Box sx={{ textAlign: 'center', py: 4, animation: 'fadeIn 0.4s ease' }}>
-              <Typography fontSize={48} sx={{ mb: 2 }}>👥</Typography>
-              <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#b388ff' }}>
-                RPG Batalha Multiplayer Co-op
+              <Typography fontSize={48} sx={{ mb: 2 }}>{rpgMode === 'pvp' ? '🤺' : '👥'}</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: rpgMode === 'pvp' ? '#ff5a79' : '#b388ff' }}>
+                {rpgMode === 'pvp' ? 'Duelo PvP de Inglês' : 'RPG Batalha Multiplayer Co-op'}
               </Typography>
               <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 4, maxWidth: 500, mx: 'auto' }}>
-                Jogue em dupla contra monstros de inglês! Um jogador cria a sala de combate e o outro entra usando o código gerado.
+                {rpgMode === 'pvp' 
+                  ? 'Desafie seus amigos! O mais rápido e preciso leva a vitória. Crie ou entre em uma arena.'
+                  : 'Jogue em dupla contra monstros de inglês! Um jogador cria a sala de combate e o outro entra usando o código gerado.'}
               </Typography>
               
               {coopError && <Alert severity="error" sx={{ mb: 3, maxWidth: 400, mx: 'auto', borderRadius: 3 }}>{coopError}</Alert>}
@@ -3758,7 +3865,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           )}
 
           {/* LOBBY WAITING FOR PLAYER 2 */}
-          {rpgMode === 'coop' && coopSubState === 'create' && (
+          {(rpgMode === 'coop' || rpgMode === 'pvp') && coopSubState === 'create' && (
             <Box sx={{ textAlign: 'center', py: 4, animation: 'fadeIn 0.4s ease' }}>
               <Typography fontSize={48} sx={{ mb: 2, animation: 'floatArcade 2s ease-in-out infinite' }}>🏰</Typography>
               <Typography variant="h5" sx={{ fontWeight: 900, mb: 1, color: '#00b4d8' }}>
@@ -3813,17 +3920,18 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           )}
 
           {/* PLAY SCREEN (SOLO OR ACTIVE CO-OP PLAYING) */}
-          {((rpgMode === 'solo') || (rpgMode === 'coop' && coopSubState === 'play')) && (
+          {((rpgMode === 'solo') || ((rpgMode === 'coop' || rpgMode === 'pvp') && coopSubState === 'play')) && (
             <Box>
               {/* Header Info */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', mb: 3, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 2, gap: 2 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900, color: rpgMode === 'coop' ? '#b388ff' : '#00b4d8' }}>
-                    {rpgMode === 'coop' ? `RPG Batalha Co-op (SALA: ${roomCode})` : 'RPG Batalha Solo'} — Estágio {battleStage} / 3
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: rpgMode === 'coop' ? '#b388ff' : rpgMode === 'pvp' ? '#ff5a79' : '#00b4d8' }}>
+                    {rpgMode === 'coop' ? `RPG Batalha Co-op (SALA: ${roomCode})` : rpgMode === 'pvp' ? `RPG Duelo PvP (SALA: ${roomCode})` : 'RPG Batalha Solo'} {rpgMode !== 'pvp' ? `— Estágio ${battleStage} / 3` : ''}
                   </Typography>
-                  {rpgMode === 'coop' && (
-                    <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 700, display: 'block', mt: 0.5 }}>
-                      👥 Jogando em Dupla: {Object.values(coopPlayers || {}).map(p => p.name).join(' & ')}
+                  {(rpgMode === 'coop' || rpgMode === 'pvp') && (
+                    <Typography variant="caption" sx={{ color: rpgMode === 'pvp' ? '#ff5a79' : '#48c78e', fontWeight: 700, display: 'block', mt: 0.5 }}>
+                      {rpgMode === 'pvp' ? '⚔️ Duelo: ' : '👥 Jogando em Dupla: '}
+                      {Object.values(coopPlayers || {}).map(p => p.name).join(rpgMode === 'pvp' ? ' VS ' : ' & ')}
                     </Typography>
                   )}
                   {rpgMode === 'solo' && (
@@ -3849,11 +3957,13 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                   )}
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                  <Chip
-                    label={`Monstro: ${battleStage === 1 ? '🟢 Slime' : battleStage === 2 ? '💀 Skeleton' : '👿 Shadow Dragon'}`}
-                    color={rpgMode === 'coop' ? "secondary" : "primary"}
-                    sx={{ fontWeight: 900 }}
-                  />
+                  {rpgMode !== 'pvp' && (
+                    <Chip
+                      label={`Monstro: ${battleStage === 1 ? '🟢 Slime' : battleStage === 2 ? '💀 Skeleton' : '👿 Shadow Dragon'}`}
+                      color={rpgMode === 'coop' ? "secondary" : "primary"}
+                      sx={{ fontWeight: 900 }}
+                    />
+                  )}
                   <Button
                     variant="outlined"
                     size="small"

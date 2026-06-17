@@ -4,7 +4,7 @@ import axios from 'axios';
 // Em dev: localhost:3002
 const API_BASE_URL = import.meta.env.MODE === 'production'
   ? '/api'
-  : 'http://localhost:3002/api';
+  : `http://${window.location.hostname}:3002/api`;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

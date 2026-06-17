@@ -160,14 +160,56 @@ export const getAvatarGrid = (avatar) => {
       "0000000000000000", "0000R7777R000000", "000RR0770RR00000", "000000RRRR000000",
       "000000R77R000000", "00000DDDDDD00000", "0000000000000000", "00000CC00CC00000",
     ],
-    'vestido': [
+    'vestido-real': [
       "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
       "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
-      "0000000000000000", "0000RR00RR000000", "00000RRRR0000000", "00000RRRR0000000",
-      "00000RRRR0000000", "0000RRRRRR000000", "0000RRRRRR000000", "00000C0000C00000",
+      "0000000000000000", "0000RY00YR000000", "000RR0YY0RR00000", "00000RRRR0000000",
+      "00000RRRR0000000", "0000RRYYRR000000", "000RRYYYYRR00000", "00000C0000C00000",
+    ],
+    'armadura': [
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000000", "0000W1111W000000", "000W101101W00000", "0000001111000000",
+      "0000001W11000000", "0000011111100000", "0000001111000000", "0000011001100000",
     ]
   };
   drawPattern(clothesStyles[avatar.clothingStyle] || clothesStyles['casual']);
+
+  const hatPatterns = {
+    'chapeu-mago': [
+      "0000000002200000", "0000000022200000", "000000022Y200000", "0000222222222200",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+    ],
+    'chapeu-pirata': [
+      "0000000000000000", "0000001111000000", "000Y111WW111Y000", "0YY111WWWW111YY0",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+    ],
+    'coroa': [
+      "0000000000000000", "0000Y000000Y0000", "0000Y00YY00Y0000", "0000Y3YY4Y3Y0000",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+    ]
+  };
+
+  const weaponPatterns = {
+    'espada-madeira': [
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000M00", "0000000000000M00", "0000000000000M00", "0000000000000M00",
+      "00000000000MMM00", "0000000000000100", "0000000000000000", "0000000000000000",
+    ],
+    'espada-ferro': [
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "0000000000000W00", "0000000000000W00", "0000000000000W00", "0000000000000W00",
+      "00000000000Y1Y00", "0000000000000100", "0000000000000000", "0000000000000000",
+    ],
+    'cajado': [
+      "0000000000000000", "0000000000000000", "0000000000000000", "0000000000000000",
+      "00000000000YYY00", "00000000000Y0Y00", "000000000000Y000", "000000000000Y000",
+      "000000000000M000", "000000000000M000", "000000000000M000", "000000000000M000",
+      "000000000000M000", "000000000000M000", "000000000000M000", "0000000000000000",
+    ]
+  };
 
   const hairStyles = {
     'liso': [
@@ -204,6 +246,13 @@ export const getAvatarGrid = (avatar) => {
   const hairClean = hair.map((r, y) => y === 4 ? r.substring(0, 3) + '00' + r.substring(5, 7) + '00' + r.substring(9) : r);
   drawPattern(hairClean, 'H');
 
+  if (avatar.weaponStyle && weaponPatterns[avatar.weaponStyle]) {
+    drawPattern(weaponPatterns[avatar.weaponStyle]);
+  }
+  if (avatar.hatStyle && hatPatterns[avatar.hatStyle]) {
+    drawPattern(hatPatterns[avatar.hatStyle]);
+  }
+
   return grid.map(row => row.join(''));
 };
 
@@ -212,7 +261,8 @@ export const renderAvatarPixels = (ctx, avatar, startX, startY, pixelSize) => {
   const colorMap = {
     'H': avatar.hairColor, 'S': avatar.skinTone, 'E': avatar.eyeColor || '#111111', 
     'W': '#ffffff', 'M': '#8b4513', 'R': avatar.clothingColor, 'D': avatar.pantsColor,
-    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b'
+    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b',
+    'Y': '#FFD700', '2': '#9B59B6', '3': '#E74C3C', '4': '#3498DB'
   };
 
   for (let y = 0; y < grid.length; y++) {
@@ -226,7 +276,7 @@ export const renderAvatarPixels = (ctx, avatar, startX, startY, pixelSize) => {
   }
 };
 
-export const StudentAvatar = ({ size = 80, editable = false, onChange }) => {
+export const StudentAvatar = ({ size = 80, editable = false, onChange, totalCoins, onSpendCoins, userId }) => {
   const [open, setOpen] = useState(false);
   
   const defaultAvatar = {
@@ -238,24 +288,31 @@ export const StudentAvatar = ({ size = 80, editable = false, onChange }) => {
     clothingStyle: 'casual',
     clothingColor: '#E74C3C',
     pantsColor: '#3E4A4E',
-    shoesColor: '#1e293b'
+    shoesColor: '#1e293b',
+    hatStyle: 'nenhum',
+    weaponStyle: 'nenhuma'
   };
 
   const [avatar, setAvatar] = useState(defaultAvatar);
 
   useEffect(() => {
-    const saved = localStorage.getItem('student_custom_avatar');
+    if (!userId) return;
+    const saved = localStorage.getItem(`student_custom_avatar_${userId}`);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         setAvatar({ ...defaultAvatar, ...parsed });
       } catch (e) {}
+    } else {
+      setAvatar(defaultAvatar);
     }
-  }, []);
+  }, [userId]);
 
   const handleSave = (newAvatar) => {
     setAvatar(newAvatar);
-    localStorage.setItem('student_custom_avatar', JSON.stringify(newAvatar));
+    if (userId) {
+      localStorage.setItem(`student_custom_avatar_${userId}`, JSON.stringify(newAvatar));
+    }
     setOpen(false);
     if (onChange) onChange(newAvatar);
   };
@@ -308,6 +365,9 @@ export const StudentAvatar = ({ size = 80, editable = false, onChange }) => {
         onClose={() => setOpen(false)} 
         currentAvatar={avatar} 
         onSave={handleSave} 
+        totalCoins={totalCoins}
+        onSpendCoins={onSpendCoins}
+        userId={userId}
       />
     </Box>
   );
@@ -319,6 +379,7 @@ const AvatarGraphic = ({ avatar, viewBox = "0 0 16 16" }) => {
     'H': avatar.hairColor, 'S': avatar.skinTone, 'E': avatar.eyeColor || '#111111', 
     'W': '#ffffff', 'M': '#8b4513', 'R': avatar.clothingColor, 'D': avatar.pantsColor,
     '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b',
+    'Y': '#FFD700', '2': '#9B59B6', '3': '#E74C3C', '4': '#3498DB',
     'h': darkenColor(avatar.hairColor, 0.25),
     's': darkenColor(avatar.skinTone, 0.15),
     'r': darkenColor(avatar.clothingColor, 0.25),
@@ -338,8 +399,33 @@ const AvatarGraphic = ({ avatar, viewBox = "0 0 16 16" }) => {
   );
 };
 
-const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
+const SHOP_ITEMS = [
+  { id: 'chapeu-mago', name: 'Chapéu de Mago', type: 'hatStyle', price: 20 },
+  { id: 'chapeu-pirata', name: 'Chapéu de Pirata', type: 'hatStyle', price: 30 },
+  { id: 'coroa', name: 'Coroa de Ouro', type: 'hatStyle', price: 50 },
+  { id: 'vestido-real', name: 'Vestido Real', type: 'clothingStyle', price: 40 },
+  { id: 'armadura', name: 'Armadura de Batalha', type: 'clothingStyle', price: 50 },
+  { id: 'espada-madeira', name: 'Espada de Madeira', type: 'weaponStyle', price: 20 },
+  { id: 'cajado', name: 'Cajado Mágico', type: 'weaponStyle', price: 30 },
+  { id: 'espada-ferro', name: 'Espada de Ferro', type: 'weaponStyle', price: 40 },
+];
+
+const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins, onSpendCoins, userId }) => {
   const [temp, setTemp] = useState(currentAvatar);
+  const [tab, setTab] = useState('customize');
+  
+  const [unlockedItems, setUnlockedItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`unlocked_items_${userId}`);
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return ['casual', 'esportivo', 'elegante', 'aventura', 'vestido', 'nenhum', 'nenhuma'];
+  });
+
+  const saveUnlocked = (items) => {
+    setUnlockedItems(items);
+    localStorage.setItem(`unlocked_items_${userId}`, JSON.stringify(items));
+  };
 
   useEffect(() => {
     if (open) setTemp(currentAvatar);
@@ -350,13 +436,42 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
   };
 
   const handleChange = (key, value) => {
+    const isRestrictedKey = ['hatStyle', 'weaponStyle', 'clothingStyle'].includes(key);
+    if (isRestrictedKey && value !== 'nenhum' && value !== 'nenhuma' && !['casual', 'esportivo', 'elegante', 'aventura', 'vestido'].includes(value) && !unlockedItems.includes(value)) {
+      return; // Not unlocked
+    }
     setTemp((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleBuy = (item) => {
+    if (totalCoins >= item.price && !unlockedItems.includes(item.id)) {
+      if (onSpendCoins) onSpendCoins(item.price);
+      saveUnlocked([...unlockedItems, item.id]);
+      setTemp((prev) => ({ ...prev, [item.type]: item.id }));
+    } else if (totalCoins < item.price) {
+      alert("Você não tem moedas suficientes!");
+    }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" PaperProps={{ sx: { bgcolor: '#1e1e2e', color: '#fff', borderRadius: 3, border: '1px solid rgba(255,255,255,0.1)', p: 3 } }}>
       <div className="character-creator">
-        <h1 style={{ margin: 0, marginBottom: '20px', fontSize: '24px', textAlign: 'center', color: '#00d4ff' }}>CRIADOR DE PERSONAGEM</h1>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3, gap: 2 }}>
+          <Button 
+            variant={tab === 'customize' ? 'contained' : 'outlined'} 
+            onClick={() => setTab('customize')}
+            sx={{ borderRadius: 8, fontWeight: 900, px: 3 }}
+          >
+            Personalizar
+          </Button>
+          <Button 
+            variant={tab === 'shop' ? 'contained' : 'outlined'} 
+            onClick={() => setTab('shop')}
+            sx={{ borderRadius: 8, fontWeight: 900, px: 3, color: tab === 'shop' ? '#000' : '#ffd426', borderColor: '#ffd426', bgcolor: tab === 'shop' ? '#ffd426' : 'transparent' }}
+          >
+            Loja de Itens 🪙 {totalCoins || 0}
+          </Button>
+        </Box>
 
         <div className="preview-container" style={{ display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' }}>
           <div className="character-preview" style={{ position: 'relative' }}>
@@ -374,7 +489,9 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
           </div>
         </div>
 
-        {/* PRESETS */}
+        {tab === 'customize' && (
+          <>
+            {/* PRESETS */}
         <Box sx={{ display: 'flex', gap: 1, mb: 3, overflowX: 'auto', pb: 1, justifyContent: 'center' }}>
           {Object.keys(presets).map(p => (
             <Button key={p} size="small" variant="outlined" onClick={() => applyPreset(p)} sx={{ borderRadius: 4, fontWeight: 800, borderColor: 'rgba(255,255,255,0.2)', color: '#fff' }}>
@@ -384,7 +501,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
         </Box>
 
         <Grid container spacing={2} sx={{ mb: 2 }}>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>GÊNERO</Typography>
             <select 
               value={temp.gender || 'male'} 
@@ -395,7 +512,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
               <option value="female">Feminino</option>
             </select>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>PENTEADO</Typography>
             <select 
               value={temp.hairstyle} 
@@ -410,7 +527,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
               <option value="trancas">Tranças</option>
             </select>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>ESTILO ROUPA</Typography>
             <select 
               value={temp.clothingStyle} 
@@ -422,10 +539,40 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
               <option value="elegante">Elegante</option>
               <option value="aventura">Aventura</option>
               <option value="vestido">Vestido</option>
+              {unlockedItems.includes('vestido-real') && <option value="vestido-real">Vestido Real</option>}
+              {unlockedItems.includes('armadura') && <option value="armadura">Armadura de Batalha</option>}
+            </select>
+          </Grid>
+          
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>CHAPÉU / CABEÇA</Typography>
+            <select 
+              value={temp.hatStyle || 'nenhum'} 
+              onChange={e => handleChange('hatStyle', e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', outline: 'none' }}
+            >
+              <option value="nenhum">Nenhum</option>
+              {unlockedItems.includes('chapeu-mago') && <option value="chapeu-mago">Chapéu de Mago</option>}
+              {unlockedItems.includes('chapeu-pirata') && <option value="chapeu-pirata">Chapéu de Pirata</option>}
+              {unlockedItems.includes('coroa') && <option value="coroa">Coroa de Ouro</option>}
             </select>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>ARMA / MÃO</Typography>
+            <select 
+              value={temp.weaponStyle || 'nenhuma'} 
+              onChange={e => handleChange('weaponStyle', e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', outline: 'none' }}
+            >
+              <option value="nenhuma">Nenhuma</option>
+              {unlockedItems.includes('espada-madeira') && <option value="espada-madeira">Espada de Madeira</option>}
+              {unlockedItems.includes('espada-ferro') && <option value="espada-ferro">Espada de Ferro</option>}
+              {unlockedItems.includes('cajado') && <option value="cajado">Cajado Mágico</option>}
+            </select>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>EXPRESSÃO (OLHOS)</Typography>
             <select 
               value={temp.eyeStyle || 'normal'} 
@@ -437,7 +584,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
               <option value="piscando">Piscando</option>
             </select>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>EXPRESSÃO (BOCA)</Typography>
             <select 
               value={temp.mouthStyle || 'normal'} 
@@ -450,7 +597,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
               <option value="triste">Triste</option>
             </select>
           </Grid>
-          <Grid item xs={12} sm={4}>
+          <Grid size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 800, mb: 1, display: 'block' }}>SOBRANCELHAS</Typography>
             <select 
               value={temp.eyebrowStyle || 'nenhuma'} 
@@ -556,10 +703,73 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave }) => {
 
         <div className="button-group">
           <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-          <button className="btn-save" onClick={() => onSave(temp)}>
+          <button className="btn-save" onClick={() => { onSave(temp); onClose(); }}>
             Salvar Avatar
           </button>
         </div>
+        </>
+        )}
+
+        {tab === 'shop' && (
+          <Box sx={{ mt: 3, px: 2 }}>
+            <Typography variant="h6" sx={{ textAlign: 'center', color: '#ffd426', fontWeight: 900, mb: 3 }}>
+              Bem-vindo à Loja! Desbloqueie itens novos para seu avatar.
+            </Typography>
+            <Grid container spacing={2}>
+              {SHOP_ITEMS.map((item) => {
+                const isUnlocked = unlockedItems.includes(item.id);
+                const isEquipped = temp[item.type] === item.id;
+                
+                return (
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
+                    <Box sx={{ 
+                      p: 2, 
+                      borderRadius: 3, 
+                      border: '1px solid',
+                      borderColor: isUnlocked ? 'rgba(72, 199, 142, 0.4)' : 'rgba(255,255,255,0.1)',
+                      bgcolor: isEquipped ? 'rgba(72, 199, 142, 0.1)' : 'rgba(0,0,0,0.2)',
+                      textAlign: 'center',
+                      transition: 'transform 0.2s',
+                      '&:hover': { transform: 'scale(1.02)' }
+                    }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1, color: '#fff' }}>
+                        {item.name}
+                      </Typography>
+                      
+                      {isUnlocked ? (
+                        <Button 
+                          variant={isEquipped ? "contained" : "outlined"} 
+                          color={isEquipped ? "error" : "success"}
+                          size="small"
+                          fullWidth
+                          onClick={() => {
+                            if (isEquipped) {
+                              const fallback = item.type === 'hatStyle' ? 'nenhum' : item.type === 'weaponStyle' ? 'nenhuma' : 'casual';
+                              handleChange(item.type, fallback);
+                            } else {
+                              handleChange(item.type, item.id);
+                            }
+                          }}
+                        >
+                          {isEquipped ? "Desequipar" : "Equipar"}
+                        </Button>
+                      ) : (
+                        <Button 
+                          variant="contained" 
+                          sx={{ bgcolor: '#ffd426', color: '#000', fontWeight: 900, width: '100%' }}
+                          onClick={() => handleBuy(item)}
+                          disabled={totalCoins < item.price}
+                        >
+                          Comprar 🪙 {item.price}
+                        </Button>
+                      )}
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          </Box>
+        )}
       </div>
     </Dialog>
   );

@@ -186,10 +186,32 @@ export default function StudentPage() {
     return parseInt(localStorage.getItem(`bonus_xp_${user?.id}`) || '0');
   });
 
+  const [bonusCoins, setBonusCoins] = useState(() => {
+    return parseInt(localStorage.getItem(`bonus_coins_${user?.id}`) || '0');
+  });
+
+  // Track spent coins
+  const [spentCoins, setSpentCoins] = useState(() => {
+    return parseInt(localStorage.getItem(`spent_coins_${user?.id}`) || '0');
+  });
+
   const handleEarnBonusXP = (amount) => {
     setBonusXP(prev => {
       const next = prev + amount;
       localStorage.setItem(`bonus_xp_${user?.id}`, String(next));
+      return next;
+    });
+    setBonusCoins(prev => {
+      const next = prev + 1;
+      localStorage.setItem(`bonus_coins_${user?.id}`, String(next));
+      return next;
+    });
+  };
+
+  const handleSpendCoins = (amount) => {
+    setSpentCoins(prev => {
+      const next = prev + amount;
+      localStorage.setItem(`spent_coins_${user?.id}`, String(next));
       return next;
     });
   };
@@ -242,6 +264,9 @@ export default function StudentPage() {
   const currentLevel = Math.floor(totalXP / xpPerLevel) + 1;
   const xpInCurrentLevel = totalXP % xpPerLevel;
   const levelPercent = Math.round((xpInCurrentLevel / xpPerLevel) * 100);
+
+  const earnedCoins = completedCount + bonusCoins;
+  const totalCoins = Math.max(0, earnedCoins - spentCoins);
 
   // Generate badges dynamically based on progress
   const badges = [
@@ -773,7 +798,7 @@ export default function StudentPage() {
           <Grid container spacing={4}>
             
             {/* LEFT COLUMN: Student Profile & Gamification Stats */}
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 
                 {/* 1. Student Profile Card */}
@@ -789,7 +814,7 @@ export default function StudentPage() {
                   }} />
                   <Box sx={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Box sx={{ mb: 2 }}>
-                      <StudentAvatar editable={true} size={90} />
+                      <StudentAvatar editable={true} size={90} totalCoins={totalCoins} onSpendCoins={handleSpendCoins} userId={user?.id} />
                     </Box>
                     <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 800, letterSpacing: 2, textTransform: 'uppercase', mb: 0.5 }}>
                       Student Account
@@ -826,6 +851,41 @@ export default function StudentPage() {
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Pixel Coin Box */}
+                    <Box sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1.5,
+                      bgcolor: 'rgba(255, 215, 0, 0.1)',
+                      border: '2px solid rgba(255, 215, 0, 0.4)',
+                      borderRadius: 3.5,
+                      px: 3,
+                      py: 1,
+                      mt: 2,
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 0 15px rgba(255, 215, 0, 0.15), inset 0 0 10px rgba(255,215,0,0.1)',
+                      animation: 'fadeIn 0.7s ease'
+                    }}>
+                      <svg width="36" height="36" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ shapeRendering: 'crispEdges', filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.4))' }}>
+                        <path d="M5 2H11V4H13V6H14V10H13V12H11V14H5V12H3V10H2V6H3V4H5V2Z" fill="#ffaa00"/>
+                        <path d="M6 4H10V6H11V10H10V12H6V10H5V6H6V4Z" fill="#ffd426"/>
+                        <path d="M7 6H9V10H7V6Z" fill="#fff490"/>
+                      </svg>
+                      <Box sx={{ textAlign: 'left' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 950, color: '#ffd426', lineHeight: 1.1, textShadow: '0px 2px 2px rgba(0,0,0,0.5)' }}>
+                          {totalCoins}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 215, 0, 0.8)', fontWeight: 800, display: 'block', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: 1 }}>
+                          Moedas
+                        </Typography>
+                      </Box>
+
+
+                    </Box>
+
                   </Box>
                 </Card>
 
@@ -882,7 +942,7 @@ export default function StudentPage() {
 
                   <Grid container spacing={2}>
                     {badges.map((badge) => (
-                      <Grid item xs={6} key={badge.id}>
+                      <Grid size={{ xs: 6 }} key={badge.id}>
                         <Box sx={{
                           p: 1.8,
                           borderRadius: 4,
@@ -919,7 +979,7 @@ export default function StudentPage() {
             </Grid>
 
             {/* RIGHT COLUMN: Activities View, Games Zone, or Attendance Records */}
-            <Grid item xs={12} md={8}>
+            <Grid size={{ xs: 12, md: 8 }}>
               
               {dashboardTab === 0 && (
                 // TAB 0: ACTIVITIES PANEL
@@ -974,7 +1034,7 @@ export default function StudentPage() {
                     <>
                       {/* Sub-Filters and Search Bar */}
                       <Grid container spacing={2} sx={{ mb: 3.5 }}>
-                        <Grid item xs={12} sm={8}>
+                        <Grid size={{ xs: 12, sm: 8 }}>
                           <Card sx={{
                             display: 'flex',
                             bgcolor: 'rgba(0, 0, 0, 0.15)',
@@ -1008,7 +1068,7 @@ export default function StudentPage() {
                           </Card>
                         </Grid>
                         
-                        <Grid item xs={12} sm={4}>
+                        <Grid size={{ xs: 12, sm: 4 }}>
                           <TextField
                             fullWidth
                             size="small"
@@ -1096,7 +1156,7 @@ export default function StudentPage() {
                     ) : (
                       <Grid container spacing={2.5}>
                         {attendanceRecords.map((att) => (
-                          <Grid item xs={12} sm={6} key={att.id}>
+                          <Grid size={{ xs: 12, sm: 6 }} key={att.id}>
                             <Box sx={{
                               p: 2.5,
                               borderRadius: 4,
