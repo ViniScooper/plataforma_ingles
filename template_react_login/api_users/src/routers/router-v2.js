@@ -9,6 +9,7 @@ export const router = Router();
 router.post('/auth/signup', handlers.signUp);
 router.post('/auth/signin', handlers.signIn);
 router.get('/users', verifyToken, verifyAdmin, handlers.getAllUsers);
+router.get('/users/:id', verifyToken, handlers.getUserById);
 router.post('/users', verifyToken, verifyAdmin, handlers.createUser);
 router.put('/users/:id', verifyToken, handlers.updateUser);
 router.delete('/users/:id', verifyToken, handlers.deleteUser);

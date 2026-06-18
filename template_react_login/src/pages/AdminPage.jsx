@@ -30,6 +30,7 @@ import {
   Checkbox,
   ListItemText,
   IconButton,
+  InputAdornment,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -44,6 +45,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import LogoutIcon from '@mui/icons-material/Logout';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SearchIcon from '@mui/icons-material/Search';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import ReplayIcon from '@mui/icons-material/Replay';
@@ -93,6 +95,7 @@ export default function AdminPage() {
   const { user, logout } = useContext(AuthContext);
 
   const [tab, setTab] = useState(0);
+  const [showRevenue, setShowRevenue] = useState(false);
   const [plans, setPlans] = useState([]);
   const [students, setStudents] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
@@ -124,6 +127,11 @@ export default function AdminPage() {
   const [editStudentId, setEditStudentId] = useState(null);
   const [editEnrollmentId, setEditEnrollmentId] = useState(null);
 
+  // Give coins state
+  const [openGiveCoinsDialog, setOpenGiveCoinsDialog] = useState(false);
+  const [selectedCoinsStudent, setSelectedCoinsStudent] = useState(null);
+  const [coinsAmountInput, setCoinsAmountInput] = useState('');
+
   // Monitoring state
   const [selectedMonitorStudent, setSelectedMonitorStudent] = useState(null);
   const [studentProgress, setStudentProgress] = useState([]);
@@ -132,11 +140,13 @@ export default function AdminPage() {
   const [importJson, setImportJson] = useState('');
   const [importTab, setImportTab] = useState(0);
   const [openImportDialog, setOpenImportDialog] = useState(false);
+  const [importIsRpg, setImportIsRpg] = useState(true);
   const [openManualExerciseDialog, setOpenManualExerciseDialog] = useState(false);
   const [manualExercise, setManualExercise] = useState({
     title: '',
     type: 'text',
     level: 'Beginner',
+    isRpg: true,
     text: '',
     questions: Array(5).fill(null).map(() => ({ question: '', options: ['', '', '', ''], correct: '' })),
     writingPrompt: '',
@@ -410,6 +420,39 @@ export default function AdminPage() {
     }
   };
 
+  const handleOpenGiveCoins = (student) => {
+    setSelectedCoinsStudent(student);
+    setCoinsAmountInput('');
+    setOpenGiveCoinsDialog(true);
+  };
+
+  const handleSaveGiveCoins = async (mode) => {
+    if (!selectedCoinsStudent) return;
+    const value = parseInt(coinsAmountInput);
+    if (isNaN(value)) {
+      alert('Por favor, insira um número válido.');
+      return;
+    }
+
+    let newCoins = selectedCoinsStudent.coins || 0;
+    if (mode === 'add') {
+      newCoins += value;
+    } else {
+      newCoins = value;
+    }
+
+    if (newCoins < 0) newCoins = 0;
+
+    try {
+      await apiClient.put(`/users/${selectedCoinsStudent.id}`, { coins: newCoins });
+      alert(`Moedas de ${selectedCoinsStudent.name} atualizadas para ${newCoins}!`);
+      setOpenGiveCoinsDialog(false);
+      loadStudents();
+    } catch (err) {
+      alert('Erro ao atualizar moedas: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
   const handleMarkAttendance = async () => {
     try {
       await apiClient.post('/attendance', {
@@ -522,7 +565,8 @@ export default function AdminPage() {
       const exercisesArray = Array.isArray(data) ? data : [data];
       const processedExercises = exercisesArray.map(ex => ({
         ...ex,
-        type: fallbackType === 'mixed' ? (ex.type || 'text') : (fallbackType || ex.type || 'text')
+        type: fallbackType === 'mixed' ? (ex.type || 'text') : (fallbackType || ex.type || 'text'),
+        isRpg: ex.isRpg !== undefined ? (ex.isRpg === 'true' || ex.isRpg === true) : importIsRpg
       }));
 
       let selectedPlanId = plans.length > 0 ? plans[0].id : 1;
@@ -716,7 +760,14 @@ export default function AdminPage() {
   const handleCreateManualExercise = async () => {
     try {
       let selectedPlanId = plans.length > 0 ? plans[0].id : 1;
-      const payload = { title: manualExercise.title, type: manualExercise.type, level: manualExercise.level, planId: selectedPlanId, content: {} };
+      const payload = { 
+        title: manualExercise.title, 
+        type: manualExercise.type, 
+        level: manualExercise.level, 
+        isRpg: manualExercise.isRpg,
+        planId: selectedPlanId, 
+        content: {} 
+      };
 
       if (manualExercise.type === 'text') {
         payload.content = { text: manualExercise.text };
@@ -743,7 +794,7 @@ export default function AdminPage() {
 
       await apiClient.post('/exercises', payload);
       setManualExercise({
-        title: '', type: 'text', level: 'Beginner', text: '',
+        title: '', type: 'text', level: 'Beginner', isRpg: true, text: '',
         questions: Array(5).fill(null).map(() => ({ question: '', options: ['', '', '', ''], correct: '' })),
         writingPrompt: '', writingMinWords: 30, writingTips: '',
         tfStatements: Array(4).fill(null).map(() => ({ statement: '', correct: true })),
@@ -946,7 +997,18 @@ export default function AdminPage() {
                   <DashboardCard
                     icon={<AttachMoneyIcon />}
                     title="FATURAMENTO ESTIMADO"
-                    value={`R$ ${totalMonthlyRevenue.toFixed(2)}`}
+                    value={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {showRevenue ? `R$ ${totalMonthlyRevenue.toFixed(2)}` : 'R$ *****'}
+                        <IconButton 
+                          size="small" 
+                          onClick={(e) => { e.stopPropagation(); setShowRevenue(!showRevenue); }} 
+                          sx={{ color: 'rgba(255,255,255,0.7)', p: 0.5 }}
+                        >
+                          {showRevenue ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                        </IconButton>
+                      </Box>
+                    }
                     subtitle="Projeção mensal baseada em planos"
                     color="#43a047"
                   />
@@ -1001,6 +1063,7 @@ export default function AdminPage() {
                       <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nome</TableCell>
                       <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Nível</TableCell>
                       <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Plano</TableCell>
+                      <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Moedas</TableCell>
                       <TableCell sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Ações</TableCell>
                     </TableRow>
                   </TableHead>
@@ -1039,10 +1102,32 @@ export default function AdminPage() {
                             <Typography variant="body2" sx={{ fontWeight: 700 }}>R$ {enrollment?.pricePerClass?.toFixed(2)}/h</Typography>
                             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{enrollment?.classesPerWeek}x por semana</Typography>
                           </TableCell>
+                          <TableCell sx={{ color: '#ffd426' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 900, color: '#ffd426' }}>🪙 {student.coins || 0}</Typography>
+                              {student.streak > 0 && (
+                                <Chip 
+                                  label={`🔥 ${student.streak}`} 
+                                  size="small" 
+                                  sx={{ 
+                                    height: 18, 
+                                    fontSize: '0.65rem', 
+                                    fontWeight: 900,
+                                    bgcolor: 'rgba(255, 152, 0, 0.15)',
+                                    color: '#ff9800',
+                                    border: '1px solid rgba(255, 152, 0, 0.25)' 
+                                  }} 
+                                />
+                              )}
+                            </Box>
+                          </TableCell>
                           <TableCell>
                             <Box sx={{ display: 'flex', gap: 1 }}>
                               <IconButton size="small" onClick={() => handleOpenEditStudent(student, enrollment)} title="Editar" sx={{ color: '#b388ff', '&:hover': { bgcolor: 'rgba(179,136,255,0.1)' } }}>
                                 <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton size="small" onClick={() => handleOpenGiveCoins(student)} title="Gerenciar Moedas" sx={{ color: '#ffd426', '&:hover': { bgcolor: 'rgba(255,212,38,0.1)' } }}>
+                                <AttachMoneyIcon fontSize="small" />
                               </IconButton>
                               <IconButton size="small" onClick={() => { setSelectedMonitorStudent(student); handleViewProgress(student.id); setTab(4); }} title="Monitorar" sx={{ color: '#00b4d8', '&:hover': { bgcolor: 'rgba(0,180,216,0.1)' } }}>
                                 <VisibilityIcon fontSize="small" />
@@ -1132,6 +1217,48 @@ export default function AdminPage() {
             <Button onClick={() => setOpenStudentDialog(false)}>Cancelar</Button>
             <Button onClick={handleSaveStudent} variant="contained">
               {editStudentId ? 'Salvar' : 'Cadastrar'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog para Gerenciar Moedas */}
+        <Dialog open={openGiveCoinsDialog} onClose={() => setOpenGiveCoinsDialog(false)}>
+          <DialogTitle sx={{ fontWeight: 900 }}>Gerenciar Moedas 🪙</DialogTitle>
+          <DialogContent sx={{ minWidth: 400, mt: 1 }}>
+            <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
+              Aluno: <span style={{ color: '#b388ff' }}>{selectedCoinsStudent?.name}</span>
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
+              Saldo Atual: <strong style={{ color: '#ffd426' }}>🪙 {selectedCoinsStudent?.coins || 0}</strong>
+            </Typography>
+            
+            <TextField
+              label="Quantidade de Moedas"
+              type="number"
+              fullWidth
+              value={coinsAmountInput}
+              onChange={(e) => setCoinsAmountInput(e.target.value)}
+              placeholder="Ex: 10 ou -5 ou 50"
+              helperText="Insira um número inteiro. Você pode ADICIONAR este valor ao saldo atual ou DEFINIR o valor exato no saldo final."
+              sx={{ mb: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <span style={{ fontSize: '1.2rem' }}>🪙</span>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+            <Button onClick={() => setOpenGiveCoinsDialog(false)} variant="outlined" sx={{ borderRadius: 3 }}>
+              Cancelar
+            </Button>
+            <Button onClick={() => handleSaveGiveCoins('add')} variant="contained" color="secondary" sx={{ borderRadius: 3, fontWeight: 800 }}>
+              Adicionar Moedas
+            </Button>
+            <Button onClick={() => handleSaveGiveCoins('set')} variant="contained" color="primary" sx={{ borderRadius: 3, fontWeight: 800 }}>
+              Definir Total
             </Button>
           </DialogActions>
         </Dialog>
@@ -1557,27 +1684,37 @@ export default function AdminPage() {
     }
   }
 ]`}
-              </Box>
+            </Box>
             )}
-            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-              <Typography variant="caption" color="textSecondary">
-                Ou carregue um arquivo .json salvo no seu computador:
-              </Typography>
-              <Button
-                variant="outlined"
-                component="label"
-                size="small"
-                startIcon={<CloudUploadIcon />}
-                sx={{ borderRadius: 2, textTransform: 'none', py: 0.5 }}
-              >
-                Anexar JSON
-                <input
-                  type="file"
-                  accept=".json"
-                  hidden
-                  onChange={handleFileUpload}
-                />
-              </Button>
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+              <FormControl sx={{ minWidth: 220 }} size="small">
+                <InputLabel>Categoria para Atividades Importadas</InputLabel>
+                <Select
+                  value={importIsRpg}
+                  label="Categoria para Atividades Importadas"
+                  onChange={(e) => setImportIsRpg(e.target.value === 'true' || e.target.value === true)}
+                >
+                  <MenuItem value="true">Trilha RPG (Gramática)</MenuItem>
+                  <MenuItem value="false">Atividade de Aula (Lista)</MenuItem>
+                </Select>
+              </FormControl>
+              <Box>
+                <Button
+                  variant="outlined"
+                  component="label"
+                  size="small"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ borderRadius: 2, textTransform: 'none', py: 0.5 }}
+                >
+                  Anexar JSON
+                  <input
+                    type="file"
+                    accept=".json"
+                    hidden
+                    onChange={handleFileUpload}
+                  />
+                </Button>
+              </Box>
             </Box>
             <TextField
               label="Cole o JSON aqui"
@@ -1605,15 +1742,32 @@ export default function AdminPage() {
                 fullWidth
                 required
               />
-              <FormControl sx={{ minWidth: 150 }}>
+              <FormControl sx={{ minWidth: 140 }}>
                 <InputLabel>Nível</InputLabel>
                 <Select 
                   value={manualExercise.level}
                   onChange={(e) => setManualExercise({...manualExercise, level: e.target.value})}
                 >
-                  <MenuItem value="Beginner">Beginner</MenuItem>
-                  <MenuItem value="Intermediate">Intermediate</MenuItem>
-                  <MenuItem value="Advanced">Advanced</MenuItem>
+                  <MenuItem value="Beginner">Beginner / Módulo 1</MenuItem>
+                  <MenuItem value="Intermediate">Intermediate / Módulo 2</MenuItem>
+                  <MenuItem value="Advanced">Advanced / Módulo 3</MenuItem>
+                  <MenuItem value="Módulo 4">Módulo 4</MenuItem>
+                  <MenuItem value="Módulo 5">Módulo 5</MenuItem>
+                  <MenuItem value="Módulo 6">Módulo 6</MenuItem>
+                  <MenuItem value="Módulo 7">Módulo 7</MenuItem>
+                  <MenuItem value="Módulo 8">Módulo 8</MenuItem>
+                  <MenuItem value="Módulo 9">Módulo 9</MenuItem>
+                  <MenuItem value="Módulo 10">Módulo 10</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 160 }}>
+                <InputLabel>Categoria</InputLabel>
+                <Select 
+                  value={manualExercise.isRpg}
+                  onChange={(e) => setManualExercise({...manualExercise, isRpg: e.target.value === 'true' || e.target.value === true})}
+                >
+                  <MenuItem value="true">Trilha RPG (Gramática)</MenuItem>
+                  <MenuItem value="false">Atividade de Aula (Lista)</MenuItem>
                 </Select>
               </FormControl>
               <FormControl sx={{ minWidth: 180 }}>

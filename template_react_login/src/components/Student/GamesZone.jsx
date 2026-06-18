@@ -882,6 +882,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
   const [cmdScriptRunning, setCmdScriptRunning] = useState(false);
   const [cmdPlayerAnim, setCmdPlayerAnim] = useState('idle');
   const scriptAbortControllerRef = useRef(null);
+  const cmdScriptEditorRef = useRef(null);
   const currentStageData = CMD_STAGES.find(s => s.id === cmdStage) || CMD_STAGES[0];
 
   const canvasRef = useRef(null);
@@ -2522,6 +2523,8 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
       return false;
     };
 
+    const functions = new Map();
+    const mainLines = [];
     let statements;
     try {
       const lines = scriptText
@@ -2529,15 +2532,15 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         .map(l => l.trim())
         .filter(l => l.length > 0);
       
-      const functions = new Map();
-      const mainLines = [];
       let inFunc = false;
       let currentFuncName = '';
       let currentFuncBody = [];
+      let funcBlockDepth = 0;
 
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         const lower = line.toLowerCase();
+        const parts = lower.split(/\s+/);
         
         if (lower.startsWith('define ')) {
           if (cmdStage < 2) {
@@ -2546,7 +2549,6 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           if (inFunc) {
             throw new Error(`Erro na linha ${i + 1}: Definição de função aninhada não permitida.`);
           }
-          const parts = line.split(/\s+/);
           const name = parts[1]?.toLowerCase();
           if (!name || ['left', 'right', 'up', 'down', 'grab', 'take', 'get', 'open', 'unlock', 'repeat', 'define', 'end', 'if', 'else', 'while', 'for'].includes(name)) {
             throw new Error(`Erro na linha ${i + 1}: Nome de função inválido ou reservado: "${name}".`);
@@ -2554,19 +2556,23 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
           inFunc = true;
           currentFuncName = name;
           currentFuncBody = [];
-        } else if (lower === 'end') {
-          if (inFunc) {
+          funcBlockDepth = 1;
+        } else if (inFunc) {
+          const firstWord = parts[0];
+          if (['repeat', 'for', 'while', 'if'].includes(firstWord)) {
+            funcBlockDepth++;
+          } else if (firstWord === 'end') {
+            funcBlockDepth--;
+          }
+
+          if (funcBlockDepth === 0) {
             functions.set(currentFuncName, currentFuncBody);
             inFunc = false;
           } else {
-            mainLines.push(line);
+            currentFuncBody.push(line);
           }
         } else {
-          if (inFunc) {
-            currentFuncBody.push(line);
-          } else {
-            mainLines.push(line);
-          }
+          mainLines.push(line);
         }
       }
 
@@ -2928,7 +2934,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 } else {
                   if (activeGame === 'command') {
                     if (scriptAbortControllerRef.current) {
-                      scriptAbortControllerRef.current.abort();
+                      scriptAbortControllerRef.current.abort = true;
                     }
                     setCmdScriptRunning(false);
                   }
@@ -4666,14 +4672,14 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                     💻 OPÇÃO B: Escrever um Script Completo (Múltiplas Linhas)
                   </Typography>
                   <Box sx={{ position: 'relative', flexGrow: 1, display: 'flex', flexDirection: 'column', mb: 1.5 }}>
-                    <Box
-                      component="textarea"
+                    <textarea
+                      ref={cmdScriptEditorRef}
                       id="cmd-script-editor"
                       placeholder={`Digite um comando por linha. Ex:\nright\nright\ndown\ngrab key`}
                       disabled={cmdScriptRunning || cmdStatus !== 'playing'}
-                      sx={{
+                      style={{
                         width: '100%',
-                        height: { xs: '120px', md: '180px' },
+                        height: '180px',
                         backgroundColor: 'rgba(0,0,0,0.3)',
                         border: '1px solid rgba(255,255,255,0.08)',
                         borderRadius: '12px',
@@ -4694,7 +4700,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                       size="small"
                       disabled={cmdScriptRunning || cmdStatus !== 'playing'}
                       onClick={() => {
-                        const val = document.getElementById('cmd-script-editor').value;
+                        const val = cmdScriptEditorRef.current?.value || '';
                         runCommandScript(val);
                       }}
                       sx={{
@@ -4721,7 +4727,9 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                         } else if (cmdStage >= 6) {
                           exampleText = "repeat 5\n  right\nend\ngrab key\nrepeat 5\n  down\nend\nopen chest";
                         }
-                        document.getElementById('cmd-script-editor').value = exampleText;
+                        if (cmdScriptEditorRef.current) {
+                          cmdScriptEditorRef.current.value = exampleText;
+                        }
                         playRetroSound('select', soundOn);
                       }}
                       sx={{

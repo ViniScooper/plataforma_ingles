@@ -1,0 +1,209 @@
+[
+  {
+    "title": "Módulo 2 - Present Continuous (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the best option:",
+      "questions": [
+        { "question": "They ___ playing football now.", "options": ["is", "are", "am"], "correct": "are" },
+        { "question": "I ___ studying English at the moment.", "options": ["is", "are", "am"], "correct": "am" },
+        { "question": "She ___ watching TV.", "options": ["isn't", "aren't", "am not"], "correct": "isn't" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Past Simple (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the correct past form:",
+      "questions": [
+        { "question": "He ___ to the park yesterday.", "options": ["go", "went", "goes"], "correct": "went" },
+        { "question": "We ___ a great movie last night.", "options": ["see", "saw", "seeing"], "correct": "saw" },
+        { "question": "They ___ play tennis.", "options": ["didn't", "don't", "doesn't"], "correct": "didn't" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Future with Will (Quiz)",
+    "type": "quiz",
+    "level": "Beginner",
+    "content": {
+      "text": "Choose the best option for the future:",
+      "questions": [
+        { "question": "I think it ___ rain tomorrow.", "options": ["will", "is", "does"], "correct": "will" },
+        { "question": "She ___ call you later.", "options": ["wills", "will", "willing"], "correct": "will" },
+        { "question": "___ you help me with this?", "options": ["Will", "Do", "Are"], "correct": "Will" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Describe a Trip (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": { "prompt": "Write about your last vacation trip. Where did you go?", "minWords": 40 }
+  },
+  {
+    "title": "Módulo 2 - Your Future Plans (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": { "prompt": "What are your plans for the next 5 years?", "minWords": 40 }
+  },
+  {
+    "title": "Módulo 2 - A Memorable Event (Escrita)",
+    "type": "writing",
+    "level": "Intermediate",
+    "content": { "prompt": "Describe an event that changed your life.", "minWords": 40 }
+  },
+  {
+    "title": "Módulo 2 - Reading Comprehension 1 (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "John is a doctor. He works at a hospital in London. He loves his job because he helps people.",
+      "statements": [
+        { "statement": "John works in New York.", "correct": false },
+        { "statement": "John is a doctor.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Reading Comprehension 2 (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "The Amazon rainforest is the largest tropical rainforest in the world. It is located in South America.",
+      "statements": [
+        { "statement": "The Amazon is a desert.", "correct": false },
+        { "statement": "It is the largest tropical rainforest.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Reading Comprehension 3 (V ou F)",
+    "type": "true-false",
+    "level": "Beginner",
+    "content": {
+      "text": "Water boils at 100 degrees Celsius at standard atmospheric pressure.",
+      "statements": [
+        { "statement": "Water boils at 50 degrees Celsius.", "correct": false },
+        { "statement": "It boils at 100 degrees Celsius.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Present Continuous Sentences (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to make present continuous sentences:",
+      "sentences": [
+        { "words": ["playing", "are", "soccer", "They"], "correct": "They are playing soccer" },
+        { "words": ["is", "reading", "book", "She", "a"], "correct": "She is reading a book" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Past Simple Sentences (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to make past simple sentences:",
+      "sentences": [
+        { "words": ["went", "I", "market", "the", "to"], "correct": "I went to the market" },
+        { "words": ["movie", "watched", "a", "We"], "correct": "We watched a movie" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Questions (Frases)",
+    "type": "sentence-order",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Order the words to form questions:",
+      "sentences": [
+        { "words": ["you", "Where", "live", "do", "?"], "correct": "Where do you live ?" },
+        { "words": ["name", "What", "your", "is", "?"], "correct": "What is your name ?" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Animals (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the animals:",
+      "pairs": [
+        { "left": "Dog", "right": "Cachorro" },
+        { "left": "Cat", "right": "Gato" },
+        { "left": "Bird", "right": "Pássaro" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Colors (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the colors:",
+      "pairs": [
+        { "left": "Red", "right": "Vermelho" },
+        { "left": "Blue", "right": "Azul" },
+        { "left": "Green", "right": "Verde" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Numbers (Relacionar)",
+    "type": "matching",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Match the numbers:",
+      "pairs": [
+        { "left": "One", "right": "Um" },
+        { "left": "Two", "right": "Dois" },
+        { "left": "Three", "right": "Três" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Travel Vocab (Vocabulário)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study these travel words:",
+      "cards": [
+        { "front": "Airport", "back": "Aeroporto" },
+        { "front": "Flight", "back": "Voo" },
+        { "front": "Luggage", "back": "Bagagem" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Food Vocab (Vocabulário)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study these food words:",
+      "cards": [
+        { "front": "Bread", "back": "Pão" },
+        { "front": "Cheese", "back": "Queijo" },
+        { "front": "Water", "back": "Água" }
+      ]
+    }
+  },
+  {
+    "title": "Módulo 2 - Jobs (Vocabulário)",
+    "type": "flashcards",
+    "level": "Beginner",
+    "content": {
+      "instructions": "Study these professions:",
+      "cards": [
+        { "front": "Teacher", "back": "Professor(a)" },
+        { "front": "Doctor", "back": "Médico(a)" },
+        { "front": "Engineer", "back": "Engenheiro(a)" }
+      ]
+    }
+  }
+]

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -564,12 +564,11 @@ function SentenceOrderRenderer({ exercise, answers, setAnswers, validation }) {
 }
 
 // --- Matching ---
-function MatchingRenderer({ exercise, answers, setAnswers, validation }) {
+function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledRight }) {
   const pairs = exercise.content?.pairs || [];
   const instructions = exercise.content?.instructions || 'Match the Column A items with the Column B items.';
 
   const [selectedLeft, setSelectedLeft] = useState(null);
-  const shuffledRight = useState(() => shuffle(pairs.map((p, i) => ({ text: p.right, originalIdx: i }))))[0];
 
   const getMatchedRight = (leftIdx) => {
     const rightIdx = answers[leftIdx];
@@ -919,6 +918,18 @@ export default function ExerciseCard({ exercise, onComplete }) {
   const [validation, setValidation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [flashcardsComplete, setFlashcardsComplete] = useState(false);
+  const [shuffledRight, setShuffledRight] = useState([]);
+
+  useEffect(() => {
+    setAnswers({});
+    setValidation(null);
+    setFlashcardsComplete(false);
+    if (exercise.type === 'matching' && exercise.content?.pairs) {
+      setShuffledRight(shuffle(exercise.content.pairs.map((p, i) => ({ text: p.right, originalIdx: i }))));
+    } else {
+      setShuffledRight([]);
+    }
+  }, [exercise.id]);
 
   const effectiveType = (exercise.type === 'text' && exercise.content?.prompt) ? 'writing'
     : exercise.type === 'text' && exercise.content?.cards ? 'flashcards'
@@ -1018,11 +1029,20 @@ export default function ExerciseCard({ exercise, onComplete }) {
       } else if (effectiveType === 'matching') {
         const pairs = exercise.content?.pairs || [];
         totalQuestions = pairs.length;
-        results = Object.entries(answers).map(([leftIdx]) => ({
-          left: pairs[leftIdx]?.left,
-          userMatchedRight: answers[leftIdx],
-        }));
-        validationData = { allCorrect: false, results, score: 0, totalQuestions, matchingRaw: answers };
+        score = 0;
+        results = pairs.map((pair, leftIdx) => {
+          const matchedRightIdx = answers[leftIdx];
+          const originalRightIdx = shuffledRight[matchedRightIdx]?.originalIdx;
+          const isCorrect = originalRightIdx === leftIdx;
+          if (isCorrect) score++;
+          return {
+            left: pair.left,
+            userMatchedRight: shuffledRight[matchedRightIdx]?.text,
+            correctAnswer: pair.right,
+            isCorrect
+          };
+        });
+        validationData = { allCorrect: score === totalQuestions, results, score, totalQuestions };
       }
 
       setValidation(validationData);
@@ -1036,7 +1056,7 @@ export default function ExerciseCard({ exercise, onComplete }) {
         result: { answers, validation: results, type: effectiveType },
       });
 
-      if (onComplete) onComplete();
+      if (onComplete) onComplete(validationData);
 
     } catch (err) {
       console.error('Error submitting exercise:', err);
@@ -1066,7 +1086,7 @@ export default function ExerciseCard({ exercise, onComplete }) {
       case 'sentence-order':
         return <SentenceOrderRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} />;
       case 'matching':
-        return <MatchingRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} />;
+        return <MatchingRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} shuffledRight={shuffledRight} />;
       case 'flashcards':
         return <FlashcardsRenderer exercise={exercise} onAllSeen={() => setFlashcardsComplete(true)} />;
       default:
@@ -1155,7 +1175,15 @@ export default function ExerciseCard({ exercise, onComplete }) {
             }
           }}
         >
-          {loading ? 'Enviando...' : effectiveType === 'text' ? 'Marcar como Lido ✅' : effectiveType === 'writing' ? 'Enviar Texto 📤' : effectiveType === 'flashcards' ? 'Concluir Flashcards 🎴' : 'Enviar Respostas 📤'}
+          {loading 
+            ? 'Enviando...' 
+            : effectiveType === 'text' 
+            ? 'Entregar Atividade (Leitura Concluída) ✅' 
+            : effectiveType === 'writing' 
+            ? 'Entregar Atividade (Enviar Texto) 📤' 
+            : effectiveType === 'flashcards' 
+            ? 'Entregar Atividade (Concluir Flashcards) 🎴' 
+            : 'Entregar Atividade (Enviar Respostas) 📤'}
         </Button>
       )}
     </Box>

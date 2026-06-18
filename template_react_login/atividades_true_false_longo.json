@@ -1,0 +1,152 @@
+[
+  {
+    "title": "True or False: Sarah's NYC Life and Daily Habits",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Sarah is a twenty-five-year-old librarian who recently moved to New York City. She lives in a small but very cozy apartment on the fourth floor of an old brick building. Every morning from Monday to Friday, her alarm goes off at exactly six o'clock. She does not like to stay in bed, so she gets up immediately. Sarah walks straight to the kitchen to brew a fresh pot of hot black coffee. While her coffee is cooling down, she sits by the window, drinks a glass of cold water, and reads the local news on her smartphone. At exactly seven o'clock, she puts on her coat, grabs her bag, and walks for ten minutes to the nearest subway station. Sarah works in a large, historical library located right next to Central Park. She absolutely loves her job because the building is beautiful and quiet, and she can read many interesting books during her lunch break. She returns home around five o'clock in the evening, cooks a healthy dinner of vegetables and rice, reads a novel, and goes to sleep early, usually at ten o'clock.",
+      "statements": [
+        { "statement": "Sarah lives on the first floor of a modern building.", "correct": false },
+        { "statement": "She wakes up at six o'clock during the weekdays.", "correct": true },
+        { "statement": "Sarah works in a quiet library next to Central Park.", "correct": true },
+        { "statement": "She stays awake until midnight reading novels.", "correct": false }
+      ]
+    }
+  },
+  {
+    "title": "True or False: The Miller Family's Weekend at the Beach",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "The Miller family consists of four members: Mr. and Mrs. Miller, and their two young children, Peter and Lucy. They live in a busy city, but they absolutely love the beach. Last Sunday, they decided to escape the noisy streets and travel to the coast very early in the morning. When they arrived at eight o'clock, the sky was completely clear, and the sun was already warm and bright. Mr. Miller set up a large blue umbrella in the sand. He and Mrs. Miller sat on comfortable chairs under the shade to read their favorite novels. Their children, Peter and Lucy, were very excited. They put on sunscreen, grabbed a bright red plastic ball, and spent hours running on the warm sand and building sandcastles. Later in the afternoon, the whole family went swimming together in the cool, blue ocean. For lunch, they sat together under the umbrella, ate fresh cheese and ham sandwiches, and drank cold orange juice. They packed their things and drove back home late in the afternoon. They were very tired, but they had a wonderful and happy day.",
+      "statements": [
+        { "statement": "The Miller family went to the beach on Saturday morning.", "correct": false },
+        { "statement": "Peter and Lucy played with a red ball on the sand.", "correct": true },
+        { "statement": "Mr. and Mrs. Miller sat under the sun without any shade.", "correct": false },
+        { "statement": "The family had lunch together and returned home in the afternoon.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Carlos' First Day of English Class",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Carlos is a seventeen-year-old student who recently moved from Madrid, Spain, to London to improve his English. Today is his very first day of class at the International Language Academy. He wakes up early, eats a light breakfast, and takes the red double-decker bus to school. When he arrives, his heart is beating fast because he is a bit nervous and does not know anyone. He walks down the hallway and finds classroom number four. The English teacher, Mr. Davis, is a friendly man who welcomes Carlos with a big smile. Carlos looks around and sits next to a girl named Anna. Anna is eighteen years old and comes from Berlin, Germany. She is very friendly and immediately notices Carlos is lost, so she helps him find the correct page in the textbook. During the morning break, they go downstairs to the school cafeteria together. Carlos buys a fresh red apple, while Anna drinks a cup of hot chamomile tea. Carlos feels much better and is very happy because he made a new friend on his first day.",
+      "statements": [
+        { "statement": "Carlos took a taxi to go to his new English school.", "correct": false },
+        { "statement": "Carlos is seventeen years old and was nervous about his first day.", "correct": true },
+        { "statement": "Anna is a student from Spain who sits next to Carlos.", "correct": false },
+        { "statement": "Carlos and Anna went to the cafeteria during the break.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "True or False: David and Max the Loyal Dog",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "David is a high school student who lives with his family and their pet dog, Max. Max is a beautiful golden retriever with a soft yellow coat and big, expressive brown eyes. He is three years old and is extremely energetic. Every single morning, Max sits patiently next to David's bed and wags his tail. As soon as David opens his eyes, Max jumps up to greet him. They go to the local park down the street before breakfast. David throws a yellow tennis ball, and Max runs fast to catch it and bring it back. In the afternoon, while David is at school, Max rests quietly under the wooden kitchen table where it is cool. Max eats dry dog food from a white plate and drinks fresh water from a large blue bowl. When David finally returns home in the afternoon, Max runs to the front door, barking happily. David believes that Max is not just a pet, but his best friend in the world.",
+      "statements": [
+        { "statement": "Max is a three-year-old golden retriever.", "correct": true },
+        { "statement": "Max waits for David to wake up before they go to the park.", "correct": true },
+        { "statement": "Max goes to school with David in the morning.", "correct": false },
+        { "statement": "Max drinks water from a red bowl.", "correct": false }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Alice's Saturday on the Farm",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Every Saturday morning, ten-year-old Alice goes to visit her Uncle Tom on his farm. The farm is located in a tiny, quiet village far away from the noisy city streets. Alice loves the country air and the many animals that live there. As soon as she arrives, she runs to the barn to help her uncle feed the chickens. The chickens gather around, clucking loudly and eating corn from Alice's hands. Uncle Tom has a lot of animals, including five strong brown horses, three dairy cows, and a black cat named Oliver. Alice's favorite activity is riding a gentle brown horse named Bella. She wears a safety helmet, and Uncle Tom walks beside her as they go around the green field. In the warm afternoon, Alice and her uncle carry wooden baskets to the orchard to pick fresh red apples from the trees. She loves to eat one right after picking it. Alice thinks the farm is the most beautiful and peaceful place she knows.",
+      "statements": [
+        { "statement": "Alice visits Uncle Tom's farm every Sunday.", "correct": false },
+        { "statement": "Uncle Tom has five horses, three cows, and a black cat.", "correct": true },
+        { "statement": "Alice rides a horse named Oliver in the morning.", "correct": false },
+        { "statement": "Alice and Uncle Tom pick fresh apples in the orchard.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Studying at the Corner Cafe",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "The Corner Cafe is a very popular spot located at the intersection of two quiet streets in the neighborhood. It is a small, warm space decorated with beautiful green hanging plants and comfortable wooden tables. The cafe is owned and run by a young, friendly couple named Paul and Lisa. Every morning, they bake fresh chocolate chip cookies, blueberry muffins, and large chocolate cakes. Many college students love to go there to study or write on their laptops because the Wi-Fi is fast and the background music is very soft and quiet. Today is a cold Thursday, and Daniel is sitting at a small table by the front window. He has his English textbook open and is taking notes in his notebook. To stay warm, he is drinking a large mug of hot chocolate with marshmallows and eating a warm chocolate cookie. He enjoys spending his afternoons at the cafe because it is peaceful and smells like fresh coffee.",
+      "statements": [
+        { "statement": "The Corner Cafe is owned by two old men.", "correct": false },
+        { "statement": "Students like the cafe because the music is very loud and exciting.", "correct": false },
+        { "statement": "Daniel is studying English while drinking hot chocolate.", "correct": true },
+        { "statement": "Paul and Lisa bake fresh cookies and cakes every day.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Helen's Long Train Journey",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Helen is sitting on a modern passenger train traveling from the busy King's Cross station in London to Edinburgh, Scotland. The train ride is very long, taking about four hours to complete. Helen has a reserved seat next to a large window, which she prefers. She spends most of the time looking outside at the passing scenery, admiring the beautiful green hills, farm animals, and old stone houses under the gray sky. To pass the time, she wears her headphones and listens to her favorite acoustic songs. She also brought an exciting adventure novel, which she reads when the train passes through dark tunnels. At exactly two o'clock, the food cart comes down the aisle. Helen buys a chicken sandwich with lettuce and a cold bottle of mineral water. She feels very happy and excited because she is going to spend the entire week visiting her grandparents in their quiet house in Scotland.",
+      "statements": [
+        { "statement": "Helen is traveling to Edinburgh by train, and the trip takes four hours.", "correct": true },
+        { "statement": "Helen has a seat far away from the window.", "correct": false },
+        { "statement": "She reads a book and listens to music during the journey.", "correct": true },
+        { "statement": "She buys a ham pizza from the food cart at two o'clock.", "correct": false }
+      ]
+    }
+  },
+  {
+    "title": "True or False: George's Ninth Birthday Party",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Today is a very special day because it is George's ninth birthday. His parents have organized a small outdoor party in their spacious backyard. They set up a long table decorated with yellow paper tablecloths, bright balloons, plates of salty potato chips, cups of soda, and a huge chocolate cake in the center. George invited ten classmates from his school to celebrate with him. George is wearing a red paper party hat and a big smile. The kids spend the afternoon playing fun games like hide-and-seek and playing soccer on the green grass. At five o'clock in the evening, the sun starts to go down, and George's mother lights the nine candles on the cake. Everyone stands around the table, sings 'Happy Birthday' loudly, and watches George blow out all the candles. After eating cake, George opens his presents and is thrilled to receive a brand new blue skateboard from his parents.",
+      "statements": [
+        { "statement": "George is celebrating his tenth birthday today.", "correct": false },
+        { "statement": "The party is held indoors in the living room.", "correct": false },
+        { "statement": "The children play soccer and hide-and-seek in the yard.", "correct": true },
+        { "statement": "George receives a blue skateboard as a birthday gift.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Mrs. Green's Grocery Shopping",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "Mrs. Green is a busy mother who goes to the local supermarket every Thursday evening after work. To save time, she always sits at her kitchen table and writes a detailed shopping list before she leaves the house. Today, the supermarket is quite busy. She grabs a metal shopping cart and walks straight to the fresh produce section. She carefully selects six sweet red apples, four ripe yellow bananas, and a large pineapple. Next, she walks to the dairy aisle to get two cartons of whole milk and a carton of fresh eggs. She also finds a package of white rice and a loaf of bread on the shelves. After gathering everything on her list, she goes to the cash register. She pays for all her groceries using her credit card, packs the food into reusable green bags, puts them in the trunk of her car, and drives back home to prepare dinner for her family.",
+      "statements": [
+        { "statement": "Mrs. Green goes to the supermarket every Saturday morning.", "correct": false },
+        { "statement": "She prepares a shopping list before going to the store.", "correct": true },
+        { "statement": "Mrs. Green buys apples, bananas, eggs, and milk.", "correct": true },
+        { "statement": "She pays for her groceries with cash at the register.", "correct": false }
+      ]
+    }
+  },
+  {
+    "title": "True or False: Staying Indoors on a Rainy Day",
+    "type": "true-false",
+    "level": "Beginner",
+    "isRpg": false,
+    "content": {
+      "text": "It is raining very hard outside today, with dark clouds covering the sky and cold wind blowing. Because of the bad weather, Emily and her younger brother Leo cannot play soccer in the garden as they planned. Instead, they decide to stay warm inside the house and play board games in the living room. Their absolute favorite game is Monopoly. They spread a large, soft brown rug on the floor near the glass window and set up the game board. Their mother notices they are having fun, so she goes to the kitchen and makes a large bowl of hot buttered popcorn and two cups of warm cocoa with marshmallows. While playing the game, the siblings enjoy eating the snacks and listening to the relaxing sound of the rain hitting the window pane. After finishing the game, they turn on the television and watch an animated movie about wild animals. They have a very cozy and enjoyable afternoon together.",
+      "statements": [
+        { "statement": "Emily and Leo play in the garden despite the heavy rain.", "correct": false },
+        { "statement": "The siblings play Monopoly on a soft rug in the living room.", "correct": true },
+        { "statement": "Their mother makes popcorn and hot cocoa for them.", "correct": true },
+        { "statement": "They watch a scary movie on television after playing.", "correct": false }
+      ]
+    }
+  }
+]

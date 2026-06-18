@@ -16,6 +16,10 @@ model user {
   age              String?
   username         String             @unique(map: "c_username") @default("S/N") @db.VarChar(30)
   role             String             @default("student")
+  coins            Int                @default(0)
+  streak           Int                @default(0)
+  lastLogin        DateTime?
+  lastActivity     DateTime?
   enrollments      enrollment[]
   studentExercises student_exercise[]
   attendances      attendance[]
@@ -41,6 +45,7 @@ model exercise {
   type             String             @default("gap-fill") // gap-fill, text, quiz
   level            String
   title            String             @default("New Exercise")
+  isRpg            Boolean            @default(true)
   content          Json?              // Store text, quiz questions, etc.
   sentence         String?            // Keeping for backward compatibility or gap-fill
   gaps             Json?              // Keeping for backward compatibility or gap-fill

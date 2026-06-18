@@ -99,7 +99,7 @@ export const signIn = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, password, age, username } = req.body;
+  const { name, email, password, age, username, coins, streak } = req.body;
 
   try {
     const data = {};
@@ -107,6 +107,8 @@ export const updateUser = async (req, res) => {
     if (email) data.email = email;
     if (age) data.age = age;
     if (username) data.username = username;
+    if (coins !== undefined) data.coins = parseInt(coins);
+    if (streak !== undefined) data.streak = parseInt(streak);
 
     if (password) {
       const bcryptjs = (await import('bcryptjs')).default;
@@ -124,7 +126,9 @@ export const updateUser = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        username: user.username
+        username: user.username,
+        coins: user.coins,
+        streak: user.streak
       }
     });
   } catch (error) {
@@ -157,12 +161,108 @@ export const getAllUsers = async (req, res) => {
         name: true,
         username: true,
         role: true,
+        coins: true,
+        streak: true,
+        lastLogin: true,
+        lastActivity: true,
         createdAt: true
       }
     });
     return res.status(200).json(users);
   } catch (error) {
     console.error('Error fetching users:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+export const getUserById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const now = new Date();
+    let updatedCoins = user.coins;
+    let newStreak = user.streak;
+    let message = null;
+
+    // Check if streak is broken (last activity was more than 1 day ago)
+    if (user.lastActivity) {
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      const diffMs = now.setHours(0,0,0,0) - new Date(user.lastActivity).setHours(0,0,0,0);
+      if (diffMs > oneDayMs && newStreak > 0) {
+        newStreak = 0; // Reset streak if they missed a day
+      }
+    }
+
+    // Check if they stayed a week (7+ days) without logging in
+    if (user.lastLogin) {
+      const lastLoginTime = new Date(user.lastLogin).getTime();
+      const timeDiff = now.getTime() - lastLoginTime;
+      const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff >= 7) {
+        const weeksMissed = Math.floor(daysDiff / 7);
+        const coinsToDeduct = weeksMissed; // 1 coin per week
+        updatedCoins = Math.max(0, updatedCoins - coinsToDeduct);
+        message = `Você ficou ${daysDiff} dias sem entrar e perdeu ${coinsToDeduct} ${coinsToDeduct === 1 ? 'moeda' : 'moedas'}! 😢`;
+        
+        // Update user coins and lastLogin
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            coins: updatedCoins,
+            lastLogin: now,
+            streak: newStreak
+          }
+        });
+      } else {
+        // Just update lastLogin if it's a new day
+        const lastLoginStr = user.lastLogin.toISOString().split('T')[0];
+        const todayStr = now.toISOString().split('T')[0];
+        if (lastLoginStr !== todayStr) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              lastLogin: now,
+              streak: newStreak
+            }
+          });
+        }
+      }
+    } else {
+      // First login ever
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          lastLogin: now,
+          streak: newStreak
+        }
+      });
+    }
+
+    return res.status(200).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      coins: updatedCoins,
+      streak: newStreak,
+      lastLogin: now,
+      lastActivity: user.lastActivity,
+      createdAt: user.createdAt,
+      message // Return alert message if any coins were lost!
+    });
+
+  } catch (error) {
+    console.error('Error fetching user:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -297,7 +397,7 @@ export const getExercises = async (req, res) => {
 };
 
 export const createExercise = async (req, res) => {
-  const { level, sentence, gaps, planId, type, title, content } = req.body;
+  const { level, sentence, gaps, planId, type, title, content, isRpg } = req.body;
 
   if (!level || !planId) {
     return res.status(400).json({ error: 'Level and planId are required' });
@@ -309,6 +409,7 @@ export const createExercise = async (req, res) => {
         level,
         type: type || 'gap-fill',
         title: title || 'New Exercise',
+        isRpg: isRpg !== undefined ? (isRpg === 'true' || isRpg === true) : true,
         content: content ? (typeof content === 'string' ? JSON.parse(content) : content) : null,
         sentence: sentence || null,
         gaps: gaps ? (typeof gaps === 'string' ? JSON.parse(gaps) : gaps) : null,
@@ -328,13 +429,14 @@ export const createExercise = async (req, res) => {
 
 export const updateExercise = async (req, res) => {
   const { id } = req.params;
-  const { type, title, level, content } = req.body;
+  const { type, title, level, content, isRpg } = req.body;
 
   try {
     const data = {};
     if (type) data.type = type;
     if (title) data.title = title;
     if (level) data.level = level;
+    if (isRpg !== undefined) data.isRpg = (isRpg === 'true' || isRpg === true);
     if (content) data.content = (typeof content === 'string' ? JSON.parse(content) : content);
 
     const exercise = await prisma.exercise.update({
@@ -398,7 +500,7 @@ export const importExercises = async (req, res) => {
           exContent = ex.content;
         } else {
           // Extract everything EXCEPT metadata fields to be part of content
-          const { title, level, type, planId, ...rest } = ex;
+          const { title, level, type, planId, isRpg, ...rest } = ex;
           exContent = rest;
         }
 
@@ -457,6 +559,7 @@ export const importExercises = async (req, res) => {
             level: ex.level || level || 'Beginner',
             type: exType,
             title: ex.title || 'Imported Activity',
+            isRpg: ex.isRpg !== undefined ? (ex.isRpg === 'true' || ex.isRpg === true) : true,
             content: exContent,
             planId: parseInt(ex.planId || planId)
           }
@@ -645,6 +748,50 @@ export const updateExerciseStatus = async (req, res) => {
         completedAt: status === 'completed' ? new Date() : undefined
       }
     });
+
+    // If exercise is marked completed, update student coins & streak
+    if (status === 'completed') {
+      const user = await prisma.user.findUnique({ where: { id: parseInt(userId) } });
+      if (user) {
+        let coinsToAdd = 1; // 1 base coin for exercise completion
+        let newStreak = user.streak;
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        let isNewDayActivity = false;
+        if (!user.lastActivity) {
+          isNewDayActivity = true;
+          newStreak = 1;
+        } else {
+          const lastActStr = user.lastActivity.toISOString().split('T')[0];
+          if (lastActStr !== todayStr) {
+            isNewDayActivity = true;
+            
+            // Check if last activity was yesterday to keep streak
+            const oneDayMs = 24 * 60 * 60 * 1000;
+            const diffMs = now.setHours(0,0,0,0) - new Date(user.lastActivity).setHours(0,0,0,0);
+            if (diffMs <= oneDayMs) {
+              newStreak += 1;
+            } else {
+              newStreak = 1;
+            }
+          }
+        }
+
+        if (isNewDayActivity) {
+          coinsToAdd += 2; // +2 bonus coins for doing activities today!
+        }
+
+        await prisma.user.update({
+          where: { id: parseInt(userId) },
+          data: {
+            coins: { increment: coinsToAdd },
+            streak: newStreak,
+            lastActivity: now
+          }
+        });
+      }
+    }
 
     return res.status(200).json({
       message: 'Exercise status updated',
