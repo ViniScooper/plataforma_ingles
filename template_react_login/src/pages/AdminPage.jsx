@@ -158,6 +158,8 @@ export default function AdminPage() {
     matchingInstructions: 'Match the word to its meaning.',
     flashCards: Array(5).fill(null).map(() => ({ front: '', back: '', example: '' })),
     flashInstructions: 'Click on the card to see the translation.',
+    speakingSentence: '',
+    speakingInstructions: 'Ouça a frase clicando no botão e grave a sua pronúncia em inglês.',
   });
 
   const [selectedExercisesToAssign, setSelectedExercisesToAssign] = useState([]);
@@ -556,7 +558,8 @@ export default function AdminPage() {
         3: 'sentence-order',
         4: 'matching',
         5: 'flashcards',
-        6: 'mixed' // mixed/compiled
+        6: 'speaking',
+        7: 'mixed' // mixed/compiled
       };
       const fallbackType = tabTypeMap[importTab];
 
@@ -696,6 +699,17 @@ export default function AdminPage() {
 }`;
         break;
       case 6:
+        template = `{
+  "title": "Prática de Pronúncia",
+  "type": "speaking",
+  "level": "Beginner",
+  "content": {
+    "sentence": "I would like to order a cup of coffee, please.",
+    "instructions": "Ouça a frase clicando no botão e grave a sua pronúncia em inglês."
+  }
+}`;
+        break;
+      case 7:
         template = `[
   {
     "title": "1. Present Simple (Quiz)",
@@ -790,6 +804,11 @@ export default function AdminPage() {
             ...(c.example ? { example: c.example } : {})
           }))
         };
+      } else if (manualExercise.type === 'speaking') {
+        payload.content = {
+          sentence: manualExercise.speakingSentence,
+          instructions: manualExercise.speakingInstructions || 'Ouça a frase clicando no botão e grave a sua pronúncia em inglês.'
+        };
       }
 
       await apiClient.post('/exercises', payload);
@@ -803,6 +822,8 @@ export default function AdminPage() {
         matchingInstructions: 'Match the word to its meaning.',
         flashCards: Array(5).fill(null).map(() => ({ front: '', back: '', example: '' })),
         flashInstructions: 'Click on the card to see the translation.',
+        speakingSentence: '',
+        speakingInstructions: 'Ouça a frase clicando no botão e grave a sua pronúncia em inglês.',
       });
       setOpenManualExerciseDialog(false);
       loadAllExercises();
@@ -1352,7 +1373,7 @@ export default function AdminPage() {
             </TableHead>
             <TableBody>
               {allExercises.map((ex) => {
-                const typeColors = { quiz: '#00b4d8', text: '#4caf50', writing: '#7c4dff', 'gap-fill': '#ff9800', 'true-false': '#4caf50', 'sentence-order': '#e040fb', matching: '#03a9f4', flashcards: '#e91e63' };
+                const typeColors = { quiz: '#00b4d8', text: '#4caf50', writing: '#7c4dff', 'gap-fill': '#ff9800', 'true-false': '#4caf50', 'sentence-order': '#e040fb', matching: '#03a9f4', flashcards: '#e91e63', speaking: '#00e5ff' };
                 const typeColor = typeColors[ex.type] || '#666';
                 return (
                 <TableRow key={ex.id} hover sx={{ 
@@ -1375,7 +1396,8 @@ export default function AdminPage() {
                             'sentence-order': '🧩 Frases',
                             matching: '🔗 Relacionar',
                             'gap-fill': '✏️ Lacunas',
-                            flashcards: '🎴 Flashcards'
+                            flashcards: '🎴 Flashcards',
+                            speaking: '🎙️ Pronúncia'
                           }[ex.type] || ex.type
                         }
                         size="small"
@@ -1411,6 +1433,7 @@ export default function AdminPage() {
                         <MenuItem value="matching" sx={{ fontSize: '0.8rem' }}>🔗 Relacionar</MenuItem>
                         <MenuItem value="gap-fill" sx={{ fontSize: '0.8rem' }}>✏️ Lacunas</MenuItem>
                         <MenuItem value="flashcards" sx={{ fontSize: '0.8rem' }}>🎴 Flashcards</MenuItem>
+                        <MenuItem value="speaking" sx={{ fontSize: '0.8rem' }}>🎙️ Pronúncia</MenuItem>
                       </Select>
                     </Box>
                   </TableCell>
@@ -1528,6 +1551,7 @@ export default function AdminPage() {
               <Tab label="🧩 Frases" />
               <Tab label="🔗 Relacionar" />
               <Tab label="🎴 Flashcards" />
+              <Tab label="🎙️ Pronúncia" />
               <Tab label="📦 Compilado (Tudo)" />
             </Tabs>
             {importTab === 0 && (
@@ -1630,6 +1654,19 @@ export default function AdminPage() {
               </Box>
             )}
             {importTab === 6 && (
+              <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
+{`{
+  "title": "Prática de Pronúncia",
+  "type": "speaking",
+  "level": "Beginner",
+  "content": {
+    "sentence": "I would like to order a cup of coffee, please.",
+    "instructions": "Ouça a frase clicando no botão e grave a sua pronúncia em inglês."
+  }
+}`}
+              </Box>
+            )}
+            {importTab === 7 && (
               <Box component="pre" sx={{ p: 1.5, bgcolor: '#1e1e1e', color: '#d4d4d4', borderRadius: 1, mb: 2, fontSize: '0.72rem', overflowX: 'auto', maxHeight: 180, whiteSpace: 'pre-wrap' }}>
 {`[
   {
@@ -1783,6 +1820,7 @@ export default function AdminPage() {
                   <MenuItem value="sentence-order">🧩 Montar a Frase</MenuItem>
                   <MenuItem value="matching">🔗 Relacionar Colunas</MenuItem>
                   <MenuItem value="flashcards">🎴 Flashcards</MenuItem>
+                  <MenuItem value="speaking">🎙️ Pronúncia de Frase</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -2040,6 +2078,28 @@ export default function AdminPage() {
                 >
                   + Adicionar Cartão
                 </Button>
+              </Box>
+            )}
+
+            {/* SPEAKING */}
+            {manualExercise.type === 'speaking' && (
+              <Box>
+                <TextField
+                  label="Frase em Inglês (para o aluno pronunciar)"
+                  fullWidth
+                  value={manualExercise.speakingSentence}
+                  onChange={(e) => setManualExercise({...manualExercise, speakingSentence: e.target.value})}
+                  sx={{ mb: 2 }}
+                  placeholder="Ex: I would like to order a cup of coffee, please."
+                  required
+                />
+                <TextField
+                  label="Instrução (opcional)"
+                  fullWidth
+                  value={manualExercise.speakingInstructions}
+                  onChange={(e) => setManualExercise({...manualExercise, speakingInstructions: e.target.value})}
+                  placeholder="Ex: Ouça a frase clicando no botão e grave a sua pronúncia em inglês."
+                />
               </Box>
             )}
           </DialogContent>

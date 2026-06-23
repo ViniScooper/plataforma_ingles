@@ -594,25 +594,25 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
 
   return (
     <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
-      <Box sx={{ p: 2.5, backgroundColor: 'rgba(0, 180, 216, 0.05)', borderLeft: '4px solid #00b4d8', borderRadius: 3.5, mb: 4 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 0.5 }}>🔗 Instructions:</Typography>
-        <Typography variant="body2" sx={{ color: '#eee', mt: 0.5 }}>{instructions}</Typography>
+      <Box sx={{ p: { xs: 1.8, md: 2.5 }, backgroundColor: 'rgba(0, 180, 216, 0.05)', borderLeft: '4px solid #00b4d8', borderRadius: 3.5, mb: { xs: 2.5, md: 4 } }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>🔗 Instructions:</Typography>
+        <Typography variant="body2" sx={{ color: '#eee', mt: 0.5, fontSize: { xs: '0.78rem', md: '0.875rem' } }}>{instructions}</Typography>
         {!validation && selectedLeft !== null && (
-          <Typography variant="caption" sx={{ color: '#00b4d8', mt: 1, display: 'block', fontWeight: 800, animation: 'fadeIn 0.3s ease' }}>
+          <Typography variant="caption" sx={{ color: '#00b4d8', mt: 1, display: 'block', fontWeight: 800, animation: 'fadeIn 0.3s ease', fontSize: { xs: '0.7rem', md: '0.75rem' } }}>
             👉 Now click on the matching item in Column B...
           </Typography>
         )}
         {!validation && selectedLeft === null && (
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', mt: 1, display: 'block', fontWeight: 700 }}>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', mt: 1, display: 'block', fontWeight: 700, fontSize: { xs: '0.7rem', md: '0.75rem' } }}>
             Click on a card in Column A first.
           </Typography>
         )}
       </Box>
 
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3.5 }}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: { xs: 1.5, md: 3.5 } }}>
         {/* Left column */}
         <Box>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2, fontSize: { xs: '0.7rem', md: '0.75rem' } }}>
             Column A
           </Typography>
           {pairs.map((pair, leftIdx) => {
@@ -646,7 +646,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
                 key={leftIdx}
                 onClick={() => handleLeftClick(leftIdx)}
                 sx={{
-                  p: 2.2, mb: 1.8,
+                  p: { xs: 1.5, md: 2.2 }, mb: { xs: 1.2, md: 1.8 },
                   border: `1.5px solid ${borderColor}`,
                   background: bgcolor,
                   borderRadius: 3.5,
@@ -660,10 +660,10 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
                   },
                 }}
               >
-                <Typography variant="body2" sx={{ fontWeight: 800, color: textColor }}>{pair.left}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800, color: textColor, fontSize: { xs: '0.78rem', md: '0.875rem' } }}>{pair.left}</Typography>
                 
                 {isMatched && !validation && (
-                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#b388ff', mt: 0.6, display: 'block', textTransform: 'uppercase', fontSize: '0.68rem' }}>
+                  <Typography variant="caption" sx={{ fontWeight: 800, color: '#b388ff', mt: 0.6, display: 'block', textTransform: 'uppercase', fontSize: { xs: '0.62rem', md: '0.68rem' } }}>
                     🔗 Linked: {getMatchedRight(leftIdx)}
                   </Typography>
                 )}
@@ -672,7 +672,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
                   const originalRightIdx = shuffledRight[matchedRightIdx]?.originalIdx;
                   const correct = originalRightIdx === leftIdx;
                   return (
-                    <Typography variant="caption" sx={{ fontWeight: 800, color: correct ? '#48c78e' : '#ff5a79', display: 'block', mt: 0.8 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: correct ? '#48c78e' : '#ff5a79', display: 'block', mt: 0.8, fontSize: { xs: '0.65rem', md: '0.75rem' } }}>
                       {correct ? `✅ ${pair.right}` : `❌ Correct: ${pair.right}`}
                     </Typography>
                   );
@@ -684,7 +684,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
 
         {/* Right column */}
         <Box>
-          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2 }}>
+          <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 2, fontSize: { xs: '0.7rem', md: '0.75rem' } }}>
             Column B
           </Typography>
           {shuffledRight.map((item, rightIdx) => {
@@ -709,7 +709,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
                 key={rightIdx}
                 onClick={() => handleRightClick(rightIdx)}
                 sx={{
-                  p: 2.2, mb: 1.8,
+                  p: { xs: 1.5, md: 2.2 }, mb: { xs: 1.2, md: 1.8 },
                   border: `1.5px solid ${borderColor}`,
                   background: bgcolor,
                   borderRadius: 3.5,
@@ -724,7 +724,7 @@ function MatchingRenderer({ exercise, answers, setAnswers, validation, shuffledR
                   },
                 }}
               >
-                <Typography variant="body2" sx={{ color: '#eee', fontWeight: 500 }}>{item.text}</Typography>
+                <Typography variant="body2" sx={{ color: '#eee', fontWeight: 500, fontSize: { xs: '0.78rem', md: '0.875rem' } }}>{item.text}</Typography>
               </Card>
             );
           })}
@@ -911,6 +911,185 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
   );
 }
 
+function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
+  const sentence = exercise.content?.sentence || '';
+  const instructions = exercise.content?.instructions || 'Ouça a frase clicando no botão e grave a sua pronúncia em inglês.';
+  
+  const [isListening, setIsListening] = useState(false);
+  const [spokenText, setSpokenText] = useState(answers.text || '');
+  const [recognitionError, setRecognitionError] = useState('');
+  const [recognitionInstance, setRecognitionInstance] = useState(null);
+
+  useEffect(() => {
+    setSpokenText(answers.text || '');
+  }, [answers.text]);
+
+  const handleListenPhrase = () => {
+    try {
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.85;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("Speech Synthesis error:", e);
+    }
+  };
+
+  const handleToggleListening = () => {
+    if (isListening) {
+      if (recognitionInstance) {
+        recognitionInstance.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setRecognitionError("Seu navegador não suporta reconhecimento de fala. Use o Chrome ou Edge.");
+      return;
+    }
+
+    setRecognitionError('');
+    setIsListening(true);
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+      const fullSpoken = (finalTranscript + interimTranscript).trim();
+      setSpokenText(fullSpoken);
+      setAnswers({ text: fullSpoken });
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === 'not-allowed') {
+        setRecognitionError("Permissão do microfone negada. Permita o microfone no navegador.");
+      } else {
+        setRecognitionError(`Erro no microfone: ${event.error}`);
+      }
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
+    setRecognitionInstance(recognition);
+  };
+
+  const clean = (w) => w.toLowerCase().replace(/[.,!?;:()"]/g, '').trim();
+  const originalWords = sentence.split(/\s+/).filter(Boolean);
+  const targetWordsClean = originalWords.map(clean);
+  const spokenWordsClean = spokenText.split(/\s+/).map(clean).filter(Boolean);
+
+  return (
+    <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
+      <Box sx={{ p: { xs: 1.8, md: 2.5 }, backgroundColor: 'rgba(0, 180, 216, 0.05)', borderLeft: '4px solid #00b4d8', borderRadius: 3.5, mb: 4 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>🎙️ Pronúncia de Frase:</Typography>
+        <Typography variant="body2" sx={{ color: '#eee', mt: 0.5, fontSize: { xs: '0.78rem', md: '0.875rem' } }}>{instructions}</Typography>
+      </Box>
+
+      <Card sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3.5, mb: 3 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', p: 2, bgcolor: 'rgba(0,0,0,0.15)', borderRadius: '12px', minWidth: '100%', boxSizing: 'border-box' }}>
+          {originalWords.map((word, idx) => {
+            const wordClean = targetWordsClean[idx];
+            const wasSpoken = spokenWordsClean.includes(wordClean);
+            
+            return (
+              <Typography 
+                key={idx}
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 900, 
+                  color: wasSpoken ? '#48c78e' : (spokenText ? '#ff5a79' : 'rgba(255,255,255,0.4)'),
+                  textDecoration: wasSpoken ? 'none' : 'underline',
+                  textDecorationColor: 'rgba(255,255,255,0.08)',
+                  transition: 'color 0.25s ease',
+                  fontFamily: 'Outfit, sans-serif',
+                  fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                }}
+              >
+                {word}
+              </Typography>
+            );
+          })}
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <Button
+            variant="outlined"
+            onClick={handleListenPhrase}
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 800,
+              px: 3.5,
+              py: 1.5,
+              borderColor: 'rgba(0, 180, 216, 0.4)',
+              color: '#00b4d8',
+              '&:hover': {
+                borderColor: '#00b4d8',
+                bgcolor: 'rgba(0, 180, 216, 0.05)'
+              }
+            }}
+          >
+            🔊 Ouvir Frase
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={handleToggleListening}
+            disabled={!!validation}
+            sx={{
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 900,
+              px: 3.5,
+              py: 1.5,
+              bgcolor: isListening ? '#ff5a79' : '#7c4dff',
+              boxShadow: isListening ? '0 0 16px rgba(255, 90, 121, 0.4)' : '0 2px 10px rgba(124, 77, 255, 0.3)',
+              color: '#fff',
+              '&:hover': {
+                bgcolor: isListening ? '#ff3b5c' : '#b388ff'
+              }
+            }}
+          >
+            {isListening ? '⏹️ Parar' : '🎙️ Gravar Pronúncia'}
+          </Button>
+        </Box>
+
+        {spokenText && (
+          <Box sx={{ width: '100%', mt: 1, p: 2, bgcolor: 'rgba(255,255,255,0.01)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '10px' }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5, fontSize: '0.7rem' }}>O sistema entendeu:</Typography>
+            <Typography variant="body2" sx={{ color: '#fff', fontStyle: 'italic', fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>"{spokenText}"</Typography>
+          </Box>
+        )}
+
+        {recognitionError && (
+          <Alert severity="error" sx={{ width: '100%', borderRadius: '10px', bgcolor: 'rgba(255, 90, 121, 0.1)', color: '#ffcbd5', border: '1px solid rgba(255, 90, 121, 0.2)' }}>
+            {recognitionError}
+          </Alert>
+        )}
+      </Card>
+    </Box>
+  );
+}
+
 // ─── Main ExerciseCard ─────────────────────────────────────────────────────────
 
 export default function ExerciseCard({ exercise, onComplete }) {
@@ -939,6 +1118,9 @@ export default function ExerciseCard({ exercise, onComplete }) {
     if (effectiveType === 'writing') {
       const minWords = exercise.content?.minWords || 0;
       return wordCount(answers[0] || '') >= minWords;
+    }
+    if (effectiveType === 'speaking') {
+      return !!answers.text;
     }
     if (effectiveType === 'true-false') {
       const statements = exercise.content?.statements || [];
@@ -970,6 +1152,38 @@ export default function ExerciseCard({ exercise, onComplete }) {
         score = 0;
         totalQuestions = 0;
         validationData = { allCorrect: true, message: 'Flashcards concluídos! Continue praticando.' };
+
+      } else if (effectiveType === 'speaking') {
+        const sentence = exercise.content?.sentence || '';
+        const userText = answers.text || '';
+        const clean = (w) => w.toLowerCase().replace(/[.,!?;:()"]/g, '').trim();
+        const targetWords = sentence.split(/\s+/).map(clean).filter(Boolean);
+        const userWords = userText.split(/\s+/).map(clean).filter(Boolean);
+        let correctCount = 0;
+        targetWords.forEach(word => { if (userWords.includes(word)) correctCount++; });
+        const threshold = 0.70;
+        const scorePct = targetWords.length > 0 ? (correctCount / targetWords.length) : 0;
+        const allCorrect = scorePct >= threshold;
+        
+        score = allCorrect ? 100 : 0;
+        totalQuestions = 100;
+        results = {
+          spokenText: userText,
+          correctCount,
+          totalWords: targetWords.length,
+          scorePct: Math.round(scorePct * 100)
+        };
+        validationData = {
+          allCorrect,
+          score,
+          totalQuestions,
+          correctCount,
+          totalWords: targetWords.length,
+          scorePct: Math.round(scorePct * 100),
+          message: allCorrect 
+            ? `Parabéns! Excelente pronúncia. Você acertou ${Math.round(scorePct * 100)}% das palavras! 🏆` 
+            : `Tente novamente. Você acertou ${Math.round(scorePct * 100)}% das palavras, mas precisa de pelo menos 70% para passar.`
+        };
 
       } else if (effectiveType === 'text') {
         score = 0;
@@ -1089,6 +1303,8 @@ export default function ExerciseCard({ exercise, onComplete }) {
         return <MatchingRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} shuffledRight={shuffledRight} />;
       case 'flashcards':
         return <FlashcardsRenderer exercise={exercise} onAllSeen={() => setFlashcardsComplete(true)} />;
+      case 'speaking':
+        return <SpeakingRenderer exercise={exercise} answers={answers} setAnswers={setAnswers} validation={validation} />;
       default:
         return (
           <Box sx={{ p: 3, bgcolor: 'rgba(239, 108, 0, 0.08)', borderRadius: 2 }}>
@@ -1122,12 +1338,12 @@ export default function ExerciseCard({ exercise, onComplete }) {
               }}
             >
               <Typography variant="subtitle2" fontWeight={800}>
-                {validation.score === validation.totalQuestions && validation.totalQuestions > 0
+                {validation.message ? validation.message : (validation.score === validation.totalQuestions && validation.totalQuestions > 0
                   ? `🏆 Perfeito! Você acertou tudo! (${validation.score}/${validation.totalQuestions})`
                   : validation.totalQuestions === 0
                   ? '✅ Atividade concluída com sucesso!'
                   : `⚠️ Você acertou ${validation.score} de ${validation.totalQuestions}. Continue praticando!`
-                }
+                )}
               </Typography>
             </Alert>
           )}

@@ -88,7 +88,8 @@ export const signIn = async (req, res) => {
         name: user.name,
         email: user.email,
         username: user.username,
-        role: user.role
+        role: user.role,
+        avatar: user.avatar
       }
     });
   } catch (error) {
@@ -99,7 +100,7 @@ export const signIn = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, password, age, username, coins, streak } = req.body;
+  const { name, email, password, age, username, coins, streak, avatar } = req.body;
 
   try {
     const data = {};
@@ -109,6 +110,7 @@ export const updateUser = async (req, res) => {
     if (username) data.username = username;
     if (coins !== undefined) data.coins = parseInt(coins);
     if (streak !== undefined) data.streak = parseInt(streak);
+    if (avatar !== undefined) data.avatar = avatar;
 
     if (password) {
       const bcryptjs = (await import('bcryptjs')).default;
@@ -128,7 +130,8 @@ export const updateUser = async (req, res) => {
         email: user.email,
         username: user.username,
         coins: user.coins,
-        streak: user.streak
+        streak: user.streak,
+        avatar: user.avatar
       }
     });
   } catch (error) {
@@ -255,6 +258,7 @@ export const getUserById = async (req, res) => {
       role: user.role,
       coins: updatedCoins,
       streak: newStreak,
+      avatar: user.avatar,
       lastLogin: now,
       lastActivity: user.lastActivity,
       createdAt: user.createdAt,

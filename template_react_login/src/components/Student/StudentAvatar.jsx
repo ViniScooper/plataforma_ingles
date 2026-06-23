@@ -3,6 +3,7 @@ import { Box, Dialog, IconButton, Grid, Button, Typography, Chip } from '@mui/ma
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import './StudentAvatar.css';
+import apiClient from '../../utils/apiClient';
 
 export const darkenColor = (color, percent) => {
   if (!color || typeof color !== 'string') return '#000000';
@@ -700,17 +701,59 @@ export const StudentAvatar = ({ size = 80, editable = false, onChange, totalCoin
 
   useEffect(() => {
     if (!userId) return;
+
+    // Load from local storage immediately so it is instant
     const saved = localStorage.getItem(`student_custom_avatar_${userId}`);
     if (saved) {
-      try { setAvatar({ ...defaultAvatar, ...JSON.parse(saved) }); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        setAvatar({ ...defaultAvatar, ...parsed });
+      } catch (e) {}
     } else {
       setAvatar(defaultAvatar);
     }
+
+    // Synchronize with database
+    const syncWithBackend = async () => {
+      try {
+        const res = await apiClient.get(`/users/${userId}`);
+        if (res.data && res.data.avatar) {
+          const parsedDb = JSON.parse(res.data.avatar);
+          setAvatar({ ...defaultAvatar, ...parsedDb });
+          localStorage.setItem(`student_custom_avatar_${userId}`, JSON.stringify(parsedDb));
+          if (parsedDb.unlockedItems) {
+            localStorage.setItem(`student_unlocked_items_${userId}`, JSON.stringify(parsedDb.unlockedItems));
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao sincronizar avatar com o servidor:", err);
+      }
+    };
+    syncWithBackend();
   }, [userId]);
 
-  const handleSave = (newAvatar) => {
+  const handleSave = async (newAvatar) => {
     setAvatar(newAvatar);
-    if (userId) localStorage.setItem(`student_custom_avatar_${userId}`, JSON.stringify(newAvatar));
+    if (userId) {
+      let currentUnlocked = [];
+      try {
+        const saved = localStorage.getItem(`student_unlocked_items_${userId}`);
+        if (saved) currentUnlocked = JSON.parse(saved);
+      } catch (e) {}
+
+      const avatarPayload = {
+        ...newAvatar,
+        unlockedItems: currentUnlocked
+      };
+
+      localStorage.setItem(`student_custom_avatar_${userId}`, JSON.stringify(newAvatar));
+      
+      try {
+        await apiClient.put(`/users/${userId}`, { avatar: JSON.stringify(avatarPayload) });
+      } catch (err) {
+        console.error("Erro ao salvar avatar no servidor:", err);
+      }
+    }
     setOpen(false);
     if (onChange) onChange(newAvatar);
   };
@@ -824,8 +867,16 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
   useEffect(() => {
     if (open) {
       setTempAvatar(currentAvatar);
+      if (userId) {
+        try {
+          const saved = localStorage.getItem(`student_unlocked_items_${userId}`);
+          setUnlockedItems(saved ? JSON.parse(saved) : []);
+        } catch (e) {
+          setUnlockedItems([]);
+        }
+      }
     }
-  }, [open, currentAvatar]);
+  }, [open, currentAvatar, userId]);
 
   const handleBuy = (item) => {
     if (totalCoins < item.price) return;
@@ -889,12 +940,23 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
           border: '2px solid rgba(0, 180, 216, 0.3)',
           boxShadow: '0 0 40px rgba(0, 180, 216, 0.2)',
           backgroundImage: 'none',
+          maxHeight: { xs: '95vh', md: 'none' },
+          overflow: 'hidden'
         }
       }}
     >
       {/* Header row */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3, borderBottom: '1px solid rgba(255, 255, 255, 0.08)', position: 'relative' }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between',
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        gap: { xs: 2, sm: 0 },
+        p: { xs: 2, sm: 3 },
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        position: 'relative'
+      }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, fontFamily: 'Outfit, sans-serif', display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
           🧙‍♂️ Criador de Personagem
         </Typography>
 
@@ -915,13 +977,13 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
         </IconButton>
         
         {/* Main Tab Switcher */}
-        <Box sx={{ display: 'flex', bgcolor: 'rgba(0, 0, 0, 0.3)', borderRadius: '30px', p: 0.5, mr: 5 }}>
+        <Box sx={{ display: 'flex', bgcolor: 'rgba(0, 0, 0, 0.3)', borderRadius: '30px', p: 0.5, mr: { xs: 0, sm: 5 } }}>
           <Button
             onClick={() => setActiveTab('personalizar')}
             sx={{
               borderRadius: '25px',
               textTransform: 'none',
-              px: 3,
+              px: { xs: 2, sm: 3 },
               py: 0.75,
               fontSize: '13px',
               fontWeight: 700,
@@ -940,7 +1002,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
             sx={{
               borderRadius: '25px',
               textTransform: 'none',
-              px: 3,
+              px: { xs: 2, sm: 3 },
               py: 0.75,
               fontSize: '13px',
               fontWeight: 700,
@@ -958,77 +1020,102 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
       </Box>
 
       {/* Main content container */}
-      <Box sx={{ display: 'flex', p: 3, gap: 2, height: '480px' }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
+        p: { xs: 2, md: 3 },
+        gap: { xs: 2, md: 2 },
+        height: { xs: '380px', sm: '420px', md: '480px' },
+        overflow: 'hidden'
+      }}>
         {activeTab === 'personalizar' ? (
           <>
             {/* Left Column: Preview + Presets */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: '148px', flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.08)', pr: 2 }}>
-              <Typography sx={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', mb: 1.5, letterSpacing: '0.8px' }}>
-                Visualização
-              </Typography>
-              
-              <Box
-                sx={{
-                  width: 128,
-                  height: 128,
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  bgcolor: 'rgba(13, 27, 42, 0.7)',
-                  border: '3px solid rgba(0, 180, 216, 0.5)',
-                  boxShadow: '0 0 20px rgba(0, 180, 216, 0.2), inset 0 0 10px rgba(0,0,0,0.3)',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                  mb: 2.5,
-                  alignSelf: 'center',
-                }}
-              >
-                <Box sx={{ width: '100%', height: '100%', imageRendering: 'pixelated', animation: 'idleBob 2.5s ease-in-out infinite' }}>
-                  <AvatarGraphic avatar={tempAvatar} />
+            <Box sx={{
+              display: 'flex',
+              flexDirection: { xs: 'row', md: 'column' },
+              justifyContent: { xs: 'space-around', md: 'flex-start' },
+              alignItems: 'center',
+              width: { xs: '100%', md: '148px' },
+              flexShrink: 0,
+              borderRight: { xs: 'none', md: '1px solid rgba(255,255,255,0.08)' },
+              borderBottom: { xs: '1px solid rgba(255,255,255,0.08)', md: 'none' },
+              pr: { xs: 0, md: 2 },
+              pb: { xs: 2, md: 0 },
+              mb: { xs: 2, md: 0 },
+              gap: 2
+            }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <Typography sx={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', mb: 1, letterSpacing: '0.8px' }}>
+                  Visualização
+                </Typography>
+                
+                <Box
+                  sx={{
+                    width: { xs: 100, md: 128 },
+                    height: { xs: 100, md: 128 },
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    bgcolor: 'rgba(13, 27, 42, 0.7)',
+                    border: '3px solid rgba(0, 180, 216, 0.5)',
+                    boxShadow: '0 0 20px rgba(0, 180, 216, 0.2), inset 0 0 10px rgba(0,0,0,0.3)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'flex-end',
+                    mb: { xs: 0, md: 2.5 },
+                  }}
+                >
+                  <Box sx={{ width: '100%', height: '100%', imageRendering: 'pixelated', animation: 'idleBob 2.5s ease-in-out infinite' }}>
+                    <AvatarGraphic avatar={tempAvatar} />
+                  </Box>
                 </Box>
               </Box>
 
-              <Typography sx={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', mb: 1, letterSpacing: '0.8px' }}>
-                Presets Rápidos
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: '120px', flexGrow: { xs: 1, md: 0 } }}>
+                <Typography sx={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', mb: 1, letterSpacing: '0.8px' }}>
+                  Presets
+                </Typography>
 
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto', flexGrow: 1, pr: 0.5 }}>
-                {Object.keys(presets).map(name => (
-                  <Box
-                    key={name}
-                    onClick={() => setTempAvatar(presets[name])}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 10px',
-                      borderRadius: '8px',
-                      bgcolor: 'rgba(255, 255, 255, 0.03)',
-                      border: '1.5px solid rgba(0, 212, 255, 0.1)',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        bgcolor: 'rgba(0, 212, 255, 0.08)',
-                        borderColor: 'rgba(0, 212, 255, 0.4)',
-                        transform: 'translateX(2px)',
-                      },
-                      transition: 'all 0.2s',
-                    }}
-                  >
-                    <Typography sx={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
-                      {name}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: '3px' }}>
-                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].skinTone }} />
-                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].hairColor }} />
-                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].clothingColor }} />
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'row', md: 'column' }, gap: 1, overflowX: { xs: 'auto', md: 'visible' }, overflowY: { xs: 'hidden', md: 'auto' }, maxHeight: { xs: '60px', md: '200px' }, pb: { xs: 0.5, md: 0 } }}>
+                  {Object.keys(presets).map(name => (
+                    <Box
+                      key={name}
+                      onClick={() => setTempAvatar(presets[name])}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '6px 10px',
+                        borderRadius: '8px',
+                        bgcolor: 'rgba(255, 255, 255, 0.03)',
+                        border: '1.5px solid rgba(0, 212, 255, 0.1)',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        gap: 1.5,
+                        '&:hover': {
+                          bgcolor: 'rgba(0, 212, 255, 0.08)',
+                          borderColor: 'rgba(0, 212, 255, 0.4)',
+                          transform: { xs: 'none', md: 'translateX(2px)' },
+                        },
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>
+                        {name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: '3px' }}>
+                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].skinTone }} />
+                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].hairColor }} />
+                        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: presets[name].clothingColor }} />
+                      </Box>
                     </Box>
-                  </Box>
-                ))}
+                  ))}
+                </Box>
               </Box>
             </Box>
 
             {/* Right Column: Tab navigation + Option fields */}
-            <Box sx={{ flexGrow: 1, pl: 2, display: 'flex', flexDirection: 'column', overflowY: 'auto', pr: 0.5 }}>
+            <Box sx={{ flexGrow: 1, pl: { xs: 0, md: 2 }, mt: { xs: 2, md: 0 }, display: 'flex', flexDirection: 'column', overflowY: 'auto', pr: 0.5 }}>
               {/* Sub-tabs pills */}
               <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
                 {[
@@ -1423,7 +1510,7 @@ const AvatarEditorDialog = ({ open, onClose, currentAvatar, onSave, totalCoins =
           </>
         ) : (
           /* Shop Tab Content */
-          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
             {/* Shop Subheader */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
               {/* Filters */}

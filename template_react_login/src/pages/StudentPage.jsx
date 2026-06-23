@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, Fragment } from 'react';
 import {
   Container,
   Box,
@@ -467,9 +467,16 @@ export default function StudentPage() {
   const [isStreakFrozen, setIsStreakFrozen] = useState(false);
 
   // RPG Map states
-  const [viewMode, setViewMode] = useState('rpg'); // 'rpg' | 'list'
+  const [viewMode, setViewMode] = useState('rpg'); // 'rpg' | 'list' | 'speaking'
   const [rpgModuleId, setRpgModuleId] = useState(1); // 1 to 10
   const [openExplanationDialog, setOpenExplanationDialog] = useState(false);
+  const [explanationPage, setExplanationPage] = useState(0);
+
+  useEffect(() => {
+    if (openExplanationDialog) {
+      setExplanationPage(0);
+    }
+  }, [openExplanationDialog]);
   const [completedExplanations, setCompletedExplanations] = useState(() => {
     try {
       const saved = localStorage.getItem(`completed_explanations_${user?.id || 'guest'}`);
@@ -557,9 +564,11 @@ export default function StudentPage() {
     if (user) loadData();
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       setError('');
       const [progRes, attRes, userRes] = await Promise.all([
         apiClient.get(`/progress/${user.id}`),
@@ -622,12 +631,16 @@ export default function StudentPage() {
         setPenaltyMessage(userData.message);
       }
 
-      const firstPending = progress.find(p => p.status !== 'completed');
-      if (firstPending) setOpenCards({ [firstPending.id]: true });
+      if (!silent) {
+        const firstPending = progress.find(p => p.status !== 'completed');
+        if (firstPending) setOpenCards({ [firstPending.id]: true });
+      }
     } catch (err) {
       setError('Falha ao carregar dados: ' + err.message);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -664,8 +677,8 @@ export default function StudentPage() {
   };
 
   const handleExerciseComplete = (progressEntry, validationData) => {
-    // Reload the student's progress and stats from backend
-    loadData();
+    // Reload the student's progress and stats from backend (silently)
+    loadData(true);
 
     // Check if it is an RPG exercise
     const isRpg = progressEntry.exercise?.isRpg;
@@ -711,16 +724,25 @@ export default function StudentPage() {
 
   const listExercises = assignedExercises.filter(p => p.exercise?.isRpg === false);
   const rpgExercises = assignedExercises.filter(p => p.exercise?.isRpg === true);
+  const speakingExercises = assignedExercises.filter(p => p.exercise?.type === 'speaking');
 
-  const completedCount = viewMode === 'list'
+  const completedCount = viewMode === 'speaking'
+    ? speakingExercises.filter(p => p.status === 'completed').length
+    : viewMode === 'list'
     ? listExercises.filter(p => p.status === 'completed').length
     : rpgExercises.filter(p => p.status === 'completed').length;
 
-  const pendingCount = viewMode === 'list'
+  const pendingCount = viewMode === 'speaking'
+    ? speakingExercises.filter(p => p.status !== 'completed').length
+    : viewMode === 'list'
     ? listExercises.filter(p => p.status !== 'completed').length
     : rpgExercises.filter(p => p.status !== 'completed').length;
 
-  const totalCount = viewMode === 'list' ? listExercises.length : rpgExercises.length;
+  const totalCount = viewMode === 'speaking'
+    ? speakingExercises.length
+    : viewMode === 'list'
+    ? listExercises.length
+    : rpgExercises.length;
 
   const progressPercent = totalCount > 0
     ? Math.round((completedCount / totalCount) * 100)
@@ -779,6 +801,25 @@ export default function StudentPage() {
     const isWriting = (p) => p.exercise?.type === 'writing' || (p.exercise?.type === 'text' && p.exercise?.content?.prompt);
     const isFlashcard = (p) => p.exercise?.type === 'flashcards' || (p.exercise?.type === 'text' && p.exercise?.content?.cards);
     
+    if (viewMode === 'speaking') {
+      const speakingOnly = exercises.filter(p => p.exercise?.type === 'speaking');
+      let filtered = speakingOnly;
+      if (activityTab === 1) {
+        filtered = speakingOnly.filter(p => p.status !== 'completed');
+      } else if (activityTab === 2) {
+        filtered = speakingOnly.filter(p => p.status === 'completed');
+      }
+      
+      if (searchTerm.trim() !== '') {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(p => 
+          (p.exercise?.title || '').toLowerCase().includes(term) ||
+          (p.exercise?.type || '').toLowerCase().includes(term)
+        );
+      }
+      return filtered;
+    }
+
     // Only show non-RPG (classroom list) activities in list view
     const listOnly = exercises.filter(p => p.exercise?.isRpg === false);
     
@@ -803,6 +844,28 @@ export default function StudentPage() {
       );
     }
     return filtered;
+  };
+
+  const handleRedoExercise = async (progressEntry) => {
+    if (!window.confirm("Deseja refazer esta atividade? Seu progresso anterior será limpo.")) {
+      return;
+    }
+    try {
+      setError('');
+      await apiClient.put('/progress/status', {
+        userId: user.id,
+        exerciseId: progressEntry.exercise.id,
+        status: 'assigned',
+        score: 0,
+        totalQuestions: 0,
+        result: null
+      });
+      setActiveFocusExercise(null);
+      await loadData(true);
+    } catch (err) {
+      console.error("Erro ao resetar atividade:", err);
+      setError("Erro ao resetar atividade: " + err.message);
+    }
   };
 
   const renderCompletedBody = (p) => {
@@ -905,6 +968,31 @@ export default function StudentPage() {
             <Typography variant="h6" color="success.main" fontWeight={800} sx={{ mt: 1 }}>Atividade de leitura concluída com sucesso!</Typography>
           </Box>
         )}
+
+        <Button
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          onClick={() => handleRedoExercise(p)}
+          sx={{
+            mt: 3,
+            borderRadius: 3.5,
+            py: 1.2,
+            fontWeight: 800,
+            textTransform: 'none',
+            color: '#b388ff',
+            borderColor: 'rgba(179, 136, 255, 0.4)',
+            transition: 'all 0.2s',
+            '&:hover': {
+              borderColor: '#b388ff',
+              bgcolor: 'rgba(179, 136, 255, 0.05)',
+              transform: 'translateY(-1px)'
+            }
+          }}
+          startIcon={<span>↺</span>}
+        >
+          Refazer Atividade
+        </Button>
       </Box>
     );
   };
@@ -1036,7 +1124,7 @@ export default function StudentPage() {
             {isCompleted ? renderCompletedBody(p) : (
               <ExerciseCard
                 exercise={{ ...(p.exercise || {}), userId: user?.id }}
-                onComplete={loadData}
+                onComplete={() => loadData(true)}
               />
             )}
           </Box>
@@ -1589,7 +1677,7 @@ export default function StudentPage() {
                       }}>
                         <Button
                           size="small"
-                          onClick={() => setViewMode('rpg')}
+                          onClick={() => { setViewMode('rpg'); setActivityTab(0); }}
                           sx={{
                             borderRadius: 3.5,
                             px: 2.5,
@@ -1605,7 +1693,7 @@ export default function StudentPage() {
                         </Button>
                         <Button
                           size="small"
-                          onClick={() => setViewMode('list')}
+                          onClick={() => { setViewMode('list'); setActivityTab(0); }}
                           sx={{
                             borderRadius: 3.5,
                             px: 2.5,
@@ -1618,6 +1706,22 @@ export default function StudentPage() {
                           startIcon={<span>📋</span>}
                         >
                           Lista
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => { setViewMode('speaking'); setActivityTab(0); }}
+                          sx={{
+                            borderRadius: 3.5,
+                            px: 2.5,
+                            py: 0.8,
+                            bgcolor: viewMode === 'speaking' ? 'rgba(0, 180, 216, 0.15)' : 'transparent',
+                            color: viewMode === 'speaking' ? '#00b4d8' : 'rgba(255, 255, 255, 0.5)',
+                            fontWeight: 800,
+                            '&:hover': { bgcolor: viewMode === 'speaking' ? 'rgba(0, 180, 216, 0.2)' : 'rgba(255,255,255,0.05)' }
+                          }}
+                          startIcon={<span>🎙️</span>}
+                        >
+                          Pronúncia
                         </Button>
                       </Box>
                     )}
@@ -2058,13 +2162,13 @@ export default function StudentPage() {
                                 },
                               }}
                             >
-                              <Tab label={`Todas (${assignedExercises.length})`} />
+                              <Tab label={`Todas (${totalCount})`} />
                               <Tab label={`Pendentes (${pendingCount})`} />
                               <Tab label={`Concluídas (${completedCount})`} />
-                              <Tab label="Escritas ✍️" />
-                              <Tab label="Quizzes 🧠" />
-                              <Tab label="Flashcards 🎴" />
-                              <Tab label="Outros 🧩" />
+                              {viewMode !== 'speaking' && <Tab label="Escritas ✍️" />}
+                              {viewMode !== 'speaking' && <Tab label="Quizzes 🧠" />}
+                              {viewMode !== 'speaking' && <Tab label="Flashcards 🎴" />}
+                              {viewMode !== 'speaking' && <Tab label="Outros 🧩" />}
                             </Tabs>
                           </Card>
                         </Grid>
@@ -2314,93 +2418,189 @@ export default function StudentPage() {
         PaperProps={{
           sx: {
             bgcolor: '#0d1b2a',
-            border: '1px solid rgba(255,255,255,0.1)',
+            border: '1px solid rgba(0, 180, 216, 0.25)',
             borderRadius: 5,
             color: '#fff',
-            p: 2
+            p: 2,
+            boxShadow: '0 0 32px rgba(0, 180, 216, 0.2)'
           }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-          <Box>
-            <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Módulo {rpgModuleId} • Explicação & Exemplos
-            </Typography>
-            <Typography variant="h5" sx={{ fontWeight: 900, mt: 0.5 }}>
-              {MODULE_EXPLANATIONS[rpgModuleId]?.title || 'Grammar Reference'}
-            </Typography>
-          </Box>
-        </DialogTitle>
-        <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', py: 3 }}>
-          <Box sx={{ 
-            typography: 'body1', 
-            lineHeight: 1.8, 
-            color: '#cbd5e1',
-            '& h3': { color: '#00b4d8', fontWeight: 800, mt: 3, mb: 1.5, borderBottom: '1px solid rgba(255,255,255,0.05)', pb: 0.5 },
-            '& p': { mb: 2 },
-            '& ul': { mb: 2.5, pl: 3 },
-            '& li': { mb: 1 },
-            '& strong': { color: '#fff' },
-            '& em': { color: '#b388ff' }
-          }}>
-            {MODULE_EXPLANATIONS[rpgModuleId]?.content.split('\n\n').map((para, pIdx) => {
-              if (para.startsWith('###')) {
-                return (
-                  <Typography key={pIdx} variant="h6" sx={{ color: '#00b4d8', fontWeight: 900, mt: 3, mb: 1.5, borderBottom: '1px solid rgba(255,255,255,0.05)', pb: 0.5 }}>
-                    {para.replace('###', '').trim()}
-                  </Typography>
-                );
+        {(() => {
+          const content = MODULE_EXPLANATIONS[rpgModuleId]?.content || '';
+          const rawParts = content.split('###').map(p => p.trim()).filter(Boolean);
+          const totalPages = rawParts.length || 1;
+          
+          // Current Page details
+          const currentPageRaw = rawParts[explanationPage] || '';
+          const pageLines = currentPageRaw.split('\n');
+          const pageTitle = pageLines[0] || 'Explicação';
+          const pageContentText = pageLines.slice(1).join('\n');
+          const paragraphs = pageContentText.split('\n\n').map(p => p.trim()).filter(Boolean);
+
+          const renderFormattedText = (text) => {
+            if (!text) return '';
+            const boldChunks = text.split('**');
+            return boldChunks.map((boldChunk, bIdx) => {
+              const isBold = bIdx % 2 === 1;
+              const italicChunks = boldChunk.split('*');
+              const renderedItalics = italicChunks.map((italicChunk, iIdx) => {
+                const isItalic = iIdx % 2 === 1;
+                if (isItalic) {
+                  return <em key={iIdx} style={{ color: '#b388ff', fontStyle: 'italic', fontWeight: 600 }}>{italicChunk}</em>;
+                }
+                return italicChunk;
+              });
+
+              if (isBold) {
+                return <strong key={bIdx} style={{ color: '#fff', fontWeight: 800 }}>{renderedItalics}</strong>;
               }
-              if (para.includes('*')) {
-                return (
-                  <Box component="ul" key={pIdx} sx={{ mb: 2.5, pl: 3 }}>
-                    {para.split('\n').map((li, lIdx) => {
-                      const cleanLi = li.replace(/^\*\s*/, '').trim();
+              return <Fragment key={bIdx}>{renderedItalics}</Fragment>;
+            });
+          };
+
+          return (
+            <>
+              <DialogTitle sx={{ pb: 1 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1 }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      📖 Módulo {rpgModuleId} • Mini Livro de Explicação
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 950, mt: 0.5, fontFamily: 'Outfit, sans-serif' }}>
+                      {MODULE_EXPLANATIONS[rpgModuleId]?.title || 'Grammar Reference'}
+                    </Typography>
+                  </Box>
+                  <Chip 
+                    label={`Pág. ${explanationPage + 1} / ${totalPages}`} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(0,180,216,0.15)', color: '#00b4d8', fontWeight: 800, border: '1.5px solid rgba(0,180,216,0.3)' }}
+                  />
+                </Box>
+              </DialogTitle>
+
+              {/* Progress bar at the top of book */}
+              <LinearProgress 
+                variant="determinate" 
+                value={((explanationPage + 1) / totalPages) * 100} 
+                sx={{ 
+                  height: 6, 
+                  mx: 3, 
+                  borderRadius: 3, 
+                  bgcolor: 'rgba(255,255,255,0.05)', 
+                  '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #00b4d8, #7c4dff)' } 
+                }}
+              />
+
+              <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', py: 3, px: 3, minHeight: '300px' }}>
+                <Box sx={{
+                  p: 3,
+                  bgcolor: 'rgba(255, 255, 255, 0.01)',
+                  border: '1.5px solid rgba(0, 180, 216, 0.1)',
+                  borderRadius: '16px',
+                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2)',
+                  minHeight: '260px'
+                }}>
+                  {/* Internal Page Title */}
+                  <Typography variant="h6" sx={{ color: '#00b4d8', fontWeight: 900, mb: 3, borderBottom: '1px solid rgba(0, 180, 216, 0.2)', pb: 1, fontFamily: 'Outfit, sans-serif' }}>
+                    {pageTitle}
+                  </Typography>
+
+                  {/* Body Paragraphs */}
+                  <Box sx={{ typography: 'body1', lineHeight: 1.8, color: '#cbd5e1' }}>
+                    {paragraphs.map((para, pIdx) => {
+                      if (para.includes('*')) {
+                        // Check if it represents a list (multiple bullet points separated by newlines)
+                        const lines = para.split('\n');
+                        const isList = lines.some(l => l.trim().startsWith('*'));
+                        
+                        if (isList) {
+                          return (
+                            <Box component="ul" key={pIdx} sx={{ mb: 2.5, pl: 3 }}>
+                              {lines.map((li, lIdx) => {
+                                const cleanLi = li.replace(/^\*\s*/, '').trim();
+                                return (
+                                  <Box component="li" key={lIdx} sx={{ mb: 1.2, color: '#cbd5e1' }}>
+                                    {renderFormattedText(cleanLi)}
+                                  </Box>
+                                );
+                              })}
+                            </Box>
+                          );
+                        }
+                      }
                       return (
-                        <Box component="li" key={lIdx} sx={{ mb: 1, color: '#cbd5e1' }}>
-                          {cleanLi.split('**').map((chunk, cIdx) => 
-                            cIdx % 2 === 1 ? <strong key={cIdx} style={{ color: '#fff' }}>{chunk}</strong> : chunk
-                          )}
-                        </Box>
+                        <Typography key={pIdx} variant="body1" sx={{ mb: 2.5, color: '#cbd5e1', lineHeight: 1.8 }}>
+                          {renderFormattedText(para)}
+                        </Typography>
                       );
                     })}
                   </Box>
-                );
-              }
-              return (
-                <Typography key={pIdx} variant="body1" sx={{ mb: 2, color: '#cbd5e1', lineHeight: 1.7 }}>
-                  {para.split('**').map((chunk, cIdx) => 
-                    cIdx % 2 === 1 ? <strong key={cIdx} style={{ color: '#fff' }}>{chunk}</strong> : chunk
-                  )}
+                </Box>
+              </DialogContent>
+
+              <DialogActions sx={{ pt: 2, px: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Button 
+                  disabled={explanationPage === 0} 
+                  onClick={() => setExplanationPage(prev => Math.max(prev - 1, 0))}
+                  sx={{ 
+                    color: '#fff', 
+                    fontWeight: 800, 
+                    textTransform: 'none',
+                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' } 
+                  }}
+                >
+                  ⬅️ Anterior
+                </Button>
+
+                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit, sans-serif' }}>
+                  Página {explanationPage + 1} de {totalPages}
                 </Typography>
-              );
-            })}
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ pt: 2, justifyContent: 'space-between' }}>
-          <Button onClick={() => setOpenExplanationDialog(false)} sx={{ color: 'rgba(255,255,255,0.5)' }}>
-            Fechar Leitura
-          </Button>
-          <Button 
-            variant="contained" 
-            color="success"
-            onClick={() => {
-              markExplanationCompleted(rpgModuleId);
-              setOpenExplanationDialog(false);
-              alert('📖 Leitura concluída! Atividade 1 desbloqueada no seu caminho do RPG! 🚀');
-            }}
-            sx={{ 
-              borderRadius: 3.5, 
-              fontWeight: 900,
-              px: 3,
-              bgcolor: '#48c78e',
-              color: '#000',
-              '&:hover': { bgcolor: '#38a876' }
-            }}
-          >
-            Concluir Leitura & Começar
-          </Button>
-        </DialogActions>
+
+                {explanationPage < totalPages - 1 ? (
+                  <Button 
+                    variant="contained" 
+                    onClick={() => setExplanationPage(prev => prev + 1)}
+                    sx={{ 
+                      borderRadius: 2.5, 
+                      fontWeight: 900,
+                      px: 3,
+                      textTransform: 'none',
+                      background: 'linear-gradient(90deg, #00b4d8, #7c4dff)',
+                      color: '#fff',
+                      boxShadow: '0 2px 10px rgba(0, 180, 216, 0.3)',
+                      '&:hover': { background: 'linear-gradient(90deg, #00c8f0, #9c27b0)' }
+                    }}
+                  >
+                    Próxima ➡️
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="contained" 
+                    color="success"
+                    onClick={() => {
+                      markExplanationCompleted(rpgModuleId);
+                      setOpenExplanationDialog(false);
+                      alert('📖 Leitura concluída! Atividade 1 desbloqueada no seu caminho do RPG! 🚀');
+                    }}
+                    sx={{ 
+                      borderRadius: 2.5, 
+                      fontWeight: 900,
+                      px: 3,
+                      textTransform: 'none',
+                      bgcolor: '#48c78e',
+                      color: '#000',
+                      boxShadow: '0 2px 10px rgba(72,199,142,0.3)',
+                      '&:hover': { bgcolor: '#38a876' }
+                    }}
+                  >
+                    Concluir Leitura 🏆
+                  </Button>
+                )}
+              </DialogActions>
+            </>
+          );
+        })()}
       </Dialog>
       </Box>
     </ThemeProvider>

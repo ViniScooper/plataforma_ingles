@@ -18,6 +18,7 @@ model user {
   role             String             @default("student")
   coins            Int                @default(0)
   streak           Int                @default(0)
+  avatar           String?            @db.Text
   lastLogin        DateTime?
   lastActivity     DateTime?
   enrollments      enrollment[]

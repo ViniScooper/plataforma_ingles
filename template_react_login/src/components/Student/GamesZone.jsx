@@ -1806,6 +1806,11 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         } while (nextIdx === currentQuestIdx && BATTLE_QUESTIONS.length > 1);
       }
       setCurrentQuestIdx(nextIdx);
+
+      const isPlayerDead = !isCorrect && (heroHp - (battleStage === 1 ? 15 : battleStage === 2 ? 20 : 25) <= 0);
+      if (!isEnemyDefeated && !isPlayerDead) {
+        setIsTimerPaused(false);
+      }
     }
   };
 
@@ -4038,7 +4043,7 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                 </Grid>
 
                 {/* Combat Log Box */}
-                <Grid size={{ xs: 12, md: 5 }}>
+                <Grid size={{ xs: 12, md: 5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
                   <Card sx={{ p: 2.5, bgcolor: 'rgba(0,0,0,0.25)', height: 170, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                     <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block', mb: 1, letterSpacing: 0.5 }}>
                       🛡️ Log de Combate:
@@ -4377,6 +4382,31 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
                         </Grid>
                       );
                     })()}
+
+                    {/* Responsive Combat Log Box */}
+                    <Box sx={{ display: { xs: 'block', md: 'none' }, mt: 3 }}>
+                      <Card sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.25)', height: 110, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                        <Typography variant="caption" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', display: 'block', mb: 1, letterSpacing: 0.5 }}>
+                          🛡️ Log de Combate:
+                        </Typography>
+                        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.8, fontSize: '0.78rem' }}>
+                          {battleLog.map((log, i) => (
+                            <Typography 
+                              key={i} 
+                              variant="body2" 
+                              sx={{ 
+                                color: log.startsWith('⚔️') ? '#a5d6a7' : log.startsWith('💥') ? '#ffcbd5' : log.startsWith('🎉') ? '#b388ff' : '#94a3b8',
+                                fontWeight: 650,
+                                fontSize: '0.78rem',
+                                lineHeight: 1.3
+                              }}
+                            >
+                              {log}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Card>
+                    </Box>
                   </Box>
                 )
               )}
