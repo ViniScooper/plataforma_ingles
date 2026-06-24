@@ -2,6 +2,30 @@ import { prisma } from '../database/index.js';
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+const assignAllExercisesToUser = async (userId) => {
+  try {
+    const exercises = await prisma.exercise.findMany({
+      select: { id: true }
+    });
+    
+    if (exercises.length === 0) return;
+
+    const data = exercises.map(ex => ({
+      userId: userId,
+      exerciseId: ex.id,
+      status: 'assigned'
+    }));
+
+    await prisma.student_exercise.createMany({
+      data,
+      skipDuplicates: true
+    });
+    console.log(`Auto-assigned ${exercises.length} exercises to user ID ${userId}`);
+  } catch (error) {
+    console.error(`Error auto-assigning exercises to user ID ${userId}:`, error);
+  }
+};
+
 export const signUp = async (req, res) => {
   const { email, password, username, age, name, role } = req.body;
 
@@ -25,6 +49,8 @@ export const signUp = async (req, res) => {
         role: role || 'student'
       }
     });
+
+    await assignAllExercisesToUser(user.id);
 
     return res.status(201).json({
       message: 'User signed up successfully',
@@ -291,6 +317,8 @@ export const createUser = async (req, res) => {
         role: role || 'student'
       }
     });
+
+    await assignAllExercisesToUser(user.id);
 
     return res.status(201).json({
       message: 'User created successfully',

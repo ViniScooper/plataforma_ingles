@@ -2094,28 +2094,104 @@ export default function GamesZone({ userId, userName, onEarnXP }) {
         if (state.shakeAmount < 0.5) state.shakeAmount = 0;
       }
 
-      ctx.fillStyle = '#060a13';
+      // ── Premium Retro Sky Gradient ──
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, 120);
+      skyGrad.addColorStop(0, '#090815'); // Dark cosmic purple
+      skyGrad.addColorStop(0.5, '#0c1020'); // Dark blue
+      skyGrad.addColorStop(1, '#1b0e27'); // Cosmic magenta-violet horizon
+      ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Stars
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      // ── Twinkling Stars ──
+      const starTwinkle1 = 0.2 + Math.abs(Math.sin(Date.now() / 350)) * 0.6;
+      const starTwinkle2 = 0.2 + Math.abs(Math.sin(Date.now() / 500 + 1.2)) * 0.6;
+      const starTwinkle3 = 0.2 + Math.abs(Math.sin(Date.now() / 650 + 2.5)) * 0.6;
+
+      ctx.fillStyle = `rgba(255, 255, 255, ${starTwinkle1})`;
       ctx.fillRect(30, 20, 2, 2);
-      ctx.fillRect(90, 45, 2, 2);
       ctx.fillRect(170, 15, 2, 2);
-      ctx.fillRect(250, 40, 2, 2);
       ctx.fillRect(340, 25, 2, 2);
 
-      // Glowing cosmic moon
-      ctx.fillStyle = 'rgba(0, 180, 216, 0.08)';
+      ctx.fillStyle = `rgba(0, 229, 255, ${starTwinkle2})`;
+      ctx.fillRect(90, 45, 2, 2);
+      ctx.fillRect(250, 40, 2, 2);
+      ctx.fillRect(15, 60, 2, 2);
+
+      ctx.fillStyle = `rgba(255, 183, 77, ${starTwinkle3})`;
+      ctx.fillRect(60, 35, 2, 2);
+      ctx.fillRect(210, 50, 2, 2);
+      ctx.fillRect(290, 20, 2, 2);
+
+      // ── Glowing Cosmic Moon with crater details ──
+      const moonGlow = ctx.createRadialGradient(320, 40, 0, 320, 40, 35);
+      moonGlow.addColorStop(0, 'rgba(0, 229, 255, 0.35)');
+      moonGlow.addColorStop(0.3, 'rgba(0, 180, 216, 0.12)');
+      moonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = moonGlow;
       ctx.beginPath();
-      ctx.arc(320, 40, 30, 0, Math.PI * 2);
+      ctx.arc(320, 40, 35, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ground (Retro Grass)
-      ctx.fillStyle = '#052316';
+      // Moon body
+      ctx.fillStyle = '#e0f7fa';
+      ctx.beginPath();
+      ctx.arc(320, 40, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Craters for pixel texture
+      ctx.fillStyle = '#b2ebf2';
+      ctx.beginPath(); ctx.arc(314, 34, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(325, 45, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(326, 33, 2, 0, Math.PI * 2); ctx.fill();
+
+      // ── Retro Mountains Silhouette ──
+      ctx.fillStyle = '#0f172a'; // Back mountains
+      ctx.beginPath();
+      ctx.moveTo(0, 120);
+      ctx.lineTo(40, 80);
+      ctx.lineTo(95, 110);
+      ctx.lineTo(150, 65);
+      ctx.lineTo(210, 102);
+      ctx.lineTo(270, 78);
+      ctx.lineTo(330, 115);
+      ctx.lineTo(380, 85);
+      ctx.lineTo(400, 120);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#0a0f1d'; // Front mountains
+      ctx.beginPath();
+      ctx.moveTo(0, 120);
+      ctx.lineTo(60, 95);
+      ctx.lineTo(125, 115);
+      ctx.lineTo(180, 88);
+      ctx.lineTo(240, 112);
+      ctx.lineTo(310, 92);
+      ctx.lineTo(400, 120);
+      ctx.closePath();
+      ctx.fill();
+
+      // ── Ground (Retro Grass Floor / Perspectived Tech Floor) ──
+      ctx.fillStyle = '#021810';
       ctx.fillRect(0, 120, canvas.width, canvas.height - 120);
-      ctx.fillStyle = '#48c78e';
+
+      // Perspective Grid Lines
+      ctx.strokeStyle = 'rgba(72, 199, 142, 0.15)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= canvas.width; i += 40) {
+        ctx.beginPath();
+        ctx.moveTo(i, 120);
+        ctx.lineTo(i + (i - 200) * 0.8, canvas.height);
+        ctx.stroke();
+      }
+
+      // Horizontal ground highlights
+      ctx.fillStyle = 'rgba(72, 199, 142, 0.18)';
       ctx.fillRect(0, 120, canvas.width, 3);
+      ctx.fillStyle = 'rgba(72, 199, 142, 0.08)';
+      ctx.fillRect(0, 130, canvas.width, 2);
+      ctx.fillRect(0, 144, canvas.width, 1.5);
+      ctx.fillRect(0, 160, canvas.width, 1);
 
       const bob = Math.sin(Date.now() / 150) * 3;
 
