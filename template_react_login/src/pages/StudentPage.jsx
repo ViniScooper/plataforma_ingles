@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, Fragment } from 'react';
+import { useState, useEffect, useContext, Fragment, useRef } from 'react';
 import {
   Container,
   Box,
@@ -466,8 +466,18 @@ export default function StudentPage() {
   const [penaltyMessage, setPenaltyMessage] = useState('');
   const [isStreakFrozen, setIsStreakFrozen] = useState(false);
 
+  // Ranking (Leaderboard) states
+  const [rankingList, setRankingList] = useState([]);
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [rankingError, setRankingError] = useState('');
+
+  // Badge unlock Dialog state
+  const [unlockedBadge, setUnlockedBadge] = useState(null);
+
   // RPG Map states
   const [viewMode, setViewMode] = useState('rpg'); // 'rpg' | 'list' | 'speaking'
+  const [speakingCategory, setSpeakingCategory] = useState('Frases Básicas');
+  const speakingExercisesRef = useRef(null);
   const [rpgModuleId, setRpgModuleId] = useState(1); // 1 to 10
   const [openExplanationDialog, setOpenExplanationDialog] = useState(false);
   const [explanationPage, setExplanationPage] = useState(0);
@@ -559,6 +569,25 @@ export default function StudentPage() {
       alert('Houve um erro ao processar sua compra.');
     }
   };
+
+  const loadRanking = async () => {
+    try {
+      setRankingLoading(true);
+      setRankingError('');
+      const response = await apiClient.get('/ranking');
+      setRankingList(response.data);
+    } catch (err) {
+      setRankingError('Erro ao carregar o ranking de alunos: ' + err.message);
+    } finally {
+      setRankingLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (dashboardTab === 3) {
+      loadRanking();
+    }
+  }, [dashboardTab]);
 
   useEffect(() => {
     if (user) loadData();
@@ -722,24 +751,25 @@ export default function StudentPage() {
     setOpenCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const listExercises = assignedExercises.filter(p => p.exercise?.isRpg === false);
-  const rpgExercises = assignedExercises.filter(p => p.exercise?.isRpg === true);
+  const listExercises = assignedExercises.filter(p => p.exercise?.isRpg === false && p.exercise?.type !== 'speaking');
+  const rpgExercises = assignedExercises.filter(p => p.exercise?.isRpg === true && p.exercise?.type !== 'speaking');
   const speakingExercises = assignedExercises.filter(p => p.exercise?.type === 'speaking');
+  const currentCategoryExercises = speakingExercises.filter(p => getSpeakingCategory(p.exercise) === speakingCategory);
 
   const completedCount = viewMode === 'speaking'
-    ? speakingExercises.filter(p => p.status === 'completed').length
+    ? currentCategoryExercises.filter(p => p.status === 'completed').length
     : viewMode === 'list'
     ? listExercises.filter(p => p.status === 'completed').length
     : rpgExercises.filter(p => p.status === 'completed').length;
 
   const pendingCount = viewMode === 'speaking'
-    ? speakingExercises.filter(p => p.status !== 'completed').length
+    ? currentCategoryExercises.filter(p => p.status !== 'completed').length
     : viewMode === 'list'
     ? listExercises.filter(p => p.status !== 'completed').length
     : rpgExercises.filter(p => p.status !== 'completed').length;
 
   const totalCount = viewMode === 'speaking'
-    ? speakingExercises.length
+    ? currentCategoryExercises.length
     : viewMode === 'list'
     ? listExercises.length
     : rpgExercises.length;
@@ -794,8 +824,54 @@ export default function StudentPage() {
       desc: 'Ganhou bônus na Área de Jogos',
       icon: '⚔️',
       active: bonusXP >= 100
+    },
+    {
+      id: 'coin_master',
+      name: 'Mestre das Moedas',
+      desc: 'Acumulou 100+ moedas',
+      icon: '🪙',
+      active: totalCoins >= 100
+    },
+    {
+      id: 'streak_master',
+      name: 'Fogo Puro',
+      desc: 'Alcançou ofensiva de 3+ dias',
+      icon: '⚡',
+      active: backendStreak >= 3
+    },
+    {
+      id: 'rpg_conqueror',
+      name: 'Conquistador RPG',
+      desc: 'Ganhou 200+ XP nos minijogos',
+      icon: '👑',
+      active: bonusXP >= 200
+    },
+    {
+      id: 'completionist',
+      name: 'Super Aluno',
+      desc: 'Concluiu 10+ atividades',
+      icon: '🏆',
+      active: completedCount >= 10
     }
   ];
+
+  useEffect(() => {
+    if (!user) return;
+    const shownKey = `badges_shown_${user.id}`;
+    let shownBadges = [];
+    try {
+      shownBadges = JSON.parse(localStorage.getItem(shownKey) || '[]');
+    } catch (e) {
+      shownBadges = [];
+    }
+
+    const newlyUnlocked = badges.find(b => b.active && !shownBadges.includes(b.id));
+    if (newlyUnlocked) {
+      shownBadges.push(newlyUnlocked.id);
+      localStorage.setItem(shownKey, JSON.stringify(shownBadges));
+      setUnlockedBadge(newlyUnlocked);
+    }
+  }, [completedCount, attendanceRecords.length, bonusXP, totalCoins, backendStreak, user]);
 
   const filterExercises = (exercises) => {
     const isWriting = (p) => p.exercise?.type === 'writing' || (p.exercise?.type === 'text' && p.exercise?.content?.prompt);
@@ -803,25 +879,27 @@ export default function StudentPage() {
     
     if (viewMode === 'speaking') {
       const speakingOnly = exercises.filter(p => p.exercise?.type === 'speaking');
-      let filtered = speakingOnly;
+      const categoryOnly = speakingOnly.filter(p => getSpeakingCategory(p.exercise) === speakingCategory);
+      let filtered = categoryOnly;
       if (activityTab === 1) {
-        filtered = speakingOnly.filter(p => p.status !== 'completed');
+        filtered = categoryOnly.filter(p => p.status !== 'completed');
       } else if (activityTab === 2) {
-        filtered = speakingOnly.filter(p => p.status === 'completed');
+        filtered = categoryOnly.filter(p => p.status === 'completed');
       }
       
       if (searchTerm.trim() !== '') {
         const term = searchTerm.toLowerCase();
         filtered = filtered.filter(p => 
           (p.exercise?.title || '').toLowerCase().includes(term) ||
-          (p.exercise?.type || '').toLowerCase().includes(term)
+          (p.exercise?.type || '').toLowerCase().includes(term) ||
+          (p.exercise?.sentence || p.exercise?.content?.sentence || '').toLowerCase().includes(term)
         );
       }
       return filtered;
     }
 
-    // Only show non-RPG (classroom list) activities in list view
-    const listOnly = exercises.filter(p => p.exercise?.isRpg === false);
+    // Only show non-RPG (classroom list) activities in list view, and filter out speaking exercises
+    const listOnly = exercises.filter(p => p.exercise?.isRpg === false && p.exercise?.type !== 'speaking');
     
     // First filter by type / tab selection
     let filtered = listOnly;
@@ -1257,8 +1335,7 @@ export default function StudentPage() {
                   startIcon={<SportsEsportsIcon />}
                 >
                   Jogos
-                </Button>
-                <Button
+                </Button>                <Button
                   onClick={() => setDashboardTab(2)}
                   sx={{
                     px: 3,
@@ -1275,6 +1352,24 @@ export default function StudentPage() {
                   startIcon={<EventAvailableIcon />}
                 >
                   Histórico
+                </Button>
+                <Button
+                  onClick={() => setDashboardTab(3)}
+                  sx={{
+                    px: 3,
+                    py: 1,
+                    borderRadius: 3,
+                    bgcolor: dashboardTab === 3 ? 'rgba(255, 183, 77, 0.12)' : 'transparent',
+                    border: `1px solid ${dashboardTab === 3 ? 'rgba(255, 183, 77, 0.25)' : 'transparent'}`,
+                    color: dashboardTab === 3 ? '#ffb74d' : 'rgba(255,255,255,0.6)',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 183, 77, 0.08)',
+                      color: '#ffb74d'
+                    }
+                  }}
+                  startIcon={<EmojiEventsIcon />}
+                >
+                  Ranking
                 </Button>
               </Box>
 
@@ -1323,6 +1418,12 @@ export default function StudentPage() {
                     style={{ fontWeight: 700, color: dashboardTab === 2 ? '#48c78e' : '#fff', gap: 10 }}
                   >
                     <EventAvailableIcon fontSize="small" /> Histórico
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { setDashboardTab(3); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 3 ? '#ffb74d' : '#fff', gap: 10 }}
+                  >
+                    <EmojiEventsIcon fontSize="small" /> Ranking
                   </MenuItem>
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
                   <MenuItem 
@@ -2135,6 +2236,229 @@ export default function StudentPage() {
                         })()}
                       </Box>
                     </Box>
+                  ) : viewMode === 'speaking' ? (
+                    <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
+                      {/* Grid of speaking modules (horizontal scroll on mobile, grid on desktop) */}
+                      <Box sx={{ 
+                        display: 'flex',
+                        flexDirection: 'row',
+                        flexWrap: { xs: 'nowrap', md: 'wrap' },
+                        gap: 3,
+                        overflowX: { xs: 'auto', md: 'visible' },
+                        pb: { xs: 2.5, md: 0 },
+                        mb: 6,
+                        scrollSnapType: { xs: 'x mandatory', md: 'none' },
+                        '&::-webkit-scrollbar': { height: 6 },
+                        '&::-webkit-scrollbar-track': { background: 'transparent' },
+                        '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.12)', borderRadius: 3 },
+                        // Sizing children items
+                        '& > div': {
+                          width: { xs: '280px', sm: 'calc(50% - 12px)', md: 'calc(33.333% - 16px)' },
+                          flexShrink: 0,
+                          scrollSnapAlign: 'start'
+                        }
+                      }}>
+                        {SPEAKING_MODULES_METADATA.map((mod) => {
+                          const moduleAll = speakingExercises.filter(p => getSpeakingCategory(p.exercise) === mod.id);
+                          const moduleCompleted = moduleAll.filter(p => p.status === 'completed');
+                          const moduleCount = moduleAll.length;
+                          const completedCountForMod = moduleCompleted.length;
+                          const percentForMod = moduleCount > 0 ? Math.round((completedCountForMod / moduleCount) * 100) : 0;
+                          
+                          const isActive = speakingCategory === mod.id;
+                          
+                          return (
+                            <Box key={mod.id}>
+                              <Card 
+                                onClick={() => {
+                                  setSpeakingCategory(mod.id);
+                                  setActivityTab(0);
+                                  // Auto-scroll to exercise list on mobile smoothly
+                                  setTimeout(() => {
+                                    speakingExercisesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                  }, 100);
+                                }}
+                                sx={{
+                                  p: 3,
+                                  cursor: 'pointer',
+                                  height: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  justifyContent: 'space-between',
+                                  transition: 'all 0.3s ease',
+                                  background: isActive 
+                                    ? `linear-gradient(135deg, rgba(0, 180, 216, 0.12) 0%, rgba(72, 199, 142, 0.05) 100%)` 
+                                    : 'rgba(255, 255, 255, 0.02)',
+                                  border: isActive 
+                                    ? `2px solid ${mod.color}` 
+                                    : '1px solid rgba(255,255,255,0.06)',
+                                  boxShadow: isActive 
+                                    ? `0 8px 30px rgba(0, 180, 216, 0.15)` 
+                                    : 'none',
+                                  '&:hover': {
+                                    transform: 'translateY(-4px)',
+                                    border: isActive ? `2px solid ${mod.color}` : '1px solid rgba(255,255,255,0.15)',
+                                    boxShadow: `0 8px 30px rgba(0,0,0,0.3)`
+                                  }
+                                }}
+                              >
+                                <Box>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+                                    <Box sx={{ 
+                                      fontSize: 26, 
+                                      p: 1, 
+                                      borderRadius: 3.5, 
+                                      bgcolor: isActive ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                                      display: 'flex', 
+                                      alignItems: 'center', 
+                                      justifyContent: 'center' 
+                                    }}>
+                                      {mod.icon}
+                                    </Box>
+                                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem' }}>
+                                      {mod.name}
+                                    </Typography>
+                                  </Box>
+                                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', mb: 3.5, fontSize: '0.8rem', lineHeight: 1.4 }}>
+                                    {mod.desc}
+                                  </Typography>
+                                </Box>
+                                
+                                <Box>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8, alignItems: 'center' }}>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Conclusão</Typography>
+                                    <Typography variant="caption" sx={{ color: percentForMod === 100 ? '#48c78e' : '#00b4d8', fontWeight: 800 }}>
+                                      {completedCountForMod}/{moduleCount} ({percentForMod}%)
+                                    </Typography>
+                                  </Box>
+                                  <LinearProgress 
+                                    variant="determinate" 
+                                    value={percentForMod} 
+                                    sx={{
+                                      height: 6,
+                                      borderRadius: 3,
+                                      bgcolor: 'rgba(255,255,255,0.05)',
+                                      '& .MuiLinearProgress-bar': {
+                                        bgcolor: percentForMod === 100 ? '#48c78e' : mod.color,
+                                        borderRadius: 3
+                                      }
+                                    }}
+                                  />
+                                </Box>
+                              </Card>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+
+                      {/* Header for selected module */}
+                      <Box ref={speakingExercisesRef} sx={{ 
+                        mb: 4, 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', md: 'row' }, 
+                        justifyContent: 'space-between', 
+                        alignItems: { xs: 'flex-start', md: 'center' }, 
+                        gap: 2 
+                      }}>
+                        <Box>
+                          <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {SPEAKING_MODULES_METADATA.find(m => m.id === speakingCategory)?.icon} Módulo: {speakingCategory}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mt: 0.5 }}>
+                            Treine sua fala repetindo as frases abaixo e enviando o áudio para análise instantânea.
+                          </Typography>
+                        </Box>
+                        
+                        <Card sx={{
+                          display: 'flex',
+                          bgcolor: 'rgba(0, 0, 0, 0.15)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          borderRadius: 3.5,
+                          overflow: 'hidden'
+                        }}>
+                          <Tabs
+                            value={activityTab}
+                            onChange={(_, v) => setActivityTab(v)}
+                            sx={{
+                              minHeight: 40,
+                              '& .MuiTabs-indicator': { height: 3, bgcolor: '#00b4d8', borderRadius: '3px 3px 0 0' },
+                              '& .MuiTab-root': {
+                                minHeight: 40,
+                                px: 2.5,
+                                fontSize: '0.8rem',
+                                color: 'rgba(255,255,255,0.5)',
+                                '&.Mui-selected': { color: '#00b4d8' }
+                              },
+                            }}
+                          >
+                            <Tab label={`Todas (${totalCount})`} />
+                            <Tab label={`Pendentes (${pendingCount})`} />
+                            <Tab label={`Concluídas (${completedCount})`} />
+                          </Tabs>
+                        </Card>
+                      </Box>
+
+                      {/* Search Bar */}
+                      <Box sx={{ mb: 3.5, maxWidth: 450 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder="Buscar frase ou palavra..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }} />
+                              </InputAdornment>
+                            ),
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              height: 44,
+                              borderRadius: 3.5,
+                              fontSize: '0.85rem',
+                              bgcolor: 'rgba(0, 0, 0, 0.12)',
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
+                              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                              '&.Mui-focused fieldset': { borderColor: '#00b4d8' }
+                            },
+                            '& .MuiInputBase-input': { color: '#fff' }
+                          }}
+                        />
+                      </Box>
+
+                      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>{error}</Alert>}
+
+                      {loading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                          <CircularProgress size={40} sx={{ color: '#00b4d8' }} />
+                        </Box>
+                      ) : filteredExercises.length === 0 ? (
+                        <Card sx={{
+                          p: 6,
+                          textAlign: 'center',
+                          border: '1.5px dashed rgba(255,255,255,0.08)',
+                          bgcolor: 'rgba(255,255,255,0.01)'
+                        }}>
+                          <Typography fontSize={44}>🎙️</Typography>
+                          <Typography variant="body2" sx={{ color: '#b3c5d7', mt: 1, fontWeight: 700 }}>
+                            Nenhum exercício de pronúncia encontrado neste filtro.
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block', mt: 0.5 }}>
+                            Tente alternar o filtro de Concluídas/Pendentes ou limpe a pesquisa.
+                          </Typography>
+                        </Card>
+                      ) : (
+                        <Grid container spacing={3}>
+                          {filteredExercises.map((p, idx) => (
+                            <Grid size={12} key={p.id}>
+                              {renderActivityCard(p, idx)}
+                            </Grid>
+                          ))}
+                        </Grid>
+                      )}
+                    </Box>
                   ) : (
                     <>
                       {/* Sub-Filters and Search Bar */}
@@ -2191,8 +2515,13 @@ export default function StudentPage() {
                               '& .MuiOutlinedInput-root': {
                                 height: 48,
                                 borderRadius: 3.5,
-                                fontSize: '0.9rem'
-                              }
+                                fontSize: '0.9rem',
+                                bgcolor: 'rgba(0, 0, 0, 0.12)',
+                                '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
+                                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                                '&.Mui-focused fieldset': { borderColor: '#00b4d8' }
+                              },
+                              '& .MuiInputBase-input': { color: '#fff' }
                             }}
                           />
                         </Grid>
@@ -2312,6 +2641,178 @@ export default function StudentPage() {
                           </Grid>
                         ))}
                       </Grid>
+                    )}
+                  </Card>
+                </Box>
+              )}
+
+              {dashboardTab === 3 && (
+                // TAB 3: STUDENT LEADERBOARD
+                <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff' }}>
+                      🏆 Ranking de Alunos
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
+                      Veja quem está liderando a jornada com mais moedas e maiores ofensivas!
+                    </Typography>
+                  </Box>
+
+                  {rankingError && <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>{rankingError}</Alert>}
+
+                  <Card sx={{
+                    p: { xs: 2, sm: 4 },
+                    background: 'rgba(13, 27, 42, 0.35)',
+                    border: '1px solid rgba(255,255,255,0.07)',
+                    borderRadius: 5
+                  }}>
+                    {rankingLoading ? (
+                      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                        <CircularProgress size={40} sx={{ color: '#ffb74d' }} />
+                      </Box>
+                    ) : rankingList.length === 0 ? (
+                      <Box sx={{ textAlign: 'center', py: 5 }}>
+                        <Typography fontSize={52} sx={{ mb: 1.5 }}>🏆</Typography>
+                        <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 800 }}>Nenhum aluno no ranking ainda</Typography>
+                      </Box>
+                    ) : (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {rankingList.map((student, idx) => {
+                          const isCurrentUser = student.id === user?.id;
+                          const rank = idx + 1;
+                          let rankIcon = '';
+                          let rankColor = 'rgba(255, 255, 255, 0.7)';
+                          let bgGradient = 'rgba(255, 255, 255, 0.02)';
+                          let borderColor = 'rgba(255, 255, 255, 0.06)';
+
+                          if (rank === 1) {
+                            rankIcon = '👑';
+                            rankColor = '#ffd700'; // Gold
+                            bgGradient = 'linear-gradient(135deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 183, 77, 0.02) 100%)';
+                            borderColor = 'rgba(255, 215, 0, 0.3)';
+                          } else if (rank === 2) {
+                            rankIcon = '🥈';
+                            rankColor = '#c0c0c0'; // Silver
+                            bgGradient = 'linear-gradient(135deg, rgba(192, 192, 192, 0.08) 0%, rgba(255,255,255,0.01) 100%)';
+                            borderColor = 'rgba(192, 192, 192, 0.25)';
+                          } else if (rank === 3) {
+                            rankIcon = '🥉';
+                            rankColor = '#cd7f32'; // Bronze
+                            bgGradient = 'linear-gradient(135deg, rgba(205, 127, 50, 0.08) 0%, rgba(255,255,255,0.01) 100%)';
+                            borderColor = 'rgba(205, 127, 50, 0.25)';
+                          }
+
+                          if (isCurrentUser) {
+                            borderColor = '#00b4d8';
+                            bgGradient = 'linear-gradient(135deg, rgba(0, 180, 216, 0.08) 0%, rgba(13, 27, 42, 0.4) 100%)';
+                          }
+
+                          return (
+                            <Box 
+                              key={student.id}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                p: 2,
+                                borderRadius: 4,
+                                background: bgGradient,
+                                border: `1px solid ${borderColor}`,
+                                transition: 'all 0.25s ease',
+                                transform: isCurrentUser ? 'scale(1.01)' : 'none',
+                                boxShadow: isCurrentUser ? '0 0 15px rgba(0, 180, 216, 0.15)' : 'none',
+                                '&:hover': {
+                                  transform: 'translateY(-2px) ' + (isCurrentUser ? 'scale(1.01)' : ''),
+                                  borderColor: isCurrentUser ? '#00b4d8' : 'rgba(255,255,255,0.15)'
+                                }
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <Typography 
+                                  variant="h6" 
+                                  sx={{ 
+                                    fontWeight: 900, 
+                                    color: rankColor, 
+                                    minWidth: 32, 
+                                    textAlign: 'center' 
+                                  }}
+                                >
+                                  {rankIcon || rank}
+                                </Typography>
+                                
+                                <Box sx={{ position: 'relative' }}>
+                                  <Avatar 
+                                    src={student.avatar ? `/avatars/${student.avatar}.png` : null}
+                                    sx={{ 
+                                      width: 44, 
+                                      height: 44, 
+                                      bgcolor: isCurrentUser ? '#00b4d8' : '#7c4dff',
+                                      fontSize: '1rem',
+                                      fontWeight: 800,
+                                      border: `1.5px solid ${isCurrentUser ? '#00b4d8' : 'rgba(255,255,255,0.1)'}`
+                                    }}
+                                  >
+                                    {student.name ? student.name.substring(0, 2).toUpperCase() : 'ST'}
+                                  </Avatar>
+                                  {isCurrentUser && (
+                                    <Chip 
+                                      label="Você" 
+                                      size="small" 
+                                      sx={{ 
+                                        position: 'absolute', 
+                                        bottom: -6, 
+                                        left: '50%', 
+                                        transform: 'translateX(-50%)',
+                                        height: 14, 
+                                        fontSize: '0.55rem', 
+                                        fontWeight: 900, 
+                                        bgcolor: '#00b4d8', 
+                                        color: '#fff',
+                                        px: 0.5
+                                      }} 
+                                    />
+                                  )}
+                                </Box>
+
+                                <Box>
+                                  <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff' }}>
+                                    {student.name}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 700 }}>
+                                    @{student.username}
+                                  </Typography>
+                                </Box>
+                              </Box>
+
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 2, sm: 4 } }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                  <Typography fontSize={20}>🪙</Typography>
+                                  <Box>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#ffb74d', lineHeight: 1 }}>
+                                      {student.coins}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', display: 'block', fontSize: '0.62rem' }}>
+                                      moedas
+                                    </Typography>
+                                  </Box>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, minWidth: { xs: 60, sm: 80 } }}>
+                                  <Typography fontSize={20}>🔥</Typography>
+                                  <Box>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#ff7043', lineHeight: 1 }}>
+                                      {student.streak}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)', display: 'block', fontSize: '0.62rem' }}>
+                                      dias
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </Box>
+                            </Box>
+                          );
+                        })}
+                      </Box>
                     )}
                   </Card>
                 </Box>
@@ -2602,7 +3103,128 @@ export default function StudentPage() {
           );
         })()}
       </Dialog>
+
+      {/* Badge Unlock Dialog */}
+      <Dialog 
+        open={Boolean(unlockedBadge)} 
+        onClose={() => setUnlockedBadge(null)}
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 100%)',
+            border: '2px solid rgba(179, 136, 255, 0.4)',
+            borderRadius: 6,
+            p: 3,
+            maxWidth: 400,
+            textAlign: 'center',
+            boxShadow: '0 0 30px rgba(179, 136, 255, 0.3)'
+          }
+        }}
+      >
+        <DialogTitle sx={{ color: '#fff', fontWeight: 900, pb: 1, fontSize: '1.5rem' }}>
+          🎉 Conquista Desbloqueada!
+        </DialogTitle>
+        <DialogContent sx={{ color: '#fff', py: 2 }}>
+          {unlockedBadge && (
+            <Box>
+              <Typography fontSize={80} sx={{ my: 2, display: 'inline-block', filter: 'drop-shadow(0 0 15px rgba(179,136,255,0.6))' }}>
+                {unlockedBadge.icon}
+              </Typography>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#b388ff', mb: 1 }}>
+                {unlockedBadge.name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 2 }}>
+                {unlockedBadge.desc}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 800, display: 'block' }}>
+                +50 Moedas Bônus!
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ justifyContent: 'center', pt: 1 }}>
+          <Button 
+            variant="contained" 
+            onClick={async () => {
+              if (unlockedBadge) {
+                try {
+                  const newCoins = backendCoins + 50;
+                  setBackendCoins(newCoins);
+                  await apiClient.put(`/users/${user.id}`, { coins: newCoins });
+                } catch (e) {
+                  console.error('Error claiming badge reward:', e);
+                }
+              }
+              setUnlockedBadge(null);
+            }}
+            sx={{
+              background: 'linear-gradient(135deg, #b388ff, #7c4dff)',
+              fontWeight: 800,
+              borderRadius: 3.5,
+              px: 4,
+              py: 1,
+              '&:hover': {
+                background: 'linear-gradient(135deg, #7c4dff, #b388ff)'
+              }
+            }}
+          >
+            Obter Recompensa
+          </Button>
+        </DialogActions>
+      </Dialog>
       </Box>
     </ThemeProvider>
   );
 }
+
+const SPEAKING_MODULES_METADATA = [
+  { id: 'Frases Básicas', name: 'Frases Básicas', icon: '🌟', desc: 'Saudações e apresentações fundamentais em inglês.', color: '#00b4d8' },
+  { id: 'Frases do Dia a Dia', name: 'Frases do Dia a Dia', icon: '📅', desc: 'Expressões comuns para rotina e conversas cotidianas.', color: '#48c78e' },
+  { id: 'Restaurante', name: 'Restaurante', icon: '🍔', desc: 'Frases para fazer reservas, pedir pratos e a conta.', color: '#ff9800' },
+  { id: 'Cafeteria', name: 'Cafeteria', icon: '☕', desc: 'Como fazer pedidos rápidos de cafés e lanches.', color: '#e91e63' },
+  { id: 'Aeroporto', name: 'Aeroporto', icon: '✈️', desc: 'Vocabulário essencial para check-in, portões e bagagens.', color: '#9c27b0' },
+  { id: 'Pedindo Informações', name: 'Pedindo Informações', icon: '🗺️', desc: 'Direções, localizações e perguntas úteis na rua.', color: '#3f51b5' }
+];
+
+const getSpeakingCategory = (exercise) => {
+  const title = (exercise?.title || '').toLowerCase();
+  const sentence = (exercise?.sentence || exercise?.content?.sentence || '').toLowerCase();
+
+  // 1. Check title prefixes first (for our seeded exercises)
+  if (title.startsWith('básica') || title.startsWith('basica') || title.includes('básicas') || title.includes('basicas')) {
+    return 'Frases Básicas';
+  }
+  if (title.startsWith('dia a dia') || title.includes('dia a dia')) {
+    return 'Frases do Dia a Dia';
+  }
+  if (title.startsWith('restaurante') || title.includes('restaurant')) {
+    return 'Restaurante';
+  }
+  if (title.startsWith('cafeteria') || title.includes('cafe')) {
+    return 'Cafeteria';
+  }
+  if (title.startsWith('aeroporto') || title.includes('airport')) {
+    return 'Aeroporto';
+  }
+  if (title.startsWith('informa') || title.includes('informação') || title.includes('informacao') || title.includes('informações') || title.includes('informacoes')) {
+    return 'Pedindo Informações';
+  }
+
+  // 2. Fallback keyword checking (for ad-hoc or manually created exercises)
+  if (title.includes('cafeteria') || title.includes('cafe') || sentence.includes('coffee') || sentence.includes('cup of tea') || sentence.includes('espresso') || sentence.includes('iced tea') || sentence.includes('cake') || sentence.includes('croissant') || sentence.includes('muffin') || sentence.includes('latte')) {
+    return 'Cafeteria';
+  }
+  if (title.includes('restaurant') || title.includes('menu') || title.includes('dinner') || title.includes('table for') || sentence.includes('recommend as the main course') || sentence.includes('book a table') || sentence.includes('menu') || sentence.includes('the check, please') || sentence.includes('main course') || sentence.includes('dish') || sentence.includes('steak') || sentence.includes('ready to pay') || sentence.includes('bill')) {
+    return 'Restaurante';
+  }
+  if (title.includes('airport') || title.includes('flight') || title.includes('gate') || title.includes('boarding') || sentence.includes('flight') || sentence.includes('airport') || sentence.includes('passport') || sentence.includes('boarding pass') || sentence.includes('check-in') || sentence.includes('baggage') || sentence.includes('luggage') || sentence.includes('delayed') || sentence.includes('security') || sentence.includes('window seat') || sentence.includes('conveyor belt')) {
+    return 'Aeroporto';
+  }
+  if (title.includes('direção') || title.includes('direcoes') || title.includes('directions') || title.includes('help') || sentence.includes('excuse me, could you tell me') || sentence.includes('where is') || sentence.includes('how do i get to') || sentence.includes('subway station') || sentence.includes('library is') || sentence.includes('museum') || sentence.includes('on the map') || sentence.includes('restroom') || sentence.includes('bus') || sentence.includes('pharmacy') || sentence.includes('drugstore') || sentence.includes('train station') || sentence.includes('street') || sentence.includes('taxi')) {
+    return 'Pedindo Informações';
+  }
+  if (title.includes('routine') || title.includes('rotina') || title.includes('everyday') || title.includes('daily') || sentence.includes('weather') || sentence.includes('appreciate') || sentence.includes('cost') || sentence.includes('rain this afternoon') || sentence.includes('supermarket') || sentence.includes('clean the house') || sentence.includes('wash the dishes') || sentence.includes('traffic') || sentence.includes('keys')) {
+    return 'Frases do Dia a Dia';
+  }
+  
+  return 'Frases Básicas';
+};

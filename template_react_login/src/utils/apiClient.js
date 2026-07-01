@@ -19,4 +19,20 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Add response interceptor to handle session expiration globally
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      const data = error.response.data;
+      if (data && data.code === 'SESSION_EXPIRED') {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        window.location.href = '/login?reason=session_expired';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default apiClient;

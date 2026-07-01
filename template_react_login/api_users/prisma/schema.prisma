@@ -19,6 +19,7 @@ model user {
   coins            Int                @default(0)
   streak           Int                @default(0)
   avatar           String?            @db.Text
+  activeToken      String?            @db.Text
   lastLogin        DateTime?
   lastActivity     DateTime?
   enrollments      enrollment[]

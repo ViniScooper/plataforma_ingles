@@ -8,8 +8,10 @@ export const router = Router();
 // Auth
 router.post('/auth/signup', handlers.signUp);
 router.post('/auth/signin', handlers.signIn);
+router.get('/auth/session-status', verifyToken, (req, res) => res.json({ active: true }));
 router.get('/users', verifyToken, verifyAdmin, handlers.getAllUsers);
 router.get('/users/:id', verifyToken, handlers.getUserById);
+router.get('/ranking', verifyToken, handlers.getStudentRanking);
 router.post('/users', verifyToken, verifyAdmin, handlers.createUser);
 router.put('/users/:id', verifyToken, handlers.updateUser);
 router.delete('/users/:id', verifyToken, handlers.deleteUser);

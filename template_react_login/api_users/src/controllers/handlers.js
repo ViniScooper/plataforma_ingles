@@ -105,6 +105,12 @@ export const signIn = async (req, res) => {
       { expiresIn: '7d' }
     );
 
+    // Save active token to database to prevent multiple concurrent logins
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { activeToken: token }
+    });
+
     console.log('✅ Login successful for user:', user.email);
     return res.status(200).json({
       message: 'Login successful',
@@ -203,6 +209,33 @@ export const getAllUsers = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+export const getStudentRanking = async (req, res) => {
+  try {
+    const students = await prisma.user.findMany({
+      where: {
+        role: 'student'
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        coins: true,
+        streak: true,
+        avatar: true
+      },
+      orderBy: [
+        { coins: 'desc' },
+        { streak: 'desc' }
+      ]
+    });
+    return res.status(200).json(students);
+  } catch (error) {
+    console.error('Error fetching student ranking:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
 
 export const getUserById = async (req, res) => {
   const { id } = req.params;
