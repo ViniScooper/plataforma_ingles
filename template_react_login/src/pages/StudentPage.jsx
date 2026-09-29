@@ -50,6 +50,7 @@ import { StudentAvatar } from '../components/Student/StudentAvatar';
 import AchievementsModal from '../components/Student/AchievementsModal';
 import StreakRulesModal from '../components/Student/StreakRulesModal';
 import MobileBottomNav from '../components/Student/MobileBottomNav';
+import ErrorBoundary from '../components/ErrorBoundary';
 import {
   TYPE_LABELS,
   MODULES,
@@ -163,6 +164,9 @@ const studentTheme = createTheme({
     },
   },
 });
+
+const isWriting = (p) => p?.exercise?.type === 'writing' || (p?.exercise?.type === 'text' && p?.exercise?.content?.prompt);
+const isFlashcard = (p) => p?.exercise?.type === 'flashcards' || (p?.exercise?.type === 'text' && p?.exercise?.content?.cards);
 
 export default function StudentPage() {
   const { user, logout } = useContext(AuthContext);
@@ -479,7 +483,7 @@ export default function StudentPage() {
     setOpenCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const listExercises = assignedExercises.filter(p => p.exercise?.isRpg === false && p.exercise?.type !== 'speaking');
+  const listExercises = assignedExercises.filter(p => p.exercise?.isRpg !== true && p.exercise?.type !== 'speaking');
   const rpgExercises = assignedExercises.filter(p => p.exercise?.isRpg === true && p.exercise?.type !== 'speaking');
   const speakingExercises = assignedExercises.filter(p => p.exercise?.type === 'speaking');
   const currentCategoryExercises = speakingExercises.filter(p => getSpeakingCategory(p.exercise) === speakingCategory);
@@ -602,9 +606,6 @@ export default function StudentPage() {
   }, [completedCount, attendanceRecords.length, bonusXP, totalCoins, backendStreak, user]);
 
   const filterExercises = (exercises) => {
-    const isWriting = (p) => p.exercise?.type === 'writing' || (p.exercise?.type === 'text' && p.exercise?.content?.prompt);
-    const isFlashcard = (p) => p.exercise?.type === 'flashcards' || (p.exercise?.type === 'text' && p.exercise?.content?.cards);
-    
     if (viewMode === 'speaking') {
       const speakingOnly = exercises.filter(p => p.exercise?.type === 'speaking');
       const categoryOnly = speakingOnly.filter(p => getSpeakingCategory(p.exercise) === speakingCategory);
@@ -627,7 +628,7 @@ export default function StudentPage() {
     }
 
     // Only show non-RPG (classroom list) activities in list view, and filter out speaking exercises
-    const listOnly = exercises.filter(p => p.exercise?.isRpg === false && p.exercise?.type !== 'speaking');
+    const listOnly = exercises.filter(p => p.exercise?.isRpg !== true && p.exercise?.type !== 'speaking');
     
     // First filter by type / tab selection
     let filtered = listOnly;
@@ -1514,7 +1515,8 @@ export default function StudentPage() {
 
             {/* RIGHT COLUMN: Activities View */}
             <Grid size={{ xs: 12, md: 8 }}>
-              <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
+              <ErrorBoundary>
+                <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
                   
                   {/* Title and stats bar with View Mode Switcher */}
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2, mb: 3.5 }}>
@@ -2376,9 +2378,10 @@ export default function StudentPage() {
                     </>
                   )}
                 </Box>
-              </Grid>
+              </ErrorBoundary>
             </Grid>
-          )}
+          </Grid>
+        )}
 
           {dashboardTab === 1 && (
             // TAB 1: ATTENDANCE HISTORY PANEL (FULL WIDTH)
