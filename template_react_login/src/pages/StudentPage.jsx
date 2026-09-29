@@ -59,6 +59,7 @@ import SlideLibrary from '../components/Student/SlideLibrary';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LockIcon from '@mui/icons-material/Lock';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import ErrorBoundary from '../components/ErrorBoundary';
 import {
   TYPE_LABELS,
