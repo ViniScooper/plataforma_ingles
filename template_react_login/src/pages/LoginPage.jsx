@@ -328,7 +328,7 @@ export default function LoginPage() {
           <div className="logo-section">
             <img
               className="logo-img"
-              src="/quest_english_logo.png"
+              src="/quest_english_logo.svg"
               alt="Quest English – Plataforma de Inglês"
             />
             <span className="login-subtitle">Acesse sua conta</span>

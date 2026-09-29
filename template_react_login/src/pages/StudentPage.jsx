@@ -46,293 +46,19 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/apiClient';
 import ExerciseCard from '../components/Student/ExerciseCard';
-import GamesZone from '../components/Student/GamesZone';
 import { StudentAvatar } from '../components/Student/StudentAvatar';
-
-const TYPE_LABELS = {
-  quiz: '🧠 Quiz',
-  text: '📖 Leitura',
-  'gap-fill': '✏️ Lacunas',
-  writing: '✍️ Escrita',
-  'true-false': '✅ V/F',
-  'sentence-order': '🧩 Frases',
-  matching: '🔗 Relacionar',
-  flashcards: '🎴 Flashcards',
-};
-
-const MODULES = [
-  { id: 1, key: 'Módulo 1', name: 'Módulo 1: Greetings & Introductions', levelValue: 'Beginner' },
-  { id: 2, key: 'Módulo 2', name: 'Módulo 2: Intermediate English', levelValue: 'Intermediate' },
-  { id: 3, key: 'Módulo 3', name: 'Módulo 3: Grammar Expansion', levelValue: 'Advanced' },
-  { id: 4, key: 'Módulo 4', name: 'Módulo 4: Everyday Expressions', levelValue: 'Módulo 4' },
-  { id: 5, key: 'Módulo 5', name: 'Módulo 5: Professional Vocabulary', levelValue: 'Módulo 5' },
-  { id: 6, key: 'Módulo 6', name: 'Módulo 6: Narrative & Telling Stories', levelValue: 'Módulo 6' },
-  { id: 7, key: 'Módulo 7', name: 'Módulo 7: Future & Conditional Sentences', levelValue: 'Módulo 7' },
-  { id: 8, key: 'Módulo 8', name: 'Módulo 8: Complex Text & Reading', levelValue: 'Módulo 8' },
-  { id: 9, key: 'Módulo 9', name: 'Módulo 9: English in Context', levelValue: 'Módulo 9' },
-  { id: 10, key: 'Módulo 10', name: 'Módulo 10: Advanced Conversations', levelValue: 'Módulo 10' }
-];
-
-const MODULE_COLORS = [
-  '#00b4d8', // Módulo 1 (Blue)
-  '#b388ff', // Módulo 2 (Purple)
-  '#48c78e', // Módulo 3 (Green)
-  '#ffb74d', // Módulo 4 (Orange)
-  '#ff8fa3', // Módulo 5 (Pink)
-  '#00f5d4', // Módulo 6 (Teal)
-  '#fee440', // Módulo 7 (Yellow)
-  '#9b5de5', // Módulo 8 (Indigo)
-  '#f15bb5', // Módulo 9 (Magenta)
-  '#00b4d8'  // Módulo 10 (Blue)
-];
-
-const MODULE_EXPLANATIONS = {
-  1: {
-    title: 'Greetings & Introductions',
-    subtitle: 'Aprenda a cumprimentar e se apresentar em inglês',
-    content: `### 📖 Explicação
-Em inglês, a forma como cumprimentamos as pessoas depende do nível de formalidade e da hora do dia.
-
-**Cumprimentos Comuns (Greetings):**
-*   **Hello / Hi:** Olá / Oi (Geral)
-*   **Good morning:** Bom dia (até 12h)
-*   **Good afternoon:** Boa tarde (das 12h às 18h)
-*   **Good evening:** Boa noite (ao chegar ou encontrar alguém)
-*   **Good night:** Boa noite (ao se despedir ou ir dormir)
-
-**Perguntando como a pessoa está:**
-*   **How are you?** (Como você está? - Mais comum)
-*   **How\'s it going?** (Como vão as coisas? - Informal)
-
-### ✍️ Exemplos
-*   *A: "Hello! My name is John. Nice to meet you."*
-*   *B: "Hi John! I\'m Mary. Nice to meet you too."*
-*   *A: "How are you today?"*
-*   *B: "I\'m fine, thank you. And you?"*
-*   *A: "I\'m good, thanks!"*`
-  },
-  2: {
-    title: 'Intermediate English - Grammar & Structure',
-    subtitle: 'Estruturação de frases e vocabulário intermediário',
-    content: `### 📖 Explicação & Guia Completo do Módulo 2
-
-Neste módulo intermediário, focamos na estruturação correta de frases, no aprendizado das preposições básicas e em vocabulário essencial. Veja abaixo as explicações detalhadas e exemplos de cada assunto que cairá nas atividades:
-
-### 📍 1. Preposições de Tempo e Lugar (In, On, At, Under)
-
-As preposições conectam palavras e indicam quando ou onde algo acontece. Aqui está como cada uma funciona de forma clara:
-
-### ➡️ AT (Usado para momentos específicos e locais pontuais)
-
-*   **Tempo (Horas e momentos exatos):** Usado para indicar horários precisos do relógio.
-*   *Exemplo:* **at 5 PM** (às 17h), **at midnight** (à meia-noite), **at lunchtime** (na hora do almoço).
-*   **Lugar (Ponto específico):** Usado quando nos referimos a um ponto geográfico específico ou estabelecimento.
-*   *Exemplo:* **at school** (na escola), **at the bus stop** (no ponto de ônibus), **at the supermarket** (no supermercado).
-
-### ➡️ ON (Usado para dias, datas e superfícies)
-
-*   **Tempo (Dias e datas):** Usado para dias específicos da semana, datas com mês e dia, e feriados com "Day".
-*   *Exemplo:* **on Monday** (na segunda-feira), **on June 18th** (em 18 de junho), **on Christmas Day** (no dia de Natal).
-*   **Lugar (Superfície):** Usado quando um objeto está fisicamente apoiado sobre uma superfície plana.
-*   *Exemplo:* **on the table** (sobre a mesa), **on the wall** (na parede), **on the floor** (no chão).
-
-### ➡️ IN (Usado para períodos longos e áreas fechadas)
-
-*   **Tempo (Meses, anos, estações e partes do dia):** Usado para espaços de tempo mais amplos e genéricos.
-*   *Exemplo:* **in July** (em julho), **in 2026** (em 2026), **in the morning** (de manhã), **in the summer** (no verão).
-*   **Lugar (Espaço delimitado/Dentro):** Usado para locais fechados, cidades, países ou quando algo está dentro de um recipiente.
-*   *Exemplo:* **in Brazil** (no Brasil), **in New York** (em Nova York), **in the box** (dentro da caixa), **in the bedroom** (no quarto).
-
-### ➡️ UNDER (Embaixo de / Sob)
-
-*   **Lugar (Posição diretamente abaixo):** Usado quando um objeto está abaixo ou debaixo de outro.
-*   *Exemplo:* **under the table** (embaixo da mesa), **under the bed** (embaixo da cama).
-
-### 📝 2. Tempos Verbais: Past Simple & Present Perfect
-
-Neste módulo, você revisará e aplicará tempos verbais para falar do passado:
-
-*   **Past Simple (Verbos Irregulares):** Usado para ações concluídas no passado em um tempo definido. Os verbos irregulares mudam de forma e devem ser estudados.
-*   *Exemplo:* **go** vira **went** (fui/foi) | **buy** vira **bought** (comprei/comprou) | **write** vira **wrote** (escrevi/escreveu).
-*   **Present Perfect:** Usado para experiências passadas sem especificar o momento exato, ou ações que começaram no passado e continuam no presente. Formado por **have/has + verbo no particípio**.
-*   *Exemplo correto:* **I have visited France twice** (Eu visitei a França duas vezes - não importa quando).
-*   *Atenção:* O correto é **She has seen that movie** (e não *She has saw*).
-
-### 📚 3. Phrasal Verbs, Condicionais e Adjetivos
-
-Outros assuntos muito importantes que você praticará nas etapas do módulo:
-
-*   **Phrasal Verbs (Verbos Frasais):** Verbos combinados com preposições que ganham novos significados.
-*   *Exemplo:* **Give up** (Desistir) | **Look for** (Procurar) | **Run out of** (Ficar sem/Esgotar algo) | **Wake up** (Acordar).
-*   **First Conditional (Primeira Condicional):** Indica uma condição real no presente e seu provável resultado no futuro. Estrutura: **If + Present Simple + Will**.
-*   *Exemplo:* **If it rains, I will stay home** (Se chover, eu ficarei em casa).
-*   **Comparativos e Superlativos:** Usados para comparar qualidades.
-*   *Exemplo Comparativo:* **This book is more interesting than that one** (Este livro é mais interessante que aquele).
-*   *Exemplo Superlativo:* **He is the tallest boy in class** (Ele é o garoto mais alto da classe - e nunca *most tallest* ou *gooder*).
-
-### ✈️ 4. Vocabulário de Viagem (Travel)
-
-Aprenda termos úteis para aeroportos e deslocamentos cotidianos:
-
-*   **Boarding pass** (Cartão de embarque) | **Luggage** (Malas/Bagagem) | **Delay** (Atraso) | **Gate** (Portão de embarque).`
-  },
-  3: {
-    title: 'Grammar Expansion',
-    subtitle: 'Entendendo tempos verbais do passado e pronomes',
-    content: `### 📖 Explicação
-Nesta etapa expandimos nossa gramática com o Past Simple e pronomes de objeto direto e indireto.
-
-**Past Simple (Regular & Irregular):**
-*   Verbos Regulares: Adiciona-se **-ed**. Ex: *work -> worked*.
-*   Verbos Irregulares: Mudam de forma. Ex: *go -> went*, *buy -> bought*.
-
-**Object Pronouns:**
-*   Substituem o objeto da frase: *me, you, him, her, it, us, them*.
-
-### ✍️ Exemplos
-*   *I saw her yesterday and gave her the book.* (Eu a vi ontem e dei a ela o livro.)
-*   *We watched a great movie last weekend.*`
-  },
-  4: {
-    title: 'Everyday Expressions & Idioms',
-    subtitle: 'Expressões idiomáticas do dia a dia',
-    content: `### 📖 Explicação
-Expressões que falantes nativos usam com frequência e que não devem ser traduzidas literalmente.
-
-*   **Piece of cake:** Algo muito fácil (Mamão com açúcar).
-*   **Break a leg:** Boa sorte (usado no teatro).
-*   **Under the weather:** Sentindo-se um pouco doente ou indisposto.
-
-### ✍️ Exemplos
-*   *The English test was a piece of cake! I got a 10.*
-*   *Are you okay? You look a bit under the weather.*`
-  },
-  5: {
-    title: 'Professional Vocabulary',
-    subtitle: 'Inglês para negócios e ambiente de trabalho',
-    content: `### 📖 Explicação
-Vocabulário essencial para reuniões, e-mails comerciais e entrevistas de emprego.
-
-*   **Schedule:** Cronograma / Agendar.
-*   **Feedback:** Avaliação / Retorno.
-*   **Deadline:** Prazo final.
-*   **To hire / To fire:** Contratar / Demitir.
-
-### ✍️ Exemplos
-*   *We need to meet the deadline for this project.*
-*   *He scheduled a meeting to give feedback on our performance.*`
-  },
-  6: {
-    title: 'Narrative & Telling Stories',
-    subtitle: 'Uso do Past Continuous e Past Perfect',
-    content: `### 📖 Explicação
-Para contar histórias de forma natural, combinamos Past Simple, Past Continuous e Past Perfect.
-
-*   **Past Continuous:** Ações em andamento no passado. Ex: *I was sleeping.*
-*   **Past Perfect:** Ação que ocorreu ANTES de outra ação no passado. Ex: *I had already eaten when she arrived.*
-
-### ✍️ Exemplos
-*   *While I was walking home, it started to rain.*
-*   *When the movie started, we realized we had lost our tickets.*`
-  },
-  7: {
-    title: 'Future & Conditional Sentences',
-    subtitle: 'Planos futuros e hipóteses (Will, Going to, Zero/First Conditional)',
-    content: `### 📖 Explicação
-**Will vs. Going to:**
-*   **Will:** Decisões espontâneas ou previsões. Ex: *I think it will rain.*
-*   **Going to:** Planos já decididos. Ex: *I am going to travel tomorrow.*
-
-**Conditionals:**
-*   **Zero Conditional:** Fatos gerais. *If you heat water, it boils.*
-*   **First Conditional:** Possibilidades futuras. *If it rains, we will stay home.*
-
-### ✍️ Exemplos
-*   *Next month, I am going to buy a new computer.*
-*   *If you study hard, you will pass the exam.*`
-  },
-  8: {
-    title: 'Complex Text & Reading Comprehension',
-    subtitle: 'Técnicas de leitura e vocabulário avançado',
-    content: `### 📖 Explicação
-Técnicas para compreender textos complexos sem precisar traduzir palavra por palavra.
-
-*   **Skimming:** Ler rapidamente para pegar a ideia principal.
-*   **Scanning:** Procurar informações específicas (nomes, números, datas).
-*   **Context Clues:** Deduzir o significado de palavras desconhecidas pelo contexto.
-
-### ✍️ Exemplos
-*   *Read the paragraph and write down only the main ideas.*
-*   *Scan the text to find the year the company was founded.*`
-  },
-  9: {
-    title: 'English in Context',
-    subtitle: 'Inglês para viagens e situações reais',
-    content: `### 📖 Explicação
-Vocabulário prático para aeroporto, hotel, restaurante e compras.
-
-*   **Check-in / Check-out:** Entrada / Saída de hotel ou voo.
-*   **Boarding pass:** Cartão de embarque.
-*   **To order:** Fazer o pedido (restaurante).
-*   **Refund:** Reembolso.
-
-### ✍️ Exemplos
-*   *Excuse me, where can I print my boarding pass?*
-*   *I would like to order a steak and a glass of water, please.*`
-  },
-  10: {
-    title: 'Advanced Conversations & Final Project',
-    subtitle: 'Expressão fluente e consolidação do aprendizado',
-    content: `### 📖 Explicação
-Prática de debate, estruturação de argumentos e apresentação final.
-
-*   **In my opinion / From my perspective:** Na minha opinião / Do meu ponto de vista.
-*   **On the other hand:** Por outro lado.
-*   **To sum up:** Resumindo.
-
-### ✍️ Exemplos
-*   *From my perspective, studying online offers more flexibility. On the other hand, classroom interaction is highly valuable.*`
-  }
-};
-
-const getModuleIdForExercise = (exercise) => {
-  if (!exercise || !exercise.level) return 1;
-  const lvl = exercise.level.toLowerCase();
-  if (lvl === 'beginner' || lvl === 'módulo 1' || lvl === 'modulo 1') return 1;
-  if (lvl === 'intermediate' || lvl === 'módulo 2' || lvl === 'modulo 2') return 2;
-  if (lvl === 'advanced' || lvl === 'módulo 3' || lvl === 'modulo 3') return 3;
-  if (lvl === 'módulo 4' || lvl === 'modulo 4') return 4;
-  if (lvl === 'módulo 5' || lvl === 'modulo 5') return 5;
-  if (lvl === 'módulo 6' || lvl === 'modulo 6') return 6;
-  if (lvl === 'módulo 7' || lvl === 'modulo 7') return 7;
-  if (lvl === 'módulo 8' || lvl === 'modulo 8') return 8;
-  if (lvl === 'módulo 9' || lvl === 'modulo 9') return 9;
-  if (lvl === 'módulo 10' || lvl === 'modulo 10') return 10;
-  return 1; // Default
-};
-
-const isRpgExerciseCompleted = (p) => {
-  if (!p) return false;
-  if (p.status !== 'completed') return false;
-  if (p.totalQuestions > 0 && p.score !== p.totalQuestions) {
-    return false;
-  }
-  return true;
-};
-
-const isModuleUnlocked = (assignedExercises, moduleId) => {
-  if (moduleId === 1) return true;
-  
-  // A module is unlocked if all previous modules are fully completed (perfect score).
-  for (let m = 1; m < moduleId; m++) {
-    const prevModuleExercises = assignedExercises.filter(p => p.exercise?.isRpg && getModuleIdForExercise(p.exercise) === m);
-    if (prevModuleExercises.length > 0) {
-      const allCompleted = prevModuleExercises.every(p => isRpgExerciseCompleted(p));
-      if (!allCompleted) return false;
-    }
-  }
-  return true;
-};
+import AchievementsModal from '../components/Student/AchievementsModal';
+import StreakRulesModal from '../components/Student/StreakRulesModal';
+import MobileBottomNav from '../components/Student/MobileBottomNav';
+import {
+  TYPE_LABELS,
+  MODULES,
+  MODULE_COLORS,
+  MODULE_EXPLANATIONS,
+  getModuleIdForExercise,
+  isRpgExerciseCompleted,
+  isModuleUnlocked
+} from '../data/modulesData';
 
 // Creating a premium cosmic theme isolated for the student experience
 const studentTheme = createTheme({
@@ -473,6 +199,8 @@ export default function StudentPage() {
 
   // Badge unlock Dialog state
   const [unlockedBadge, setUnlockedBadge] = useState(null);
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [streakRulesOpen, setStreakRulesOpen] = useState(false);
 
   // RPG Map states
   const [viewMode, setViewMode] = useState('rpg'); // 'rpg' | 'list' | 'speaking'
@@ -584,7 +312,7 @@ export default function StudentPage() {
   };
 
   useEffect(() => {
-    if (dashboardTab === 3) {
+    if (dashboardTab === 2) {
       loadRanking();
     }
   }, [dashboardTab]);
@@ -1277,11 +1005,10 @@ export default function StudentPage() {
               {/* Logo / Brand */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <img
-                  src="/quest_english_logo.png"
+                  src="/quest_english_logo.svg"
                   alt="Quest English"
                   style={{
-                    height: '38px',
-                    mixBlendMode: 'screen',
+                    height: '42px',
                     filter: 'drop-shadow(0 2px 10px rgba(0,180,216,0.3))'
                   }}
                 />
@@ -1324,26 +1051,9 @@ export default function StudentPage() {
                     px: 3,
                     py: 1,
                     borderRadius: 3,
-                    bgcolor: dashboardTab === 1 ? 'rgba(179, 136, 255, 0.12)' : 'transparent',
-                    border: `1px solid ${dashboardTab === 1 ? 'rgba(179, 136, 255, 0.25)' : 'transparent'}`,
-                    color: dashboardTab === 1 ? '#b388ff' : 'rgba(255,255,255,0.6)',
-                    '&:hover': {
-                      bgcolor: 'rgba(179, 136, 255, 0.08)',
-                      color: '#b388ff'
-                    }
-                  }}
-                  startIcon={<SportsEsportsIcon />}
-                >
-                  Jogos
-                </Button>                <Button
-                  onClick={() => setDashboardTab(2)}
-                  sx={{
-                    px: 3,
-                    py: 1,
-                    borderRadius: 3,
-                    bgcolor: dashboardTab === 2 ? 'rgba(72, 199, 142, 0.12)' : 'transparent',
-                    border: `1px solid ${dashboardTab === 2 ? 'rgba(72, 199, 142, 0.25)' : 'transparent'}`,
-                    color: dashboardTab === 2 ? '#48c78e' : 'rgba(255,255,255,0.6)',
+                    bgcolor: dashboardTab === 1 ? 'rgba(72, 199, 142, 0.12)' : 'transparent',
+                    border: `1px solid ${dashboardTab === 1 ? 'rgba(72, 199, 142, 0.25)' : 'transparent'}`,
+                    color: dashboardTab === 1 ? '#48c78e' : 'rgba(255,255,255,0.6)',
                     '&:hover': {
                       bgcolor: 'rgba(72, 199, 142, 0.08)',
                       color: '#48c78e'
@@ -1354,14 +1064,14 @@ export default function StudentPage() {
                   Histórico
                 </Button>
                 <Button
-                  onClick={() => setDashboardTab(3)}
+                  onClick={() => setDashboardTab(2)}
                   sx={{
                     px: 3,
                     py: 1,
                     borderRadius: 3,
-                    bgcolor: dashboardTab === 3 ? 'rgba(255, 183, 77, 0.12)' : 'transparent',
-                    border: `1px solid ${dashboardTab === 3 ? 'rgba(255, 183, 77, 0.25)' : 'transparent'}`,
-                    color: dashboardTab === 3 ? '#ffb74d' : 'rgba(255,255,255,0.6)',
+                    bgcolor: dashboardTab === 2 ? 'rgba(255, 183, 77, 0.12)' : 'transparent',
+                    border: `1px solid ${dashboardTab === 2 ? 'rgba(255, 183, 77, 0.25)' : 'transparent'}`,
+                    color: dashboardTab === 2 ? '#ffb74d' : 'rgba(255,255,255,0.6)',
                     '&:hover': {
                       bgcolor: 'rgba(255, 183, 77, 0.08)',
                       color: '#ffb74d'
@@ -1370,6 +1080,25 @@ export default function StudentPage() {
                   startIcon={<EmojiEventsIcon />}
                 >
                   Ranking
+                </Button>
+                <Button
+                  onClick={() => setAchievementsOpen(true)}
+                  sx={{
+                    px: 2.5,
+                    py: 1,
+                    borderRadius: 3,
+                    bgcolor: 'rgba(179, 136, 255, 0.1)',
+                    border: '1px solid rgba(179, 136, 255, 0.25)',
+                    color: '#b388ff',
+                    fontWeight: 800,
+                    '&:hover': {
+                      bgcolor: 'rgba(179, 136, 255, 0.18)',
+                      borderColor: '#b388ff'
+                    }
+                  }}
+                  startIcon={<MedalIcon />}
+                >
+                  Conquistas
                 </Button>
               </Box>
 
@@ -1397,7 +1126,7 @@ export default function StudentPage() {
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: 12,
                       color: '#fff',
-                      minWidth: 160
+                      minWidth: 180
                     }
                   }}
                 >
@@ -1409,21 +1138,27 @@ export default function StudentPage() {
                   </MenuItem>
                   <MenuItem 
                     onClick={() => { setDashboardTab(1); handleCloseMenu(); }}
-                    style={{ fontWeight: 700, color: dashboardTab === 1 ? '#b388ff' : '#fff', gap: 10 }}
-                  >
-                    <SportsEsportsIcon fontSize="small" /> Jogos
-                  </MenuItem>
-                  <MenuItem 
-                    onClick={() => { setDashboardTab(2); handleCloseMenu(); }}
-                    style={{ fontWeight: 700, color: dashboardTab === 2 ? '#48c78e' : '#fff', gap: 10 }}
+                    style={{ fontWeight: 700, color: dashboardTab === 1 ? '#48c78e' : '#fff', gap: 10 }}
                   >
                     <EventAvailableIcon fontSize="small" /> Histórico
                   </MenuItem>
                   <MenuItem 
-                    onClick={() => { setDashboardTab(3); handleCloseMenu(); }}
-                    style={{ fontWeight: 700, color: dashboardTab === 3 ? '#ffb74d' : '#fff', gap: 10 }}
+                    onClick={() => { setDashboardTab(2); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 2 ? '#ffb74d' : '#fff', gap: 10 }}
                   >
                     <EmojiEventsIcon fontSize="small" /> Ranking
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { setAchievementsOpen(true); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: '#b388ff', gap: 10 }}
+                  >
+                    <MedalIcon fontSize="small" /> Conquistas
+                  </MenuItem>
+                  <MenuItem 
+                    onClick={() => { setStreakRulesOpen(true); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: '#ffd426', gap: 10 }}
+                  >
+                    <StarIcon fontSize="small" /> Regras de Moedas
                   </MenuItem>
                   <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)' }} />
                   <MenuItem 
@@ -1461,7 +1196,7 @@ export default function StudentPage() {
           </Container>
         </Box>
 
-        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, pb: { xs: 12, md: 6 } }}>
           {penaltyMessage && (
             <Alert 
               severity="warning" 
@@ -1512,20 +1247,31 @@ export default function StudentPage() {
                     <Divider sx={{ width: '100%', borderColor: 'rgba(255,255,255,0.07)', my: 2 }} />
                     {/* Stats side-by-side */}
                     <Box sx={{ display: 'flex', gap: 1.5, width: '100%', mb: 2 }}>
-                      {/* Ofensiva */}
-                      <Box sx={{
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        bgcolor: isStreakFrozen ? 'rgba(0, 180, 216, 0.08)' : 'rgba(255, 112, 67, 0.08)',
-                        border: isStreakFrozen ? '1px solid rgba(0, 180, 216, 0.25)' : '1px solid rgba(255, 112, 67, 0.25)',
-                        borderRadius: 3.5,
-                        p: 1.5,
-                        boxShadow: isStreakFrozen ? '0 0 15px rgba(0, 180, 216, 0.08)' : '0 0 15px rgba(255, 112, 67, 0.08)',
-                        animation: 'fadeIn 0.6s ease',
-                        position: 'relative'
-                      }}>
+                      {/* Ofensiva (clicável para ver regras) */}
+                      <Box
+                        onClick={() => setStreakRulesOpen(true)}
+                        role="button"
+                        title="Clique para ver as regras de ofensiva!"
+                        sx={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          bgcolor: isStreakFrozen ? 'rgba(0, 180, 216, 0.08)' : 'rgba(255, 112, 67, 0.08)',
+                          border: isStreakFrozen ? '1px solid rgba(0, 180, 216, 0.25)' : '1px solid rgba(255, 112, 67, 0.25)',
+                          borderRadius: 3.5,
+                          p: 1.5,
+                          cursor: 'pointer',
+                          boxShadow: isStreakFrozen ? '0 0 15px rgba(0, 180, 216, 0.08)' : '0 0 15px rgba(255, 112, 67, 0.08)',
+                          animation: 'fadeIn 0.6s ease',
+                          position: 'relative',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            transform: 'translateY(-2px)',
+                            borderColor: isStreakFrozen ? '#00b4d8' : '#ff7043'
+                          }
+                        }}
+                      >
                         <FireIcon sx={{ color: isStreakFrozen ? '#00b4d8' : '#ff7043', fontSize: 24 }} />
                         <Box sx={{ textAlign: 'left' }}>
                           <Typography variant="subtitle2" sx={{ fontWeight: 900, color: isStreakFrozen ? '#00b4d8' : '#ff7043', lineHeight: 1.1 }}>
@@ -1586,22 +1332,33 @@ export default function StudentPage() {
                       </Box>
                     </Box>
 
-                    {/* Pixel Coin Box */}
-                    <Box sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 1.5,
-                      bgcolor: 'rgba(255, 215, 0, 0.1)',
-                      border: '2px solid rgba(255, 215, 0, 0.4)',
-                      borderRadius: 3.5,
-                      px: 3,
-                      py: 1,
-                      width: '100%',
-                      boxSizing: 'border-box',
-                      boxShadow: '0 0 15px rgba(255, 215, 0, 0.15), inset 0 0 10px rgba(255,215,0,0.1)',
-                      animation: 'fadeIn 0.7s ease'
-                    }}>
+                    {/* Pixel Coin Box (clicável para ver regras) */}
+                    <Box
+                      onClick={() => setStreakRulesOpen(true)}
+                      role="button"
+                      title="Clique para ver como ganhar mais moedas!"
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1.5,
+                        bgcolor: 'rgba(255, 215, 0, 0.1)',
+                        border: '2px solid rgba(255, 215, 0, 0.4)',
+                        borderRadius: 3.5,
+                        px: 3,
+                        py: 1,
+                        width: '100%',
+                        boxSizing: 'border-box',
+                        boxShadow: '0 0 15px rgba(255, 215, 0, 0.15), inset 0 0 10px rgba(255,215,0,0.1)',
+                        animation: 'fadeIn 0.7s ease',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 0 20px rgba(255, 215, 0, 0.3)'
+                        }
+                      }}
+                    >
                       <svg width="36" height="36" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ shapeRendering: 'crispEdges', filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.4))' }}>
                         <path d="M5 2H11V4H13V6H14V10H13V12H11V14H5V12H3V10H2V6H3V4H5V2Z" fill="#ffaa00"/>
                         <path d="M6 4H10V6H11V10H10V12H6V10H5V6H6V4Z" fill="#ffd426"/>
@@ -1616,55 +1373,60 @@ export default function StudentPage() {
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Botão Conquistas */}
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<MedalIcon sx={{ color: '#b388ff' }} />}
+                      onClick={() => setAchievementsOpen(true)}
+                      sx={{
+                        mt: 2,
+                        py: 1.1,
+                        borderRadius: 3.5,
+                        borderColor: 'rgba(179, 136, 255, 0.35)',
+                        color: '#b388ff',
+                        fontWeight: 800,
+                        textTransform: 'none',
+                        fontSize: '0.88rem',
+                        background: 'rgba(179, 136, 255, 0.06)',
+                        '&:hover': {
+                          borderColor: '#b388ff',
+                          background: 'rgba(179, 136, 255, 0.15)',
+                          transform: 'translateY(-1px)'
+                        },
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      🏆 Ver Minhas Conquistas
+                    </Button>
+
+                    <Button
+                      fullWidth
+                      size="small"
+                      onClick={() => setStreakRulesOpen(true)}
+                      sx={{
+                        mt: 0.8,
+                        color: 'rgba(255, 215, 0, 0.75)',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        textTransform: 'none',
+                        '&:hover': {
+                          color: '#ffd426',
+                          background: 'transparent'
+                        }
+                      }}
+                    >
+                      🎯 Regras de Ofensiva e Moedas
+                    </Button>
                   </Box>
                 </Card>
 
-                {/* Rules Card */}
-                <Card sx={{ 
-                  p: 2.5, 
-                  background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.6), rgba(7, 15, 25, 0.8))',
-                  border: '1px solid rgba(255, 215, 0, 0.15)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
-                }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#ffd426', display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                    🎯 Regras de Ofensiva e Moedas
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block', mb: 1.5, lineHeight: 1.5 }}>
-                    Mantenha o foco nos seus estudos de inglês e ganhe recompensas!
-                  </Typography>
-                  
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                    <Box sx={{ display: 'flex', gap: 1.5 }}>
-                      <span style={{ fontSize: '1.2rem' }}>🔥</span>
-                      <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 850, color: '#fff', display: 'block' }}>
-                          Ofensiva Diária (+2 Moedas)
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.2, lineHeight: 1.3 }}>
-                          Faça login e realize atividades todos os dias para acumular ofensiva e ganhar <strong>+2 moedas de bônus</strong> diariamente!
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 1.5 }}>
-                      <span style={{ fontSize: '1.2rem' }}>⏳</span>
-                      <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 850, color: '#ff8fa3', display: 'block' }}>
-                          Inatividade (-1 Moeda)
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block', mt: 0.2, lineHeight: 1.3 }}>
-                          Fique atento! Se você ficar <strong>uma semana (7 dias ou mais) sem logar</strong>, perderá <strong>1 moeda</strong> por cada semana de ausência.
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </Box>
-                </Card>
-
-                {/* 2. Gamified Level / XP Tracker Card */}
-                <Card sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                {/* Gamified Level / XP Tracker Card */}
+                <Card sx={{ p: 2.5, borderRadius: 4 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <StarIcon sx={{ color: '#00b4d8' }} />
+                      <StarIcon sx={{ color: '#00b4d8', fontSize: 20 }} />
                       <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff' }}>Progresso de Nível</Typography>
                     </Box>
                     <Chip
@@ -1675,21 +1437,21 @@ export default function StudentPage() {
                         bgcolor: 'rgba(0, 180, 216, 0.15)',
                         color: '#00b4d8',
                         border: '1px solid rgba(0, 180, 216, 0.3)',
-                        fontSize: '0.75rem'
+                        fontSize: '0.72rem'
                       }}
                     />
                   </Box>
 
-                  <Box sx={{ mb: 1.5 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>XP Geral</Typography>
+                  <Box sx={{ mb: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.6 }}>
+                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>XP do Nível</Typography>
                       <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 900 }}>{xpInCurrentLevel} / {xpPerLevel} XP</Typography>
                     </Box>
                     <LinearProgress
                       variant="determinate"
                       value={levelPercent}
                       sx={{
-                        height: 8,
+                        height: 7,
                         borderRadius: 4,
                         backgroundColor: 'rgba(255,255,255,0.06)',
                         '& .MuiLinearProgress-bar': {
@@ -1699,51 +1461,6 @@ export default function StudentPage() {
                       }}
                     />
                   </Box>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', display: 'block', mt: 1, fontStyle: 'italic' }}>
-                    Ganhe 100 XP por cada atividade completada ou minijogo vencido! Falta pouco para o nível {currentLevel + 1}!
-                  </Typography>
-                </Card>
-
-                {/* 3. Achievements / Badges locker */}
-                <Card sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
-                    <MedalIcon sx={{ color: '#b388ff' }} />
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff' }}>Seus Conquistas</Typography>
-                  </Box>
-
-                  <Grid container spacing={2}>
-                    {badges.map((badge) => (
-                      <Grid size={{ xs: 6 }} key={badge.id}>
-                        <Box sx={{
-                          p: 1.8,
-                          borderRadius: 4,
-                          border: badge.active ? '1px solid rgba(179, 136, 255, 0.25)' : '1px solid rgba(255,255,255,0.04)',
-                          bgcolor: badge.active ? 'rgba(179, 136, 255, 0.04)' : 'rgba(0,0,0,0.2)',
-                          textAlign: 'center',
-                          opacity: badge.active ? 1 : 0.45,
-                          transition: 'all 0.3s ease',
-                          height: '100%',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <Typography fontSize={32} sx={{
-                            mb: 0.8,
-                            filter: badge.active ? 'drop-shadow(0 0 8px rgba(179,136,255,0.4))' : 'grayscale(100%)'
-                          }}>
-                            {badge.icon}
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 800, color: badge.active ? '#fff' : 'rgba(255,255,255,0.5)', fontSize: '0.78rem', lineHeight: 1.2 }}>
-                            {badge.name}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.62rem', mt: 0.5, lineHeight: 1.2 }}>
-                            {badge.desc}
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    ))}
-                  </Grid>
                 </Card>
 
               </Box>
@@ -2557,14 +2274,7 @@ export default function StudentPage() {
               )}
 
               {dashboardTab === 1 && (
-                // TAB 1: GAMES ZONE
-                <Box>
-                  <GamesZone userId={user?.id} userName={user?.name} onEarnXP={handleEarnBonusXP} />
-                </Box>
-              )}
-
-              {dashboardTab === 2 && (
-                // TAB 2: ATTENDANCE HISTORY PANEL
+                // TAB 1: ATTENDANCE HISTORY PANEL
                 <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
                   <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff' }}>
@@ -2646,8 +2356,8 @@ export default function StudentPage() {
                 </Box>
               )}
 
-              {dashboardTab === 3 && (
-                // TAB 3: STUDENT LEADERBOARD
+              {dashboardTab === 2 && (
+                // TAB 2: STUDENT LEADERBOARD
                 <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
                   <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff' }}>
@@ -3171,6 +2881,30 @@ export default function StudentPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modern Achievements & XP Modal Dialog */}
+      <AchievementsModal
+        open={achievementsOpen}
+        onClose={() => setAchievementsOpen(false)}
+        badges={badges}
+        currentLevel={currentLevel}
+        xpInCurrentLevel={xpInCurrentLevel}
+        xpPerLevel={xpPerLevel}
+        levelPercent={levelPercent}
+      />
+
+      {/* Interactive Daily Streak & Inactivity Penalty Rules Dialog */}
+      <StreakRulesModal
+        open={streakRulesOpen}
+        onClose={() => setStreakRulesOpen(false)}
+      />
+
+      {/* App-like Fixed Mobile Bottom Navigation */}
+      <MobileBottomNav
+        activeTab={dashboardTab}
+        onSelectTab={setDashboardTab}
+        onOpenAchievements={() => setAchievementsOpen(true)}
+      />
       </Box>
     </ThemeProvider>
   );
