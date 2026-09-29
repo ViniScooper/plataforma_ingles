@@ -2,6 +2,7 @@ import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/apiClient';
+import InstallAppModal from '../components/InstallAppModal';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -10,6 +11,39 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // PWA / App Install states
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent || '';
+    const checkIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const checkAndroid = /Android/.test(ua);
+    setIsIOS(checkIOS);
+    setIsAndroid(checkAndroid);
+
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handlePromptInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setInstallModalOpen(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -311,8 +345,78 @@ export default function LoginPage() {
           to { transform: rotate(360deg); }
         }
 
+        .install-app-section {
+          margin-top: 20px;
+          width: 100%;
+        }
+
+        .install-app-btn {
+          width: 100%;
+          padding: 12px 16px;
+          background: rgba(0, 180, 216, 0.08);
+          border: 1px solid rgba(0, 180, 216, 0.25);
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-align: left;
+        }
+
+        .install-app-btn:hover {
+          background: rgba(0, 180, 216, 0.16);
+          border-color: rgba(0, 180, 216, 0.5);
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(0, 180, 216, 0.2);
+        }
+
+        .install-icon-wrapper {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(0, 180, 216, 0.15);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+        }
+
+        .install-btn-text {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .install-title {
+          color: #fff;
+          font-size: 0.85rem;
+          font-weight: 700;
+          font-family: 'Inter', sans-serif;
+        }
+
+        .install-subtitle {
+          color: rgba(255, 255, 255, 0.55);
+          font-size: 0.72rem;
+          font-family: 'Inter', sans-serif;
+          margin-top: 1px;
+        }
+
+        .install-badge {
+          background: rgba(72, 199, 142, 0.18);
+          color: #48c78e;
+          border: 1px solid rgba(72, 199, 142, 0.35);
+          padding: 3px 8px;
+          border-radius: 6px;
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
         .footer-text {
-          margin-top: 28px;
+          margin-top: 24px;
           text-align: center;
           color: rgba(255,255,255,0.25);
           font-size: 0.78rem;
@@ -383,8 +487,44 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Botão de Instalação do App */}
+          <div className="install-app-section">
+            <button
+              type="button"
+              className="install-app-btn"
+              onClick={() => setInstallModalOpen(true)}
+            >
+              <div className="install-icon-wrapper">
+                {isIOS ? '🍎' : isAndroid ? '🤖' : '📲'}
+              </div>
+              <div className="install-btn-text">
+                <span className="install-title">
+                  {isIOS
+                    ? 'Baixar no iPhone (iOS)'
+                    : isAndroid
+                    ? 'Baixar no Android'
+                    : 'Baixar a Plataforma no Celular'}
+                </span>
+                <span className="install-subtitle">
+                  {isIOS
+                    ? 'Veja como fixar na sua tela de início'
+                    : 'Instale o aplicativo oficial'}
+                </span>
+              </div>
+              <span className="install-badge">App</span>
+            </button>
+          </div>
+
           <p className="footer-text">Quest English © {new Date().getFullYear()} · Plataforma de Inglês</p>
         </div>
+
+        {/* Modal de Instalação com suporte para Android e iOS */}
+        <InstallAppModal
+          open={installModalOpen}
+          onClose={() => setInstallModalOpen(false)}
+          installPrompt={deferredPrompt}
+          onPromptInstall={handlePromptInstall}
+        />
       </div>
     </>
   );

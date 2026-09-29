@@ -1,0 +1,22 @@
+{
+  "short_name": "Quest English",
+  "name": "Quest English - Plataforma de Inglês",
+  "description": "Aprenda inglês com exercícios interativos, batalhas e recompensas!",
+  "icons": [
+    {
+      "src": "/quest_english_logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512 any"
+    },
+    {
+      "src": "/quest_english_logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#070f19",
+  "theme_color": "#00b4d8",
+  "display": "standalone",
+  "orientation": "portrait"
+}
