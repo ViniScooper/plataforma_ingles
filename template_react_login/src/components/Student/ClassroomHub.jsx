@@ -12,7 +12,15 @@ import {
   FormControl,
   LinearProgress,
   Divider,
-  Tooltip
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  IconButton,
+  Tooltip,
+  Paper,
+  ToggleButtonGroup,
+  ToggleButton
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -27,8 +35,20 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import PrintIcon from '@mui/icons-material/Print';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import SlideshowIcon from '@mui/icons-material/Slideshow';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import SpeedIcon from '@mui/icons-material/Speed';
+import TranslateIcon from '@mui/icons-material/Translate';
+import ViewStreamIcon from '@mui/icons-material/ViewStream';
+import FilterNoneIcon from '@mui/icons-material/FilterNone';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import CelebrationIcon from '@mui/icons-material/Celebration';
+import CloseIcon from '@mui/icons-material/Close';
 
-import { CLASSROOM_LESSONS, getTodayDateString, getFormattedDate } from '../../data/classroomsData';
+import { CLASSROOM_LESSONS, LESSON_VOCABULARY, getTodayDateString, getFormattedDate } from '../../data/classroomsData';
+import { soundEffects } from '../../utils/soundEffects';
+import { speechService } from '../../utils/textToSpeech';
 import PdfViewerModal from './PdfViewerModal';
 import LessonSlidesModal from './LessonSlidesModal';
 
@@ -36,13 +56,27 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
   const [selectedLessonId, setSelectedLessonId] = useState(CLASSROOM_LESSONS[0]?.id || 'lesson_today_1630');
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [slidesModalOpen, setSlidesModalOpen] = useState(false);
-  
-  // Selected answers for each activity: { [activityId]: chosenOptionIndex }
+
+  // UI/UX Mode: 'quiz' (1 per screen Duolingo style) or 'list' (all questions)
+  const [viewMode, setViewMode] = useState('quiz');
+  const [quizActiveIndex, setQuizActiveIndex] = useState(0);
+
+  // Audio & Speech States
+  const [soundMuted, setSoundMuted] = useState(soundEffects.isMuted());
+  const [speechRate, setSpeechRate] = useState(1.0); // 1.0 = Normal, 0.75 = Slow
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Dictionary / Vocabulary Popover
+  const [activeVocabWord, setActiveVocabWord] = useState(null);
+
+  // Floating animated reward popup (+XP / +Coins)
+  const [floatingReward, setFloatingReward] = useState(null);
+
+  // Selected & submitted answers
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  // Submitted answers for each activity: { [activityId]: { isSubmitted: true, isCorrect: true/false, chosenIndex: number } }
   const [submittedAnswers, setSubmittedAnswers] = useState({});
 
-  const storageKey = user?.id ? `classroom_answers_v2_${user.id}` : 'classroom_answers_v2_guest';
+  const storageKey = user?.id ? `classroom_answers_v3_${user.id}` : 'classroom_answers_v3_guest';
 
   // Load saved answers from localStorage
   useEffect(() => {
@@ -59,16 +93,43 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
   // Current active lesson
   const currentLesson = CLASSROOM_LESSONS.find(l => l.id === selectedLessonId) || CLASSROOM_LESSONS[0];
   const teacherName = currentLesson?.teacher || 'Prof. Vinicius Lourenço';
+  const activities = currentLesson?.activities || [];
+  const totalActivities = activities.length;
 
-  // Activities completion stats
-  const totalActivities = currentLesson?.activities?.length || 0;
-  const completedActivitiesCount = currentLesson?.activities?.filter(
+  const completedActivitiesCount = activities.filter(
     a => submittedAnswers[a.id]?.isSubmitted && submittedAnswers[a.id]?.isCorrect
-  ).length || 0;
+  ).length;
+
   const progressPercent = totalActivities > 0 ? Math.round((completedActivitiesCount / totalActivities) * 100) : 0;
+  const isAllActivitiesCompleted = totalActivities > 0 && completedActivitiesCount === totalActivities;
+
+  const handleToggleSound = () => {
+    const nextMuted = !soundMuted;
+    setSoundMuted(nextMuted);
+    soundEffects.setMuted(nextMuted);
+  };
+
+  const handleToggleSpeechRate = () => {
+    const nextRate = speechRate === 1.0 ? 0.75 : 1.0;
+    setSpeechRate(nextRate);
+  };
+
+  const handleSpeakText = (text) => {
+    if (isSpeaking) {
+      speechService.stop();
+      setIsSpeaking(false);
+      return;
+    }
+    speechService.speak(
+      text,
+      speechRate,
+      () => setIsSpeaking(true),
+      () => setIsSpeaking(false)
+    );
+  };
 
   const handleSelectOption = (actId, optIndex) => {
-    if (submittedAnswers[actId]?.isSubmitted) return; // Locked once answered until retry
+    if (submittedAnswers[actId]?.isSubmitted) return;
     setSelectedAnswers(prev => ({ ...prev, [actId]: Number(optIndex) }));
   };
 
@@ -94,8 +155,22 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
       console.warn('Error saving answer to localStorage:', e);
     }
 
-    if (isCorrect && onRewardEarned) {
-      onRewardEarned({ xp: act.xp, coins: act.coins });
+    if (isCorrect) {
+      soundEffects.playSuccess();
+      setFloatingReward({ xp: act.xp, coins: act.coins, id: Date.now() });
+      setTimeout(() => setFloatingReward(null), 2200);
+
+      if (onRewardEarned) {
+        onRewardEarned({ xp: act.xp, coins: act.coins });
+      }
+
+      // Check if all completed for fanfare celebration
+      const willBeTotal = completedActivitiesCount + 1;
+      if (willBeTotal === totalActivities) {
+        setTimeout(() => soundEffects.playFanfare(), 400);
+      }
+    } else {
+      soundEffects.playError();
     }
   };
 
@@ -121,6 +196,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
     if (window.confirm('Deseja reiniciar todas as atividades desta aula para fazer de novo?')) {
       setSubmittedAnswers({});
       setSelectedAnswers({});
+      setQuizActiveIndex(0);
       try {
         localStorage.removeItem(storageKey);
       } catch (e) {
@@ -133,10 +209,276 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
     window.print();
   };
 
+  // Render a single question card (used in both quiz and list mode)
+  const renderQuestionCard = (act, index, isQuizMode = false) => {
+    const submission = submittedAnswers[act.id];
+    const isSubmitted = submission?.isSubmitted;
+    const isCorrect = submission?.isCorrect;
+    const chosenIndex = isSubmitted ? submission.chosenIndex : selectedAnswers[act.id];
+
+    return (
+      <Card
+        key={act.id}
+        sx={{
+          p: { xs: 2.5, sm: 4 },
+          width: '100%',
+          background: isSubmitted
+            ? isCorrect
+              ? 'rgba(72, 199, 142, 0.08)'
+              : 'rgba(239, 68, 68, 0.08)'
+            : 'rgba(13, 27, 42, 0.65)',
+          border: isSubmitted
+            ? isCorrect
+              ? '2px solid #48c78e'
+              : '2px solid #ef4444'
+            : '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: 4.5,
+          boxShadow: isSubmitted && isCorrect
+            ? '0 10px 35px rgba(72, 199, 142, 0.2)'
+            : '0 8px 30px rgba(0, 0, 0, 0.4)',
+          transition: 'all 0.25s ease'
+        }}
+      >
+        {/* Top Badges */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              label={`Questão ${index + 1} de ${totalActivities}`}
+              size="small"
+              sx={{ bgcolor: 'rgba(0, 180, 216, 0.25)', color: '#38bdf8', fontWeight: 900, fontSize: '0.78rem' }}
+            />
+            <Chip
+              label={act.category}
+              size="small"
+              sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#e2e8f0', fontWeight: 700, fontSize: '0.72rem' }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Ouvir Pergunta em Inglês">
+              <IconButton
+                size="small"
+                onClick={() => handleSpeakText(act.question)}
+                sx={{
+                  bgcolor: 'rgba(0, 180, 216, 0.15)',
+                  color: '#38bdf8',
+                  '&:hover': { bgcolor: 'rgba(0, 180, 216, 0.3)' }
+                }}
+              >
+                <VolumeUpIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Chip
+              icon={<EmojiEventsIcon sx={{ fontSize: 16 }} />}
+              label={`+${act.xp} XP`}
+              size="small"
+              sx={{ bgcolor: 'rgba(179, 136, 255, 0.2)', color: '#b388ff', fontWeight: 800 }}
+            />
+            <Chip
+              label={`+${act.coins} 🪙`}
+              size="small"
+              sx={{ bgcolor: 'rgba(255, 183, 77, 0.2)', color: '#ffb74d', fontWeight: 800 }}
+            />
+            {isSubmitted && (
+              <Chip
+                icon={isCorrect ? <CheckCircleOutlineIcon sx={{ fontSize: 16 }} /> : <CancelOutlinedIcon sx={{ fontSize: 16 }} />}
+                label={isCorrect ? 'Você Acertou!' : 'Incorreto'}
+                size="small"
+                sx={{
+                  bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.25)' : 'rgba(239, 68, 68, 0.25)',
+                  color: isCorrect ? '#48c78e' : '#ef4444',
+                  fontWeight: 900
+                }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        <Typography variant="h6" sx={{ fontWeight: 800, color: '#fff', mb: 1, fontSize: '1.15rem' }}>
+          {act.title}
+        </Typography>
+
+        <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.92)', mb: 3, whiteSpace: 'pre-line', lineHeight: 1.7, fontSize: '1.02rem' }}>
+          {act.question}
+        </Typography>
+
+        {/* Options */}
+        <FormControl component="fieldset" sx={{ width: '100%', mb: 2 }}>
+          <RadioGroup
+            value={chosenIndex !== undefined && chosenIndex !== null ? Number(chosenIndex) : ''}
+            onChange={(e) => handleSelectOption(act.id, Number(e.target.value))}
+          >
+            {act.options.map((opt, optIdx) => {
+              let optBg = 'rgba(255, 255, 255, 0.03)';
+              let optBorder = '1px solid rgba(255, 255, 255, 0.1)';
+
+              if (isSubmitted) {
+                if (optIdx === act.correctIndex) {
+                  optBg = 'rgba(72, 199, 142, 0.25)';
+                  optBorder = '2px solid #48c78e';
+                } else if (optIdx === chosenIndex && !isCorrect) {
+                  optBg = 'rgba(239, 68, 68, 0.25)';
+                  optBorder = '2px solid #ef4444';
+                }
+              } else if (chosenIndex === optIdx) {
+                optBg = 'rgba(0, 180, 216, 0.18)';
+                optBorder = '2px solid #00b4d8';
+              }
+
+              return (
+                <Box
+                  key={optIdx}
+                  onClick={() => !isSubmitted && handleSelectOption(act.id, optIdx)}
+                  sx={{
+                    p: 1.8,
+                    mb: 1.5,
+                    borderRadius: 3.5,
+                    bgcolor: optBg,
+                    border: optBorder,
+                    cursor: isSubmitted ? 'default' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s ease',
+                    '&:hover': !isSubmitted ? { bgcolor: 'rgba(0, 180, 216, 0.12)', borderColor: 'rgba(0, 180, 216, 0.5)' } : {}
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Radio
+                      value={optIdx}
+                      checked={chosenIndex === optIdx}
+                      disabled={isSubmitted}
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.3)',
+                        '&.Mui-checked': {
+                          color: isSubmitted ? (isCorrect ? '#48c78e' : '#ef4444') : '#00b4d8'
+                        }
+                      }}
+                    />
+                    <Typography variant="body1" sx={{ color: '#fff', fontWeight: 600, ml: 1.2, fontSize: '0.98rem' }}>
+                      {opt}
+                    </Typography>
+                  </Box>
+
+                  <Tooltip title="Ouvir esta Opção">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSpeakText(opt);
+                      }}
+                      sx={{ color: 'rgba(255,255,255,0.4)', '&:hover': { color: '#38bdf8' } }}
+                    >
+                      <VolumeUpIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              );
+            })}
+          </RadioGroup>
+        </FormControl>
+
+        {/* Action Button & Explanations */}
+        {!isSubmitted ? (
+          <Button
+            variant="contained"
+            disabled={chosenIndex === undefined || chosenIndex === null}
+            onClick={() => handleSubmitAnswer(act)}
+            sx={{
+              bgcolor: '#00b4d8',
+              color: '#fff',
+              fontWeight: 800,
+              borderRadius: 2.5,
+              px: 4,
+              py: 1.3,
+              textTransform: 'none',
+              fontSize: '0.96rem',
+              boxShadow: '0 4px 15px rgba(0, 180, 216, 0.35)',
+              '&:hover': { bgcolor: '#0096c7' }
+            }}
+          >
+            Confirmar Resposta
+          </Button>
+        ) : (
+          <Box sx={{ mt: 1 }}>
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 3,
+                bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                border: isCorrect ? '1px solid rgba(72, 199, 142, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
+                mb: 2
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 900, color: isCorrect ? '#48c78e' : '#ef4444', mb: 0.5, fontSize: '0.98rem' }}>
+                {isCorrect ? '🎉 Resposta Correta!' : '💡 Explicação do Prof. Vinicius Lourenço:'}
+              </Typography>
+              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.92)', lineHeight: 1.65, fontSize: '0.96rem' }}>
+                {act.explanation}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant="outlined"
+                startIcon={<ReplayIcon />}
+                onClick={() => handleRetryQuestion(act.id)}
+                sx={{
+                  color: '#fff',
+                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                  borderRadius: 2.5,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  px: 2.5,
+                  py: 0.9,
+                  '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.12)' }
+                }}
+              >
+                Tentar Novamente
+              </Button>
+
+              {isQuizMode && index < totalActivities - 1 && (
+                <Button
+                  variant="contained"
+                  endIcon={<ArrowForwardIcon />}
+                  onClick={() => setQuizActiveIndex(prev => prev + 1)}
+                  sx={{
+                    bgcolor: '#48c78e',
+                    color: '#fff',
+                    borderRadius: 2.5,
+                    fontWeight: 900,
+                    textTransform: 'none',
+                    px: 3,
+                    py: 0.9,
+                    '&:hover': { bgcolor: '#36b37e' }
+                  }}
+                >
+                  Próxima Questão ➡️
+                </Button>
+              )}
+            </Box>
+          </Box>
+        )}
+      </Card>
+    );
+  };
+
   return (
     <>
-      {/* Estilos específicos para impressão apenas da folha de exercícios */}
+      {/* Estilos específicos para impressão e animação de recompensa flutuante */}
       <style>{`
+        @keyframes floatUpFade {
+          0% { transform: translateY(0px) scale(0.9); opacity: 0; }
+          20% { transform: translateY(-10px) scale(1.1); opacity: 1; }
+          80% { transform: translateY(-30px) scale(1.05); opacity: 1; }
+          100% { transform: translateY(-45px) scale(1); opacity: 0; }
+        }
+
+        .floating-reward-badge {
+          animation: floatUpFade 2s ease-out forwards;
+        }
+
         @media print {
           body * {
             visibility: hidden !important;
@@ -159,8 +501,42 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
         }
       `}</style>
 
-      <Box sx={{ animation: 'fadeIn 0.5s ease', width: '100%', pb: 8 }}>
-        {/* Top Header */}
+      {/* Floating Animated Reward Popup */}
+      {floatingReward && (
+        <Box
+          className="floating-reward-badge"
+          sx={{
+            position: 'fixed',
+            top: '40%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 9999,
+            bgcolor: 'rgba(13, 27, 42, 0.95)',
+            border: '2px solid #48c78e',
+            boxShadow: '0 10px 40px rgba(72, 199, 142, 0.5)',
+            borderRadius: 4,
+            px: 3.5,
+            py: 1.8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            pointerEvents: 'none'
+          }}
+        >
+          <Typography fontSize={32}>🎉</Typography>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#48c78e', lineHeight: 1.1 }}>
+              +{floatingReward.xp} XP & +{floatingReward.coins} Moedas!
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#fff', fontWeight: 700 }}>
+              Acertou em cheio!
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
+      <Box sx={{ animation: 'fadeIn 0.5s ease', width: '100%', pb: 10 }}>
+        {/* Top Header & Settings Bar */}
         <Box sx={{ mb: 4, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' }, gap: 2 }}>
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5, flexWrap: 'wrap' }}>
@@ -196,7 +572,41 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          {/* Quick Toolbar: Sound, Speed, Print, Slides & PDF */}
+          <Box sx={{ display: 'flex', gap: 1.2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Tooltip title={soundMuted ? 'Ativar Efeitos Sonoros' : 'Silenciar Efeitos Sonoros'}>
+              <IconButton
+                onClick={handleToggleSound}
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.06)',
+                  color: soundMuted ? 'rgba(255,255,255,0.4)' : '#38bdf8',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 2
+                }}
+              >
+                {soundMuted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Velocidade da Voz em Inglês">
+              <Button
+                size="small"
+                onClick={handleToggleSpeechRate}
+                startIcon={<SpeedIcon />}
+                sx={{
+                  color: '#fff',
+                  bgcolor: 'rgba(255,255,255,0.06)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.78rem'
+                }}
+              >
+                {speechRate === 1.0 ? '1.0x Normal' : '0.75x Lento'}
+              </Button>
+            </Tooltip>
+
             <Button
               variant="outlined"
               startIcon={<PrintIcon />}
@@ -210,7 +620,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                 '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.08)' }
               }}
             >
-              🖨️ Imprimir Exercícios
+              🖨️ Imprimir
             </Button>
 
             <Button
@@ -222,18 +632,18 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                 color: '#fff',
                 fontWeight: 800,
                 px: 2.5,
-                py: 1.2,
+                py: 1.1,
                 borderRadius: 2.5,
                 boxShadow: '0 8px 24px rgba(114, 9, 183, 0.35)',
                 textTransform: 'none',
-                fontSize: '0.92rem',
+                fontSize: '0.9rem',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #b5179e 0%, #4895ef 100%)',
                   transform: 'translateY(-2px)'
                 }
               }}
             >
-              📽️ Slides da Aula (10 Páginas)
+              📽️ Slides (10 Págs)
             </Button>
 
             <Button
@@ -244,24 +654,24 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                 background: 'linear-gradient(135deg, #00b4d8 0%, #0077b6 100%)',
                 color: '#fff',
                 fontWeight: 800,
-                px: 3,
-                py: 1.2,
+                px: 2.5,
+                py: 1.1,
                 borderRadius: 2.5,
                 boxShadow: '0 8px 24px rgba(0, 180, 216, 0.35)',
                 textTransform: 'none',
-                fontSize: '0.92rem',
+                fontSize: '0.9rem',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #48cae4 0%, #023e8a 100%)',
                   transform: 'translateY(-2px)'
                 }
               }}
             >
-              📖 Abrir Apostila em PDF (Tela Cheia)
+              📖 Apostila PDF
             </Button>
           </Box>
         </Box>
 
-        {/* Date Navigation Timeline */}
+        {/* Date Navigation Timeline com Indicador de Conclusão */}
         <Card
           sx={{
             p: { xs: 2, sm: 2.5 },
@@ -279,8 +689,8 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                 Cronograma de Aulas & Calendário
               </Typography>
             </Box>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)' }}>
-              Clique em qualquer data para revisar o material estudado
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>
+              Selecione qualquer data para rever matérias e exercícios
             </Typography>
           </Box>
 
@@ -288,6 +698,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
             {CLASSROOM_LESSONS.map((lesson) => {
               const isSelected = lesson.id === selectedLessonId;
               const isToday = lesson.isToday;
+              const isLessonFullyDone = isToday ? isAllActivitiesCompleted : true;
 
               return (
                 <Grid size={{ xs: 12, sm: 6, md: 4 }} key={lesson.id}>
@@ -299,7 +710,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                       cursor: 'pointer',
                       transition: 'all 0.25s ease',
                       background: isSelected
-                        ? 'linear-gradient(135deg, rgba(0, 180, 216, 0.2) 0%, rgba(13, 27, 42, 0.8) 100%)'
+                        ? 'linear-gradient(135deg, rgba(0, 180, 216, 0.2) 0%, rgba(13, 27, 42, 0.85) 100%)'
                         : 'rgba(255,255,255,0.03)',
                       border: isSelected
                         ? '1.5px solid #00b4d8'
@@ -325,9 +736,18 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                           border: isToday ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(72, 199, 142, 0.3)'
                         }}
                       />
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>
-                        ⏰ {lesson.time}
-                      </Typography>
+
+                      <Chip
+                        label={isLessonFullyDone ? '100% Concluída ✓' : `${completedActivitiesCount}/${totalActivities} Feitas`}
+                        size="small"
+                        sx={{
+                          height: 19,
+                          fontSize: '0.62rem',
+                          fontWeight: 800,
+                          bgcolor: isLessonFullyDone ? 'rgba(72, 199, 142, 0.15)' : 'rgba(0, 180, 216, 0.15)',
+                          color: isLessonFullyDone ? '#48c78e' : '#38bdf8'
+                        }}
+                      />
                     </Box>
 
                     <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff', mb: 0.5, lineHeight: 1.3 }}>
@@ -335,7 +755,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                     </Typography>
 
                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', display: 'block' }}>
-                      📅 {getFormattedDate(lesson.date)}
+                      📅 {getFormattedDate(lesson.date)} · ⏰ {lesson.time}
                     </Typography>
                   </Box>
                 </Grid>
@@ -483,17 +903,172 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
           </Box>
         </Card>
 
-        {/* Activities Section - TELA TODA (Full Width) */}
+        {/* TEXTO DE APOIO INTERATIVO COM ÁUDIO E GLOSSÁRIO AO TOCAR */}
+        <Card
+          sx={{
+            p: { xs: 2.5, sm: 3.5 },
+            mb: 4,
+            width: '100%',
+            background: 'rgba(15, 23, 42, 0.5)',
+            border: '1.5px solid rgba(0, 180, 216, 0.25)',
+            borderRadius: 4.5
+          }}
+        >
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <AutoStoriesIcon sx={{ color: '#00b4d8' }} />
+              <Typography variant="h6" sx={{ fontWeight: 800, color: '#fff' }}>
+                📖 Texto de Apoio: Lucas and His Smart Pet
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<VolumeUpIcon />}
+                onClick={() => handleSpeakText("Lucas is 14 years old and lives in a friendly small city. Every day, Lucas wakes up at 7:00 AM and studies English before breakfast. Lucas has a very special pet: a friendly robot dog named Sparky. Lucas created Sparky in 2024 for his school science project. If Lucas says 'Sit', Sparky sits immediately. If Lucas throws a small ball, Sparky runs happily to catch it. If I study hard today, I will become a computer engineer in the future. And if I had a spaceship, I would take Sparky to visit the stars!")}
+                sx={{
+                  bgcolor: isSpeaking ? '#ef4444' : '#00b4d8',
+                  color: '#fff',
+                  fontWeight: 800,
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontSize: '0.8rem',
+                  '&:hover': { bgcolor: isSpeaking ? '#dc2626' : '#0096c7' }
+                }}
+              >
+                {isSpeaking ? 'Parar Áudio' : '🔊 Ouvir Texto em Inglês'}
+              </Button>
+            </Box>
+          </Box>
+
+          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.85, fontSize: '1rem', mb: 2 }}>
+            Lucas is 14 years old and lives in a{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'friendly', ...LESSON_VOCABULARY['friendly'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              friendly
+            </span>{' '}
+            small city. Every day, Lucas wakes up at 7:00 AM and studies English before breakfast. Lucas has a very special pet: a friendly{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'robot', ...LESSON_VOCABULARY['robot'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              robot
+            </span>{' '}
+            dog named Sparky. Lucas created Sparky in 2024 for his school{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'science project', ...LESSON_VOCABULARY['science project'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              science project
+            </span>
+            . If Lucas says "Sit", Sparky sits{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'immediately', ...LESSON_VOCABULARY['immediately'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              immediately
+            </span>
+            . If Lucas{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'throws', ...LESSON_VOCABULARY['throws'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              throws
+            </span>{' '}
+            a small ball, Sparky runs happily to{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'catch', ...LESSON_VOCABULARY['catch'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              catch
+            </span>{' '}
+            it. Sparky is very intelligent and learns new{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'tricks', ...LESSON_VOCABULARY['tricks'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              tricks
+            </span>{' '}
+            every week. Lucas loves technology and often says to his friends: "If I study hard today, I will become a computer{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'engineer', ...LESSON_VOCABULARY['engineer'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              engineer
+            </span>{' '}
+            in the future. And if I had a{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'spaceship', ...LESSON_VOCABULARY['spaceship'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              spaceship
+            </span>
+            , I would take Sparky to visit the{' '}
+            <span
+              onClick={() => setActiveVocabWord({ word: 'stars', ...LESSON_VOCABULARY['stars'] })}
+              style={{ color: '#38bdf8', textDecoration: 'underline dotted', cursor: 'pointer', fontWeight: 700 }}
+            >
+              stars
+            </span>
+            !"
+          </Typography>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#38bdf8' }}>
+            <TranslateIcon fontSize="small" />
+            <Typography variant="caption" sx={{ fontWeight: 700 }}>
+              Toque nas palavras sublinhadas em azul para ver a tradução e pronúncia instantânea!
+            </Typography>
+          </Box>
+        </Card>
+
+        {/* Activities Section - TELA TODA com Seleção de Modo (Quiz vs Lista) */}
         <Box sx={{ mb: 5, width: '100%' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <AutoStoriesIcon sx={{ color: '#00b4d8', fontSize: 28 }} />
+              <EmojiEventsIcon sx={{ color: '#00b4d8', fontSize: 28 }} />
               <Typography variant="h5" sx={{ fontWeight: 900, color: '#fff', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 🎯 Exercícios Práticos da Aula (Nível A2)
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            {/* Mode Switcher: Quiz vs List */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(_, nextVal) => nextVal && setViewMode(nextVal)}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(255,255,255,0.06)',
+                  borderRadius: 2.5,
+                  p: 0.3,
+                  '& .MuiToggleButton-root': {
+                    color: 'rgba(255,255,255,0.7)',
+                    border: 'none',
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 800,
+                    px: 2,
+                    py: 0.6,
+                    '&.Mui-selected': {
+                      bgcolor: '#00b4d8',
+                      color: '#fff'
+                    }
+                  }
+                }}
+              >
+                <ToggleButton value="quiz">
+                  🎯 Modo Quiz (Foco 1 por 1)
+                </ToggleButton>
+                <ToggleButton value="list">
+                  📋 Modo Lista Completa
+                </ToggleButton>
+              </ToggleButtonGroup>
+
               <Button
                 size="small"
                 variant="outlined"
@@ -509,217 +1084,87 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
                   '&:hover': { color: '#ffb74d', borderColor: '#ffb74d' }
                 }}
               >
-                Reiniciar Todas as Questões
+                Reiniciar Todas
               </Button>
-
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
-                {totalActivities} Questões
-              </Typography>
             </Box>
           </Box>
 
-          <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
-            {currentLesson.activities?.map((act, index) => {
-              const submission = submittedAnswers[act.id];
-              const isSubmitted = submission?.isSubmitted;
-              const isCorrect = submission?.isCorrect;
-              const chosenIndex = isSubmitted ? submission.chosenIndex : selectedAnswers[act.id];
+          {/* RENDER VIEW: QUIZ MODE (1 por vez estilo Duolingo) OU LIST MODE */}
+          {viewMode === 'quiz' ? (
+            <Box sx={{ width: '100%' }}>
+              {/* Stepper Header */}
+              <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: '#38bdf8', fontWeight: 800 }}>
+                  Questão {quizActiveIndex + 1} de {totalActivities}
+                </Typography>
 
-              return (
-                <Grid size={{ xs: 12 }} key={act.id} sx={{ p: '0 !important', mb: 3 }}>
-                  <Card
-                    sx={{
-                      p: { xs: 2.5, sm: 4 },
-                      width: '100%',
-                      background: isSubmitted
-                        ? isCorrect
-                          ? 'rgba(72, 199, 142, 0.08)'
-                          : 'rgba(239, 68, 68, 0.08)'
-                        : 'rgba(13, 27, 42, 0.55)',
-                      border: isSubmitted
-                        ? isCorrect
-                          ? '1.5px solid rgba(72, 199, 142, 0.45)'
-                          : '1.5px solid rgba(239, 68, 68, 0.45)'
-                        : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: 4.5,
-                      boxShadow: '0 8px 30px rgba(0, 0, 0, 0.35)',
-                      transition: 'all 0.25s ease'
-                    }}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={quizActiveIndex === 0}
+                    onClick={() => setQuizActiveIndex(prev => prev - 1)}
+                    startIcon={<ArrowBackIcon />}
+                    sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.2)', textTransform: 'none', borderRadius: 2 }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip
-                          label={`Questão ${index + 1}`}
-                          size="small"
-                          sx={{ bgcolor: 'rgba(0, 180, 216, 0.2)', color: '#38bdf8', fontWeight: 900, fontSize: '0.75rem' }}
-                        />
-                        <Chip
-                          label={act.category}
-                          size="small"
-                          sx={{ bgcolor: 'rgba(255, 255, 255, 0.08)', color: '#e2e8f0', fontWeight: 700, fontSize: '0.72rem' }}
-                        />
-                      </Box>
+                    Anterior
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={quizActiveIndex === totalActivities - 1}
+                    onClick={() => setQuizActiveIndex(prev => prev + 1)}
+                    endIcon={<ArrowForwardIcon />}
+                    sx={{ color: '#fff', borderColor: 'rgba(255,255,255,0.2)', textTransform: 'none', borderRadius: 2 }}
+                  >
+                    Próxima
+                  </Button>
+                </Box>
+              </Box>
 
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Chip
-                          icon={<EmojiEventsIcon sx={{ fontSize: 16 }} />}
-                          label={`+${act.xp} XP`}
-                          size="small"
-                          sx={{ bgcolor: 'rgba(179, 136, 255, 0.18)', color: '#b388ff', fontWeight: 800 }}
-                        />
-                        <Chip
-                          label={`+${act.coins} 🪙`}
-                          size="small"
-                          sx={{ bgcolor: 'rgba(255, 183, 77, 0.18)', color: '#ffb74d', fontWeight: 800 }}
-                        />
-                        {isSubmitted && (
-                          <Chip
-                            icon={isCorrect ? <CheckCircleOutlineIcon sx={{ fontSize: 16 }} /> : <CancelOutlinedIcon sx={{ fontSize: 16 }} />}
-                            label={isCorrect ? 'Você Acertou!' : 'Incorreto'}
-                            size="small"
-                            sx={{
-                              bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.25)' : 'rgba(239, 68, 68, 0.25)',
-                              color: isCorrect ? '#48c78e' : '#ef4444',
-                              fontWeight: 900
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
+              {/* Render Active Question Card */}
+              {activities[quizActiveIndex] && renderQuestionCard(activities[quizActiveIndex], quizActiveIndex, true)}
 
-                    <Typography variant="h6" sx={{ fontWeight: 800, color: '#fff', mb: 1.2, fontSize: '1.1rem' }}>
-                      {act.title}
-                    </Typography>
+              {/* Quick Dots Pagination */}
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center', gap: 0.8, flexWrap: 'wrap' }}>
+                {activities.map((act, idx) => {
+                  const isDone = submittedAnswers[act.id]?.isSubmitted;
+                  const isRight = submittedAnswers[act.id]?.isCorrect;
+                  const isCurrent = quizActiveIndex === idx;
 
-                    <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', mb: 3, whiteSpace: 'pre-line', lineHeight: 1.7, fontSize: '1rem' }}>
-                      {act.question}
-                    </Typography>
+                  let dotColor = 'rgba(255,255,255,0.2)';
+                  if (isDone) {
+                    dotColor = isRight ? '#48c78e' : '#ef4444';
+                  }
 
-                    {/* Radio Options */}
-                    <FormControl component="fieldset" sx={{ width: '100%', mb: 2 }}>
-                      <RadioGroup
-                        value={chosenIndex !== undefined && chosenIndex !== null ? Number(chosenIndex) : ''}
-                        onChange={(e) => handleSelectOption(act.id, Number(e.target.value))}
-                      >
-                        {act.options.map((opt, optIdx) => {
-                          let optBg = 'rgba(255, 255, 255, 0.02)';
-                          let optBorder = '1px solid rgba(255, 255, 255, 0.08)';
-
-                          if (isSubmitted) {
-                            if (optIdx === act.correctIndex) {
-                              optBg = 'rgba(72, 199, 142, 0.22)';
-                              optBorder = '2px solid #48c78e';
-                            } else if (optIdx === chosenIndex && !isCorrect) {
-                              optBg = 'rgba(239, 68, 68, 0.22)';
-                              optBorder = '2px solid #ef4444';
-                            }
-                          } else if (chosenIndex === optIdx) {
-                            optBg = 'rgba(0, 180, 216, 0.15)';
-                            optBorder = '2px solid #00b4d8';
-                          }
-
-                          return (
-                            <Box
-                              key={optIdx}
-                              onClick={() => !isSubmitted && handleSelectOption(act.id, optIdx)}
-                              sx={{
-                                p: 1.8,
-                                mb: 1.5,
-                                borderRadius: 3.5,
-                                bgcolor: optBg,
-                                border: optBorder,
-                                cursor: isSubmitted ? 'default' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                transition: 'all 0.2s ease',
-                                '&:hover': !isSubmitted ? { bgcolor: 'rgba(0, 180, 216, 0.1)', borderColor: 'rgba(0, 180, 216, 0.4)' } : {}
-                              }}
-                            >
-                              <Radio
-                                value={optIdx}
-                                checked={chosenIndex === optIdx}
-                                disabled={isSubmitted}
-                                sx={{
-                                  color: 'rgba(255, 255, 255, 0.3)',
-                                  '&.Mui-checked': {
-                                    color: isSubmitted ? (isCorrect ? '#48c78e' : '#ef4444') : '#00b4d8'
-                                  }
-                                }}
-                              />
-                              <Typography variant="body1" sx={{ color: '#fff', fontWeight: 600, ml: 1.2, fontSize: '0.96rem' }}>
-                                {opt}
-                              </Typography>
-                            </Box>
-                          );
-                        })}
-                      </RadioGroup>
-                    </FormControl>
-
-                    {/* Actions: Confirmar Resposta OU Tentar Novamente com Explicação */}
-                    {!isSubmitted ? (
-                      <Button
-                        variant="contained"
-                        disabled={chosenIndex === undefined || chosenIndex === null}
-                        onClick={() => handleSubmitAnswer(act)}
-                        sx={{
-                          bgcolor: '#00b4d8',
-                          color: '#fff',
-                          fontWeight: 800,
-                          borderRadius: 2.5,
-                          px: 3.5,
-                          py: 1.2,
-                          textTransform: 'none',
-                          fontSize: '0.95rem',
-                          boxShadow: '0 4px 15px rgba(0, 180, 216, 0.35)',
-                          '&:hover': { bgcolor: '#0096c7' }
-                        }}
-                      >
-                        Confirmar Resposta
-                      </Button>
-                    ) : (
-                      <Box sx={{ mt: 1 }}>
-                        <Box
-                          sx={{
-                            p: 2.5,
-                            borderRadius: 3,
-                            bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                            border: isCorrect ? '1px solid rgba(72, 199, 142, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
-                            mb: 2
-                          }}
-                        >
-                          <Typography variant="subtitle2" sx={{ fontWeight: 900, color: isCorrect ? '#48c78e' : '#ef4444', mb: 0.5, fontSize: '0.98rem' }}>
-                            {isCorrect ? '🎉 Resposta Correta!' : '💡 Explicação do Prof. Vinicius Lourenço:'}
-                          </Typography>
-                          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.65, fontSize: '0.95rem' }}>
-                            {act.explanation}
-                          </Typography>
-                        </Box>
-
-                        {/* Botão de Tentar Novamente / Refazer Questão */}
-                        <Button
-                          variant="outlined"
-                          startIcon={<ReplayIcon />}
-                          onClick={() => handleRetryQuestion(act.id)}
-                          sx={{
-                            color: '#fff',
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                            borderRadius: 2.5,
-                            fontWeight: 800,
-                            textTransform: 'none',
-                            px: 2.5,
-                            py: 0.8,
-                            '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.12)' }
-                          }}
-                        >
-                          Tentar Novamente / Refazer Questão
-                        </Button>
-                      </Box>
-                    )}
-                  </Card>
+                  return (
+                    <Box
+                      key={idx}
+                      onClick={() => setQuizActiveIndex(idx)}
+                      sx={{
+                        width: isCurrent ? 24 : 12,
+                        height: 12,
+                        borderRadius: 6,
+                        bgcolor: isCurrent ? '#00b4d8' : dotColor,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        border: isCurrent ? '2px solid #fff' : 'none'
+                      }}
+                    />
+                  );
+                })}
+              </Box>
+            </Box>
+          ) : (
+            // LIST VIEW (Todas as 22 questões empilhadas)
+            <Grid container spacing={3} sx={{ width: '100%', m: 0 }}>
+              {activities.map((act, index) => (
+                <Grid size={{ xs: 12 }} key={act.id} sx={{ p: '0 !important', mb: 3 }}>
+                  {renderQuestionCard(act, index, false)}
                 </Grid>
-              );
-            })}
-          </Grid>
+              ))}
+            </Grid>
+          )}
         </Box>
 
         {/* Attendance Log Box (Registros do Professor) */}
@@ -778,6 +1223,81 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
           )}
         </Card>
 
+        {/* MODAL DO DICIONÁRIO / VOCABULÁRIO INSTANTÂNEO */}
+        <Dialog
+          open={Boolean(activeVocabWord)}
+          onClose={() => setActiveVocabWord(null)}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{
+            sx: {
+              bgcolor: '#0d1b2a',
+              color: '#fff',
+              borderRadius: 4,
+              border: '1.5px solid #00b4d8',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)'
+            }
+          }}
+        >
+          {activeVocabWord && (
+            <>
+              <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <TranslateIcon sx={{ color: '#00b4d8' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#fff' }}>
+                    {activeVocabWord.word}
+                  </Typography>
+                </Box>
+                <IconButton size="small" onClick={() => setActiveVocabWord(null)} sx={{ color: 'rgba(255,255,255,0.6)' }}>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </DialogTitle>
+
+              <DialogContent sx={{ pt: 1 }}>
+                <Box sx={{ p: 2, bgcolor: 'rgba(0, 180, 216, 0.1)', borderRadius: 3, border: '1px solid rgba(0, 180, 216, 0.25)', mb: 2 }}>
+                  <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 800, textTransform: 'uppercase' }}>
+                    Tradução para Português:
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 800, color: '#48c78e', mt: 0.3 }}>
+                    🇧🇷 {activeVocabWord.pt}
+                  </Typography>
+                  {activeVocabWord.phonetic && (
+                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace', display: 'block', mt: 0.5 }}>
+                      Pronúncia: {activeVocabWord.phonetic}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>
+                    Exemplo de Uso:
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#fff', fontWeight: 600, mt: 0.5 }}>
+                    🇬🇧 "{activeVocabWord.example}"
+                  </Typography>
+                </Box>
+              </DialogContent>
+
+              <DialogActions sx={{ p: 2, pt: 0 }}>
+                <Button
+                  startIcon={<VolumeUpIcon />}
+                  onClick={() => handleSpeakText(activeVocabWord.word)}
+                  sx={{ color: '#38bdf8', fontWeight: 800, textTransform: 'none' }}
+                >
+                  Ouvir Pronúncia
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => setActiveVocabWord(null)}
+                  sx={{ bgcolor: '#00b4d8', color: '#fff', fontWeight: 800, borderRadius: 2 }}
+                >
+                  Entendi
+                </Button>
+              </DialogActions>
+            </>
+          )}
+        </Dialog>
+
         {/* PDF In-App Reader Modal (Quase Tela Cheia) */}
         <PdfViewerModal
           open={pdfModalOpen}
@@ -826,7 +1346,7 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
             Atividades de Fixação (Assinale a alternativa correta):
           </h4>
 
-          {currentLesson.activities?.map((act, index) => (
+          {activities.map((act, index) => (
             <div key={act.id} style={{ marginBottom: '16px', pageBreakInside: 'avoid' }}>
               <p style={{ margin: '0 0 6px 0', fontSize: '14px', fontWeight: 'bold' }}>
                 {index + 1}. {act.title}

@@ -25,6 +25,25 @@ export const getFormattedDate = (dateStr) => {
   }
 };
 
+export const LESSON_VOCABULARY = {
+  'friendly': { pt: 'amigável / simpático', example: 'Sparky is a friendly robot dog.', phonetic: '/ˈfrendli/' },
+  'smart': { pt: 'inteligente / esperto', example: 'Lucas has a smart pet.', phonetic: '/smɑːrt/' },
+  'robot': { pt: 'robô / autômato', example: 'The robot learns new tricks.', phonetic: '/ˈroʊbɑːt/' },
+  'immediately': { pt: 'imediatamente / na mesma hora', example: 'Sparky sits immediately.', phonetic: '/ɪˈmiːdiətli/' },
+  'science project': { pt: 'projeto de ciências escolar', example: 'Created for his school science project.', phonetic: '/ˈsaɪəns ˈprɑːdʒɛkt/' },
+  'throws': { pt: 'arremessa / joga', example: 'If Lucas throws a small ball.', phonetic: '/θroʊz/' },
+  'catch': { pt: 'pegar / apanhar', example: 'Sparky runs happily to catch it.', phonetic: '/kætʃ/' },
+  'tricks': { pt: 'truques / habilidades', example: 'Learns new tricks every week.', phonetic: '/trɪks/' },
+  'spaceship': { pt: 'nave espacial', example: 'If I had a spaceship, I would visit the stars.', phonetic: '/ˈspeɪsʃɪp/' },
+  'stars': { pt: 'estrelas', example: 'Look at the beautiful stars.', phonetic: '/stɑːrz/' },
+  'heat': { pt: 'aquecer / esquentar', example: 'If you heat ice, it melts.', phonetic: '/hiːt/' },
+  'melts': { pt: 'derrete', example: 'The ice melts quickly.', phonetic: '/mɛlts/' },
+  'freeze': { pt: 'congelar', example: 'If you freeze water, it turns into ice.', phonetic: '/friːz/' },
+  'rains': { pt: 'chove', example: 'If it rains tomorrow, we will stay at home.', phonetic: '/reɪnz/' },
+  'lottery': { pt: 'loteria', example: 'If I won the lottery, I would buy a house.', phonetic: '/ˈlɑːtəri/' },
+  'engineer': { pt: 'engenheiro(a)', example: 'I will become a computer engineer.', phonetic: '/ˌɛndʒɪˈnɪr/' }
+};
+
 export const CLASSROOM_LESSONS = [
   {
     id: 'lesson_today_1630',
