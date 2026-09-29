@@ -50,6 +50,7 @@ import { StudentAvatar } from '../components/Student/StudentAvatar';
 import AchievementsModal from '../components/Student/AchievementsModal';
 import StreakRulesModal from '../components/Student/StreakRulesModal';
 import MobileBottomNav from '../components/Student/MobileBottomNav';
+import ClassroomHub from '../components/Student/ClassroomHub';
 import ErrorBoundary from '../components/ErrorBoundary';
 import {
   TYPE_LABELS,
@@ -2384,87 +2385,16 @@ export default function StudentPage() {
         )}
 
           {dashboardTab === 1 && (
-            // TAB 1: ATTENDANCE HISTORY PANEL (FULL WIDTH)
-            <Box sx={{ animation: 'fadeIn 0.5s ease', width: '100%' }}>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff' }}>
-                      🕒 Histórico de Aulas
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)' }}>
-                      Acompanhe suas aulas presenciais e frequências confirmadas.
-                    </Typography>
-                  </Box>
-
-                  <Card sx={{
-                    p: 4,
-                    background: 'rgba(13, 27, 42, 0.35)',
-                    border: '1px solid rgba(255,255,255,0.07)',
-                    borderRadius: 5
-                  }}>
-                    {(!attendanceRecords || attendanceRecords.length === 0) ? (
-                      <Box sx={{ textAlign: 'center', py: 5 }}>
-                        <Typography fontSize={52} sx={{ mb: 1.5 }}>📅</Typography>
-                        <Typography variant="subtitle1" sx={{ color: '#fff', fontWeight: 800 }}>Nenhuma aula registrada ainda</Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.4)', mt: 0.5 }}>Seu histórico de presenças aparecerá aqui assim que o professor registrar.</Typography>
-                      </Box>
-                    ) : (
-                      <Grid container spacing={2.5}>
-                        {attendanceRecords.map((att) => (
-                          <Grid size={{ xs: 12, sm: 6 }} key={att.id}>
-                            <Box sx={{
-                              p: 2.5,
-                              borderRadius: 4,
-                              background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.06), rgba(179, 136, 255, 0.06))',
-                              border: '1px solid rgba(255,255,255,0.06)',
-                              display: 'flex',
-                              gap: 2,
-                              alignItems: 'center',
-                              transition: 'all 0.25s ease',
-                              '&:hover': {
-                                border: '1px solid rgba(0, 180, 216, 0.25)',
-                                bgcolor: 'rgba(0,180,216,0.04)',
-                                transform: 'translateY(-2px)'
-                              }
-                            }}>
-                              <Box sx={{
-                                bgcolor: 'rgba(179, 136, 255, 0.12)',
-                                p: 1.5,
-                                borderRadius: 3,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}>
-                                <EventAvailableIcon sx={{ color: '#b388ff', fontSize: 24 }} />
-                              </Box>
-                              <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff' }}>
-                                  {new Date(att.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
-                                </Typography>
-                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontWeight: 700, display: 'block', mt: 0.3 }}>
-                                  ⏰ Horário: {att.time}
-                                </Typography>
-                                <Chip
-                                  label="Presença Confirmada"
-                                  size="small"
-                                  sx={{
-                                    height: 18,
-                                    fontSize: '0.62rem',
-                                    fontWeight: 900,
-                                    bgcolor: 'rgba(72, 199, 142, 0.12)',
-                                    color: '#48c78e',
-                                    border: '1px solid rgba(72, 199, 142, 0.2)',
-                                    mt: 1
-                                  }}
-                                />
-                              </Box>
-                            </Box>
-                          </Grid>
-                        ))}
-                      </Grid>
-                    )}
-                  </Card>
-                </Box>
-              )}
+            // TAB 1: CLASSROOM HUB (FULL WIDTH)
+            <ClassroomHub
+              user={user}
+              attendanceRecords={attendanceRecords}
+              onRewardEarned={({ xp, coins }) => {
+                if (xp) setBonusXP(prev => prev + xp);
+                if (coins) setBackendCoins(prev => prev + coins);
+              }}
+            />
+          )}
 
               {dashboardTab === 2 && (
                 // TAB 2: STUDENT LEADERBOARD

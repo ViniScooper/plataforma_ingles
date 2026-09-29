@@ -9,21 +9,23 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load from sessionStorage on mount
-    const storedToken = sessionStorage.getItem('token');
-    const storedUser = sessionStorage.getItem('user');
+    // Load from localStorage (persistent) or sessionStorage (transient) on mount
+    const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
 
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error parsing stored user data:", e);
+      }
     }
 
     setLoading(false);
   }, []);
 
   // Poll server to check if this token is still the active session.
-  // If the user logs in from another device/browser, it updates the token in the DB,
-  // causing this check to fail and trigger the log out automatically.
   useEffect(() => {
     if (!token) return;
 
@@ -31,21 +33,29 @@ export function AuthProvider({ children }) {
       try {
         await apiClient.get('/auth/session-status');
       } catch (err) {
-        // Errors like 401 SESSION_EXPIRED are handled by the axios response interceptor in apiClient.js
         console.warn('Session verification check status:', err.message);
       }
     };
 
-    // Run immediately on auth change
     checkSessionStatus();
-
-    const intervalId = setInterval(checkSessionStatus, 10000);
+    const intervalId = setInterval(checkSessionStatus, 15000);
     return () => clearInterval(intervalId);
   }, [token]);
 
-  const login = (userData, authToken) => {
+  const login = (userData, authToken, rememberMe = true) => {
     setUser(userData);
     setToken(authToken);
+
+    if (rememberMe) {
+      localStorage.setItem('token', authToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('remember_me', 'true');
+    } else {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('remember_me');
+    }
+
     sessionStorage.setItem('token', authToken);
     sessionStorage.setItem('user', JSON.stringify(userData));
   };
@@ -55,6 +65,9 @@ export function AuthProvider({ children }) {
     setToken(null);
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('remember_me');
   };
 
   return (

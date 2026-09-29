@@ -8,7 +8,13 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ 
+    email: localStorage.getItem('saved_login_email') || '', 
+    password: '' 
+  });
+  const [rememberMe, setRememberMe] = useState(
+    localStorage.getItem('remember_me') !== 'false'
+  );
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -71,7 +77,13 @@ export default function LoginPage() {
         password: formData.password,
       });
 
-      login(response.data.user, response.data.token);
+      if (rememberMe) {
+        localStorage.setItem('saved_login_email', formData.email);
+      } else {
+        localStorage.removeItem('saved_login_email');
+      }
+
+      login(response.data.user, response.data.token, rememberMe);
       navigate(response.data.user.role === 'admin' ? '/admin' : '/student');
     } catch (err) {
       setError(err.response?.data?.message || 'E-mail ou senha inválidos.');
@@ -284,6 +296,39 @@ export default function LoginPage() {
           40%, 80% { transform: translateX(5px); }
         }
 
+        .remember-me-wrapper {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          gap: 10px;
+          margin-top: 14px;
+          margin-bottom: 22px;
+          user-select: none;
+          cursor: pointer;
+        }
+
+        .remember-me-checkbox {
+          width: 18px;
+          height: 18px;
+          border-radius: 5px;
+          border: 1.5px solid rgba(0, 180, 216, 0.4);
+          background: rgba(13, 27, 42, 0.6);
+          cursor: pointer;
+          accent-color: #00b4d8;
+        }
+
+        .remember-me-label {
+          color: rgba(255, 255, 255, 0.75);
+          font-size: 0.85rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: color 0.2s ease;
+        }
+
+        .remember-me-label:hover {
+          color: #fff;
+        }
+
         .submit-btn {
           width: 100%;
           margin-top: 24px;
@@ -473,6 +518,20 @@ export default function LoginPage() {
                   autoComplete="current-password"
                 />
               </div>
+            </div>
+
+            <div className="remember-me-wrapper" onClick={() => setRememberMe(!rememberMe)}>
+              <input
+                type="checkbox"
+                id="rememberMe"
+                className="remember-me-checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <label htmlFor="rememberMe" className="remember-me-label" onClick={(e) => e.stopPropagation()}>
+                Manter conectado neste dispositivo
+              </label>
             </div>
 
             <button type="submit" className="submit-btn" disabled={loading}>
