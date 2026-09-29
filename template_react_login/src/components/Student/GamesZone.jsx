@@ -30,7 +30,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import StarIcon from '@mui/icons-material/Star';
 import apiClient from '../../utils/apiClient';
-import { getAvatarGrid } from './StudentAvatar';
+import { getAvatarGrid, buildColorMap } from './StudentAvatar';
 
 // ─── Sprite Data 16x16 Matrices ──────────────────────────────────────────────────
 
@@ -242,36 +242,20 @@ const drawSprite = (ctx, sprite, x, y, scale = 4, isFlipped = false) => {
 const drawStudentSprite = (ctx, avatar, isAttacking, x, y, scale = 4, isFlipped = false) => {
   if (!avatar || !avatar.hairstyle) return false;
   const gridObj = getAvatarGrid(avatar);
-  const darkenColor = (color, percent) => {
-    if (!color || typeof color !== 'string') return '#000000';
-    let hex = color.replace(/^#/, '');
-    if (hex.length === 3) hex = hex.split('').map(c => c+c).join('');
-    if (hex.length !== 6) return color;
-    const num = parseInt(hex, 16);
-    const r = Math.floor((num >> 16) * (1 - percent));
-    const g = Math.floor(((num >> 8) & 0x00FF) * (1 - percent));
-    const b = Math.floor((num & 0x0000FF) * (1 - percent));
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-  };
+  const rows = gridObj.length;
+  const cols = gridObj[0]?.length || 24;
+  const colorMap = buildColorMap(avatar);
 
-  const colorMap = {
-    'H': avatar.hairColor, 'S': avatar.skinTone, 'E': avatar.eyeColor || '#111111', 
-    'W': '#ffffff', 'M': '#8b4513', 'R': avatar.clothingColor, 'D': avatar.pantsColor,
-    '1': '#111111', '7': '#8b4513', 'C': avatar.shoesColor || '#1e293b',
-    'h': darkenColor(avatar.hairColor, 0.25),
-    's': darkenColor(avatar.skinTone, 0.15),
-    'r': darkenColor(avatar.clothingColor, 0.25),
-    'd': darkenColor(avatar.pantsColor, 0.25),
-    'c': darkenColor(avatar.shoesColor || '#1e293b', 0.25)
-  };
+  // Normalize scale so minigame hitbox and physical display size match original (64px)
+  const spriteScale = (scale * 16) / cols;
 
-  for (let r = 0; r < 16; r++) {
-    for (let c = 0; c < 16; c++) {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
       const char = gridObj[r]?.[c] || '0';
-      if (char !== '0') {
+      if (char !== '0' && colorMap[char]) {
         ctx.fillStyle = colorMap[char];
-        const drawX = isFlipped ? x + (15 - c) * scale : x + c * scale;
-        ctx.fillRect(drawX, y + r * scale, scale, scale);
+        const drawX = isFlipped ? x + (cols - 1 - c) * spriteScale : x + c * spriteScale;
+        ctx.fillRect(Math.floor(drawX), Math.floor(y + r * spriteScale), Math.ceil(spriteScale), Math.ceil(spriteScale));
       }
     }
   }
