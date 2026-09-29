@@ -1,5 +1,5 @@
 // src/data/classroomsData.js
-// Dados de Aulas, Apostilas em PDF e Atividades - Adaptado para Nível Iniciante (A2)
+// Dados de Aulas, Apostilas em PDF, Apresentação de Slides (10 páginas) e Atividades Expandidas (Nível A2)
 // Professor: Prof. Vinicius Lourenço
 
 export const getTodayDateString = () => {
@@ -38,8 +38,163 @@ export const CLASSROOM_LESSONS = [
     room: 'Sala Virtual / Presencial - Turma A2',
     level: 'Iniciante / Elementar (Nível A2)',
     summary: 'Começamos revisando o Present Simple para dar total segurança aos alunos iniciantes, e em seguida aprendemos como montar as orações condicionais (Zero, First e Second) de forma simples e direta, com leitura guiada passo a passo.',
-    
-    // Apostila In-App adaptada para Nível A2
+
+    // APRESENTAÇÃO DE SLIDES COM 10 PÁGINAS DETALHADAS
+    slides: [
+      {
+        pageNumber: 1,
+        title: 'Bem-vindo à Aula de Inglês A2!',
+        subtitle: 'Aula das 16:30 · Quest English Academy',
+        tag: 'Slide 1 de 10 · Introdução',
+        color: '#00b4d8',
+        bullets: [
+          '🎯 **Objetivo de Hoje**: Dominar o Present Simple, as 3 Conditionals básicas e aprender a ler sem medo de dicionário.',
+          '👨‍🏫 **Professor**: Prof. Vinicius Lourenço.',
+          '🎒 **Nível**: A2 (Iniciante / Elementar) - com linguagem simples, sem termos difíceis!',
+          '💡 **Dica Inicial**: Você não precisa traduzir tudo ao pé da letra. O segredo é entender o contexto!'
+        ],
+        highlight: 'Prepare seu caderno e vamos aprender passo a passo de forma leve e divertida!'
+      },
+      {
+        pageNumber: 2,
+        title: 'Cronograma 1: O que é o Present Simple?',
+        subtitle: 'A base sólida de todas as frases em inglês',
+        tag: 'Slide 2 de 10 · Present Simple',
+        color: '#0284c7',
+        bullets: [
+          '⏰ **Quando usamos?**: Para falar de rotinas diárias, hábitos e fatos que acontecem com frequência.',
+          '👤 **Sujeitos Normais (I, You, We, They)**: O verbo fica na forma normal, sem mudar nada!',
+          '👉 *Exemplo 1*: "I drink water every day." (Eu bebo água todo dia).',
+          '👉 *Exemplo 2*: "We live in Brazil." (Nós moramos no Brasil).'
+        ],
+        formula: 'Sujeito (I / You / We / They) + Verbo Normal',
+        highlight: 'Muito fácil! Com I, You, We e They você não precisa mexer no verbo!'
+      },
+      {
+        pageNumber: 3,
+        title: 'Present Simple: A Regra do He / She / It',
+        subtitle: 'A única pegadinha que você precisa dominar',
+        tag: 'Slide 3 de 10 · Terceira Pessoa',
+        color: '#0369a1',
+        bullets: [
+          '⭐ **Atenção**: Quando o sujeito for **He** (ele), **She** (ela) ou **It** (coisa/animal), o verbo ganha um **-S** ou **-ES** no final!',
+          '👉 *Live* vira **lives**: "Lucas lives in a small city."',
+          '👉 *Study* vira **studies**: "She studies English before breakfast."',
+          '👉 *Verbo to be*: Usa-se **is** para he/she/it e **are** para you/we/they.'
+        ],
+        formula: 'He / She / It + Verbo com "-S" ou "-ES"',
+        highlight: 'Guardou a regra do -S? Excelente! Ela vai ser fundamental para montar as condicionais!'
+      },
+      {
+        pageNumber: 4,
+        title: 'O que são as Conditionals? O Poder do "IF"',
+        subtitle: 'Conectando causa e consequência em inglês',
+        tag: 'Slide 4 de 10 · Conceito de IF',
+        color: '#10b981',
+        bullets: [
+          '🔤 **A palavra mágica**: **IF** significa **SE** em português.',
+          '🔗 **Como funciona?**: Mostra que uma ação depende diretamente de outra.',
+          '👉 *Exemplo*: "SE você estudar, você passa no teste."',
+          '⚖️ A primeira parte é a **Condição** (If...). A segunda parte é o **Resultado**!'
+        ],
+        formula: 'IF (Se) + [Condição], [Resultado]',
+        highlight: 'Se você entender o "IF", você domina qualquer condicional em inglês!'
+      },
+      {
+        pageNumber: 5,
+        title: 'Zero Conditional: Fatos Científicos e Certezas',
+        subtitle: 'Coisas que SEMPRE acontecem 100% das vezes',
+        tag: 'Slide 5 de 10 · Zero Conditional',
+        color: '#059669',
+        bullets: [
+          '🔬 **Uso**: Leis da física, verdades da natureza e fatos garantidos.',
+          '📐 **Estrutura**: Os DOIS lados da frase ficam no **Present Simple**!',
+          '👉 *Exemplo 1*: "If you heat ice, it melts." (Se você esquenta o gelo, ele derrete).',
+          '👉 *Exemplo 2*: "If babies are hungry, they cry." (Se bebês estão com fome, eles choram).',
+          '👉 *No nosso texto*: "If Lucas says \'Sit\', Sparky sits immediately."'
+        ],
+        formula: 'If + Present Simple, Present Simple',
+        highlight: 'Dica do Prof. Vinicius: Como é fato garantido, não usamos "will" nem "would" aqui!'
+      },
+      {
+        pageNumber: 6,
+        title: 'First Conditional: Planos Reais e Futuro Provável',
+        subtitle: 'Se eu fizer algo hoje, o que acontecerá amanhã?',
+        tag: 'Slide 6 de 10 · First Conditional',
+        color: '#f59e0b',
+        bullets: [
+          '🚀 **Uso**: Situações reais ou altamente prováveis de acontecerem no futuro.',
+          '📐 **Estrutura**: A parte do If fica no **Presente**, e o resultado leva **WILL** (futuro)!',
+          '👉 *Exemplo 1*: "If it rains tomorrow, we will stay at home." (Se chover amanhã, ficaremos em casa).',
+          '👉 *Exemplo 2*: "If you practice, you will speak English." (Se você praticar, falará inglês).',
+          '👉 *No nosso texto*: "If I study hard today, I will become an engineer."'
+        ],
+        formula: 'If + Present Simple, will + verbo normal',
+        highlight: 'Lembre-se: O "will" NUNCA vai grudado com a palavra If! Ele vai no resultado!'
+      },
+      {
+        pageNumber: 7,
+        title: 'Second Conditional: Imaginação, Sonhos e Hipóteses',
+        subtitle: 'Coisas que não são reais agora, mas que estamos sonhando',
+        tag: 'Slide 7 de 10 · Second Conditional',
+        color: '#8b5cf6',
+        bullets: [
+          '💭 **Uso**: Sonhos, imaginação e situações irreais no presente ou futuro.',
+          '📐 **Estrutura**: A parte do If fica no **Past Simple** (passado), e o resultado leva **WOULD**!',
+          '👉 *Exemplo 1*: "If I won the lottery, I would travel the world." (Se eu ganhasse a loteria, viajaria pelo mundo).',
+          '👉 *Exemplo 2*: "If I had a car, I would drive to the beach." (Se eu tivesse um carro, dirigiria até a praia).',
+          '👉 *No texto*: "If I had a spaceship, I would take Sparky to visit the stars!"'
+        ],
+        formula: 'If + Past Simple, would + verbo normal',
+        highlight: 'O "would" serve para colocar o verbo no futuro do pretérito: would travel = viajaria!'
+      },
+      {
+        pageNumber: 8,
+        title: 'O Segredo de Ouro: "If I were you..."',
+        subtitle: 'Como dar conselhos elegantes e corretos em inglês',
+        tag: 'Slide 8 de 10 · Dica do Prof. Vinicius',
+        color: '#7c3aed',
+        bullets: [
+          '👑 **Dica Especial do Prof. Vinicius Lourenço**: Na linguagem formal da Second Conditional, usamos a palavra **WERE** para todas as pessoas!',
+          '👉 Em vez de falar "If I was", a regra culta pede: **"If I were you"** (Se eu fosse você).',
+          '👉 *Exemplo de conselho*: "If I were you, I would study English every day."',
+          '👉 *Outro exemplo*: "If he were here, he would help us."'
+        ],
+        formula: 'If I were you, I would + verbo...',
+        highlight: 'Guardou essa dica? Nas provas e entrevistas de emprego isso demonstra um inglês muito bem preparado!'
+      },
+      {
+        pageNumber: 9,
+        title: 'Leitura A2: Skimming, Scanning e Inferência',
+        subtitle: 'As 3 armas secretas para entender qualquer texto em inglês',
+        tag: 'Slide 9 de 10 · Compreensão Leitora',
+        color: '#06b6d4',
+        bullets: [
+          '🦅 **Skimming (Visão Panorâmica)**: Olhar rápido para o título e as primeiras frases para pegar a ideia principal. Não pare em palavras difíceis!',
+          '🔍 **Scanning (Radar de Detetive)**: Correr os olhos pelo texto procurando um número, uma data ou um nome próprio (ex: achar "2024" ou "Sparky").',
+          '🧠 **Inferência Contextual**: Deduzir o significado de uma palavra desconhecida olhando as palavras vizinhas e o sentido geral da frase.'
+        ],
+        formula: 'Skimming (Geral) + Scanning (Detalhes) = Leitura 100% Eficaz',
+        highlight: 'Nunca tente traduzir palavra por palavra! Use essas 3 técnicas e você lerá com velocidade!'
+      },
+      {
+        pageNumber: 10,
+        title: 'Quadro Resumo & Hora de Praticar!',
+        subtitle: 'Tudo o que você precisa em uma única tabela de bolso',
+        tag: 'Slide 10 de 10 · Resumo & Atividades',
+        color: '#ec4899',
+        bullets: [
+          '1️⃣ **Present Simple**: Rotinas diárias (`He studies`, `We live`).',
+          '2️⃣ **Zero Conditional**: `If + Presente, Presente` (Gelo derrete, fatos certos).',
+          '3️⃣ **First Conditional**: `If + Presente, will + verbo` (Se eu estudar, passarei).',
+          '4️⃣ **Second Conditional**: `If + Passado, would + verbo` (Se eu tivesse dinheiro, viajaria).',
+          '5️⃣ **Conselho Elegante**: `If I were you, I would...`'
+        ],
+        highlight: '🎉 Parabéns! Você concluiu a apresentação. Agora faça os exercícios práticos abaixo para fixar tudo!'
+      }
+    ],
+
+    // Apostila In-App
     pdfDocument: {
       title: 'Apostila de Inglês: Present Simple & Conditionals (Nível A2)',
       subtitle: 'Material Oficial da Aula das 16:30 · Quest English',
@@ -157,7 +312,7 @@ Lucas loves technology and often says to his friends:
       ]
     },
 
-    // Atividades práticas simplificadas para Nível A2 com gabarito revisado
+    // 16 ATIVIDADES EXPANDIDAS E PRÁTICAS (NÍVEL A2) COM GABARITO PRECISO
     activities: [
       {
         id: 'act_1_present_simple',
@@ -192,9 +347,25 @@ Lucas loves technology and often says to his friends:
         coins: 5
       },
       {
-        id: 'act_3_skimming',
+        id: 'act_3_present_routine',
+        category: 'Revisão: Present Simple',
+        title: 'Atividade 3: Sujeitos no Plural (We / They)',
+        question: 'Com os sujeitos I, You, We e They, o verbo NÃO muda.\nComplete:\n"We _______ (live) in a beautiful city."',
+        options: [
+          'live',
+          'lives',
+          'living',
+          'lived'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Com "We", o verbo permanece na sua forma normal: "We live".',
+        xp: 25,
+        coins: 5
+      },
+      {
+        id: 'act_4_skimming',
         category: 'Leitura A2 (Skimming)',
-        title: 'Atividade 3: Ideia Principal do Texto',
+        title: 'Atividade 4: Ideia Principal do Texto',
         question: 'Fazendo um Skimming (leitura rápida) no texto "Lucas and His Smart Pet", qual é o assunto principal?',
         options: [
           'Um garoto de 14 anos chamado Lucas e seu cachorro-robô inteligente Sparky.',
@@ -208,9 +379,9 @@ Lucas loves technology and often says to his friends:
         coins: 5
       },
       {
-        id: 'act_4_scanning',
+        id: 'act_5_scanning_year',
         category: 'Leitura A2 (Scanning)',
-        title: 'Atividade 4: Encontrando Números no Texto',
+        title: 'Atividade 5: Encontrando Números no Texto',
         question: 'Usando a técnica de Scanning (buscar números com os olhos), em que ano Lucas criou o Sparky no projeto da escola?',
         options: [
           'No ano de 2024',
@@ -224,10 +395,42 @@ Lucas loves technology and often says to his friends:
         coins: 5
       },
       {
-        id: 'act_5_zero_conditional',
+        id: 'act_6_scanning_age',
+        category: 'Leitura A2 (Scanning)',
+        title: 'Atividade 6: Localizando a Idade de Lucas',
+        question: 'Usando Scanning no primeiro parágrafo do texto, quantos anos tem o Lucas?',
+        options: [
+          '14 anos (14 years old)',
+          '18 anos (18 years old)',
+          '10 anos (10 years old)',
+          '20 anos (20 years old)'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! A primeira frase do texto diz: "Lucas is 14 years old".',
+        xp: 30,
+        coins: 5
+      },
+      {
+        id: 'act_7_inference_smart',
+        category: 'Leitura A2 (Inferência)',
+        title: 'Atividade 7: Inferência de Vocabulário',
+        question: 'No texto, Sparky é chamado de "smart pet" e aprende truques rápido. A palavra "smart" significa:',
+        options: [
+          'Inteligente / Esperto',
+          'Bravo / Agressivo',
+          'Com sono / Cansado',
+          'Perdido na rua'
+        ],
+        correctIndex: 0,
+        explanation: 'Show! "Smart" significa inteligente e esperto (como em "smartphone").',
+        xp: 30,
+        coins: 5
+      },
+      {
+        id: 'act_8_zero_conditional_text',
         category: 'Gramática: Zero Conditional',
-        title: 'Atividade 5: Causa e Efeito Simples',
-        question: 'Complete a frase da Zero Conditional (verdade simples do texto):\n"If Lucas says \'Sit\', Sparky _______ (sit) immediately."',
+        title: 'Atividade 8: Causa e Efeito no Presente',
+        question: 'Complete a frase da Zero Conditional:\n"If Lucas says \'Sit\', Sparky _______ (sit) immediately."',
         options: [
           'sits',
           'will sit',
@@ -240,9 +443,25 @@ Lucas loves technology and often says to his friends:
         coins: 6
       },
       {
-        id: 'act_6_first_conditional',
+        id: 'act_9_zero_conditional_water',
+        category: 'Gramática: Zero Conditional',
+        title: 'Atividade 9: Verdade Científica Universal',
+        question: 'Complete com a regra da Zero Conditional (fato comprovado):\n"If you freeze water, it _______ (turn) into ice."',
+        options: [
+          'turns',
+          'turned',
+          'will turn',
+          'would turn'
+        ],
+        correctIndex: 0,
+        explanation: 'Muito bem! Fatos da natureza usam o Present Simple nos dois verbos: "it turns into ice".',
+        xp: 30,
+        coins: 6
+      },
+      {
+        id: 'act_10_first_conditional_study',
         category: 'Gramática: First Conditional',
-        title: 'Atividade 6: Plano Futuro Real',
+        title: 'Atividade 10: Promessa para o Futuro Real',
         question: 'Qual palavra completa a First Conditional sobre o futuro de Lucas?\n"If I study hard today, I _______ become a computer engineer."',
         options: [
           'will',
@@ -251,14 +470,46 @@ Lucas loves technology and often says to his friends:
           'did'
         ],
         correctIndex: 0,
-        explanation: 'Correto! A First Conditional usa "will" para falar do futuro que vai acontecer se você estudar!',
+        explanation: 'Correto! A First Conditional usa "will" para falar do futuro que vai acontecer se a condição for cumprida!',
         xp: 35,
         coins: 6
       },
       {
-        id: 'act_7_second_cond_were',
+        id: 'act_11_first_conditional_rain',
+        category: 'Gramática: First Conditional',
+        title: 'Atividade 11: Condição do Clima no Futuro',
+        question: 'Complete a frase de previsão real da First Conditional:\n"If it rains tomorrow, we _______ (stay) at home."',
+        options: [
+          'will stay',
+          'stay',
+          'stayed',
+          'would stay'
+        ],
+        correctIndex: 0,
+        explanation: 'Exato! If + Presente (rains) seguido de "will + verbo base" (will stay).',
+        xp: 35,
+        coins: 6
+      },
+      {
+        id: 'act_12_first_conditional_pass',
+        category: 'Gramática: First Conditional',
+        title: 'Atividade 12: Consequência dos Estudos',
+        question: 'Complete a First Conditional de incentivo do Prof. Vinicius:\n"If you practice every day, you _______ (speak) great English."',
+        options: [
+          'will speak',
+          'spoke',
+          'would speak',
+          'speaking'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Se você praticar todo dia, você falará (will speak) um ótimo inglês!',
+        xp: 35,
+        coins: 6
+      },
+      {
+        id: 'act_13_second_conditional_dream',
         category: 'Gramática: Second Conditional',
-        title: 'Atividade 7: Imaginação e Sonho',
+        title: 'Atividade 13: Imaginação e Sonho com Would',
         question: 'Complete a frase imaginária de Lucas na Second Conditional:\n"If I had a spaceship, I _______ (travel) to the stars!"',
         options: [
           'would travel',
@@ -272,10 +523,26 @@ Lucas loves technology and often says to his friends:
         coins: 7
       },
       {
-        id: 'act_8_were_rule',
+        id: 'act_14_second_conditional_lottery',
         category: 'Gramática: Second Conditional',
-        title: 'Atividade 8: Dica do Prof. Vinicius Lourenço',
-        question: 'Segundo o Prof. Vinicius Lourenço, qual palavra é usada na Second Conditional para dar conselhos?\n"If I _______ you, I would practice English every day."',
+        title: 'Atividade 14: Hipótese da Loteria',
+        question: 'Complete a frase hipotética tradicional:\n"If I won the lottery, I _______ (buy) a big house for my family."',
+        options: [
+          'would buy',
+          'will buy',
+          'bought',
+          'buy'
+        ],
+        correctIndex: 0,
+        explanation: 'Excelente! If + Past (won) seguido de "would buy" (compraria).',
+        xp: 35,
+        coins: 7
+      },
+      {
+        id: 'act_15_second_conditional_were',
+        category: 'Gramática: Second Conditional',
+        title: 'Atividade 15: Conselho com "If I were you"',
+        question: 'Segundo o Prof. Vinicius Lourenço, qual palavra é usada na Second Conditional formal para dar conselhos?\n"If I _______ you, I would practice English every day."',
         options: [
           'were',
           'was',
@@ -284,6 +551,22 @@ Lucas loves technology and often says to his friends:
         ],
         correctIndex: 0,
         explanation: 'Parabéns! "If I were you" é a forma padrão tradicional da língua inglesa para expressar "Se eu fosse você"!',
+        xp: 40,
+        coins: 8
+      },
+      {
+        id: 'act_16_superpower_imagination',
+        category: 'Gramática: Second Conditional',
+        title: 'Atividade 16: Imaginação de Superpoderes',
+        question: 'Complete a oração imaginária:\n"If I could fly, I _______ (visit) every country in the world."',
+        options: [
+          'would visit',
+          'will visit',
+          'visited',
+          'visit'
+        ],
+        correctIndex: 0,
+        explanation: 'Sensacional! Situação 100% imaginária leva "would + verbo base": "I would visit"!',
         xp: 40,
         coins: 8
       }
@@ -303,6 +586,7 @@ Lucas loves technology and often says to his friends:
     room: 'Sala Presencial - Turma A2',
     level: 'Iniciante / A2',
     summary: 'Revisão dos verbos de rotina mais usados: wake up, take a shower, have breakfast, study, work, go to bed.',
+    slides: [],
     pdfDocument: {
       title: 'Apostila de Aula: Daily Routine Verbs',
       subtitle: 'Resumo da Aula de 25 de Setembro',

@@ -26,13 +26,16 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import ReplayIcon from '@mui/icons-material/Replay';
 import PrintIcon from '@mui/icons-material/Print';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import SlideshowIcon from '@mui/icons-material/Slideshow';
 
 import { CLASSROOM_LESSONS, getTodayDateString, getFormattedDate } from '../../data/classroomsData';
 import PdfViewerModal from './PdfViewerModal';
+import LessonSlidesModal from './LessonSlidesModal';
 
 export default function ClassroomHub({ user, attendanceRecords = [], onRewardEarned }) {
   const [selectedLessonId, setSelectedLessonId] = useState(CLASSROOM_LESSONS[0]?.id || 'lesson_today_1630');
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [slidesModalOpen, setSlidesModalOpen] = useState(false);
   
   // Selected answers for each activity: { [activityId]: chosenOptionIndex }
   const [selectedAnswers, setSelectedAnswers] = useState({});
@@ -212,6 +215,29 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
 
             <Button
               variant="contained"
+              startIcon={<SlideshowIcon />}
+              onClick={() => setSlidesModalOpen(true)}
+              sx={{
+                background: 'linear-gradient(135deg, #7209b7 0%, #4361ee 100%)',
+                color: '#fff',
+                fontWeight: 800,
+                px: 2.5,
+                py: 1.2,
+                borderRadius: 2.5,
+                boxShadow: '0 8px 24px rgba(114, 9, 183, 0.35)',
+                textTransform: 'none',
+                fontSize: '0.92rem',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #b5179e 0%, #4895ef 100%)',
+                  transform: 'translateY(-2px)'
+                }
+              }}
+            >
+              📽️ Slides da Aula (10 Páginas)
+            </Button>
+
+            <Button
+              variant="contained"
               startIcon={<MenuBookIcon />}
               onClick={() => setPdfModalOpen(true)}
               sx={{
@@ -386,6 +412,25 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
 
             {/* Action buttons */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+              <Button
+                variant="contained"
+                startIcon={<SlideshowIcon />}
+                onClick={() => setSlidesModalOpen(true)}
+                sx={{
+                  bgcolor: '#7209b7',
+                  color: '#fff',
+                  fontWeight: 800,
+                  borderRadius: 2.5,
+                  px: 3,
+                  py: 1.2,
+                  textTransform: 'none',
+                  boxShadow: '0 6px 20px rgba(114, 9, 183, 0.4)',
+                  '&:hover': { bgcolor: '#560bad' }
+                }}
+              >
+                📽️ Slides da Aula (10 Páginas)
+              </Button>
+
               <Button
                 variant="contained"
                 startIcon={<MenuBookIcon />}
@@ -737,6 +782,13 @@ export default function ClassroomHub({ user, attendanceRecords = [], onRewardEar
         <PdfViewerModal
           open={pdfModalOpen}
           onClose={() => setPdfModalOpen(false)}
+          lesson={currentLesson}
+        />
+
+        {/* Modal de Apresentação de Slides (10 Páginas) */}
+        <LessonSlidesModal
+          open={slidesModalOpen}
+          onClose={() => setSlidesModalOpen(false)}
           lesson={currentLesson}
         />
       </Box>
