@@ -1,5 +1,6 @@
 // src/data/classroomsData.js
-// Dados de Aulas, Apostilas em PDF e Atividades específicas por aula
+// Dados de Aulas, Apostilas em PDF e Atividades - Adaptado para Nível Iniciante (A2)
+// Professor: Prof. Vinicius Lourenço
 
 export const getTodayDateString = () => {
   const now = new Date();
@@ -31,340 +32,302 @@ export const CLASSROOM_LESSONS = [
     time: '16:30',
     duration: '50 min',
     isToday: true,
-    title: 'Conditionals (Zero, First, Second) & Reading Comprehension',
-    theme: 'Grammar & Textual Strategies',
-    teacher: 'Prof. English Quest',
-    room: 'Sala Virtual / Presencial - Turma Alpha',
-    level: 'Intermediário (B1-B2)',
-    summary: 'Aprenda e domine a estrutura das orações condicionais (Zero, First e Second Conditionals) e acelere sua interpretação de textos com Skimming, Scanning e Inferência Contextual.',
+    title: 'Present Simple + Conditionals & Leitura Fácil (A2)',
+    theme: 'Gramática Passo a Passo & Leitura Iniciante',
+    teacher: 'Prof. Vinicius Lourenço',
+    room: 'Sala Virtual / Presencial - Turma A2',
+    level: 'Iniciante / Elementar (Nível A2)',
+    summary: 'Começamos revisando o Present Simple para dar total segurança aos alunos iniciantes, e em seguida aprendemos como montar as orações condicionais (Zero, First e Second) de forma simples e direta, com leitura guiada passo a passo.',
     
-    // Conteúdo da Apostila em PDF para leitura in-app
+    // Apostila In-App adaptada para Nível A2
     pdfDocument: {
-      title: 'Apostila de Aula: Conditionals & Reading Comprehension',
+      title: 'Apostila de Inglês: Present Simple & Conditionals (Nível A2)',
       subtitle: 'Material Oficial da Aula das 16:30 · Quest English',
-      version: 'Edição 2026.1',
-      author: 'Quest English Academic Team',
+      version: 'Edição Especial para Alunos Iniciantes A2',
+      author: 'Prof. Vinicius Lourenço',
       date: getTodayDateString(),
       sections: [
         {
-          id: 'conditionals_intro',
-          title: '1. Conditionals (Orações Condicionais)',
+          id: 'intro_welcome',
+          title: 'Bem-vindo à Aula!',
           type: 'theory',
-          content: `As condicionais são usadas para mostrar que uma ação depende de outra (causa e consequência), utilizando frequentemente a palavra **If** (Se).
+          content: `Olá, aluno! Nesta aula com o **Prof. Vinicius Lourenço**, vamos construir seu inglês com calma e sem palavras difíceis. 
 
-Elas conectam uma condição a um resultado em diferentes níveis de certeza temporal (fatos reais, previsões futuras e hipóteses imaginárias).`
+Para falar sobre condições em inglês (usando a palavra **IF**, que significa "SE"), primeiro precisamos revisar um tempo verbal muito fácil que você usa todos os dias: o **Present Simple**!`
+        },
+        {
+          id: 'present_simple_revision',
+          title: '1. Cronograma 1: Revisão Essencial do Present Simple',
+          type: 'rule',
+          badge: 'Base de Tudo (Rotina & Fatos)',
+          formula: 'Sujeito + Verbo no Presente (He/She/It ganha -s)',
+          explanation: 'O Present Simple serve para falar do que acontece sempre, das suas rotinas e de fatos reais do dia a dia.',
+          examples: [
+            { en: 'I live in Brazil.', pt: 'Eu moro no Brasil.' },
+            { en: 'She drinks water every morning.', pt: 'Ela bebe água toda manhã. (com -s)' },
+            { en: 'We do not eat fast food every day.', pt: 'Nós não comemos fast food todo dia.' },
+            { en: 'If the weather is good, we smile.', pt: 'Se o tempo está bom, nós sorrimos.' }
+          ]
+        },
+        {
+          id: 'conditionals_intro',
+          title: '2. O que são as Conditionals (Orações com "IF")?',
+          type: 'theory',
+          content: `Conditionals são frases que mostram uma **causa e uma consequência**. Quase sempre começam com a palavra **IF** (Se).
+Exemplo em português: *"Se você estudar, você aprende."* Viu como uma coisa depende da outra?`
         },
         {
           id: 'zero_conditional',
-          title: 'Zero Conditional (Condicional Zero)',
+          title: 'Zero Conditional (Verdades e Fatos Simples)',
           type: 'rule',
-          badge: 'Fatos e Leis Científicas',
+          badge: 'Fatos e Certezas',
           formula: 'If + Present Simple, Present Simple',
-          explanation: 'Utilizada para expressar fatos, regras e verdades universais ou científicas. O resultado é sempre garantido.',
+          explanation: 'Usamos quando o resultado é 100% garantido e natural.',
           examples: [
-            { en: 'If you heat ice, it melts.', pt: 'Se aqueceres gelo, ele derrete.' },
-            { en: 'If people do not drink water, they get dehydrated.', pt: 'Se as pessoas não bebem água, ficam desidratadas.' },
-            { en: 'If you press this button, the machine turns on.', pt: 'Se você apertar este botão, a máquina liga.' }
+            { en: 'If you heat ice, it melts.', pt: 'Se você esquenta o gelo, ele derrete.' },
+            { en: 'If I am tired, I go to sleep.', pt: 'Se eu estou cansado, eu vou dormir.' },
+            { en: 'If babies are hungry, they cry.', pt: 'Se os bebês estão com fome, eles choram.' }
           ]
         },
         {
           id: 'first_conditional',
-          title: 'First Conditional (Primeira Condicional)',
+          title: 'First Conditional (Coisas Prováveis no Futuro)',
           type: 'rule',
-          badge: 'Situações Reais / Prováveis no Futuro',
-          formula: 'If + Present Simple, will + verbo no infinitivo',
-          explanation: 'Serve para descrever situações reais ou altamente prováveis de acontecerem no futuro, dependendo de uma condição no presente.',
+          badge: 'Futuro com "WILL"',
+          formula: 'If + Present Simple, will + verbo normal',
+          explanation: 'Usamos para falar de planos e coisas reais que provavelmente vão acontecer se a condição for cumprida.',
           examples: [
             { en: 'If it rains tomorrow, we will stay at home.', pt: 'Se chover amanhã, nós ficaremos em casa.' },
-            { en: 'If you study hard, you will pass the English exam.', pt: 'Se você estudar bastante, passará no exame de inglês.' },
-            { en: 'If we leave now, we will catch the 16:30 bus.', pt: 'Se sairmos agora, pegaremos o ônibus das 16:30.' }
+            { en: 'If you practice English, you will speak well.', pt: 'Se você praticar inglês, você falará bem.' },
+            { en: 'If she has time, she will call you.', pt: 'Se ela tiver tempo, ela vai te ligar.' }
           ]
         },
         {
           id: 'second_conditional',
-          title: 'Second Conditional (Segunda Condicional)',
+          title: 'Second Conditional (Imaginação e Sonhos)',
           type: 'rule',
-          badge: 'Situações Hipotéticas ou Improváveis',
-          formula: 'If + Past Simple, would + verbo no infinitivo',
-          explanation: `Emprega-se para expressar situações hipotéticas, irreais ou altamente improváveis no presente ou no futuro.`,
-          note: `⚠️ Nota Gramatical Importante: Com o verbo to be, é comum usar a forma WERE para todas as pessoas do singular e plural na linguagem culta/formal (ex: "If I were you", "If he were here").`,
+          badge: 'Sonhos com "WOULD"',
+          formula: 'If + Past Simple, would + verbo normal',
+          explanation: 'Usamos para situações de imaginação ou conselhos: coisas que não são reais agora, mas estamos sonhando.',
+          note: '💡 Dica do Prof. Vinicius: Para dar conselhos, usamos "If I were you..." (Se eu fosse você). Usamos WERE para soar bem educado e formal!',
           examples: [
-            { en: 'If I won the lottery, I would travel the world.', pt: 'Se eu ganhasse a loteria, viajaria pelo mundo.' },
-            { en: 'If I were you, I would take that opportunity.', pt: 'Se eu fosse você, aproveitaria essa oportunidade.' },
-            { en: 'If they had more free time, they would learn Japanese.', pt: 'Se eles tivessem mais tempo livre, aprenderiam japonês.' }
+            { en: 'If I had money, I would travel to Miami.', pt: 'Se eu tivesse dinheiro, viajaria para Miami.' },
+            { en: 'If I were you, I would drink more water.', pt: 'Se eu fosse você, beberia mais água.' }
           ]
         },
         {
-          id: 'reading_comprehension',
-          title: '2. Reading Comprehension (Compreensão Leitora)',
-          type: 'theory',
-          content: `Esta componente avalia a capacidade de entender, interpretar e extrair informações com agilidade de um texto em inglês sem depender de tradução palavra por palavra.`
-        },
-        {
           id: 'reading_techniques',
-          title: 'Técnicas de Leitura Rápida e Eficiente',
+          title: '3. Como Ler Textos em Inglês Sem Medo (Nível A2)',
           type: 'cards',
           techniques: [
             {
               icon: '🦅',
-              name: 'Skimming (Visão Panorâmica)',
-              desc: 'Leitura rápida e superficial do texto para captar o tema e a ideia principal, sem focar em palavras desconhecidas.',
-              tip: 'Leia o título, subtítulos, primeira e última frase de cada parágrafo.'
+              name: 'Skimming (Olhar Rápido)',
+              desc: 'Dar uma olhada rápida no título e na primeira frase para descobrir sobre o que o texto está falando.',
+              tip: 'Não precisa traduzir tudo! Apenas descubra o assunto geral.'
             },
             {
               icon: '🔍',
-              name: 'Scanning (Radar de Dados)',
-              desc: 'Procurar informações específicas (datas, nomes próprios, números, porcentagens) percorrendo o texto com os olhos até encontrar o dado desejado.',
-              tip: 'Mantenha em mente a palavra-chave antes de passar os olhos pelo texto.'
+              name: 'Scanning (Caça-Palavras)',
+              desc: 'Procurar uma data, um número ou um nome sem ler o texto inteiro.',
+              tip: 'Mantenha o número ou nome em mente e passe os olhos rápido pelo texto.'
             },
             {
-              icon: '🧠',
-              name: 'Inferência e Contexto (Dedução Inteligente)',
-              desc: 'Adivinhar o significado de palavras difíceis através do contexto das frases vizinhas, em vez de depender de dicionário ou traduções literais.',
-              tip: 'Observe se o tom é positivo ou negativo e quais palavras acompanham o termo desconhecido.'
+              icon: '💡',
+              name: 'Inferência (Dedução Fácil)',
+              desc: 'Adivinhar o significado de uma palavra pelo que vem antes e depois dela.',
+              tip: 'Palavras parecidas com o português ajudam muito (ex: music = música, family = família).'
             }
           ]
         },
         {
-          id: 'reading_sample_text',
-          title: '3. Texto Oficial de Leitura para a Aula',
+          id: 'reading_text_easy',
+          title: '4. Texto de Leitura: "Lucas and His Smart Pet"',
           type: 'text_box',
-          textTitle: 'The Green Metropolises of 2030',
-          textContent: `In the heart of modern urban design, visionary architects and engineers are transforming gray cities into sustainable havens. In EcoMetropolis, an innovative initiative launched in 2021, urban planners made a bold promise: the city will reach zero net carbon emissions by 2030.
+          textTitle: 'Lucas and His Smart Pet',
+          textContent: `Lucas is 14 years old and lives in a friendly small city. Every day, Lucas wakes up at 7:00 AM and studies English before breakfast.
 
-If public authorities invest in solar infrastructure, urban pollution drops immediately. Last year alone, over 150,000 smart solar roofs were installed across public schools and residential towers. 
+Lucas has a very special pet: a friendly robot dog named Sparky. Lucas created Sparky in 2024 for his school science project.
 
-The local green economy is thriving after these green reforms. Small businesses and technology startups report record profits, proving that ecological preservation and financial prosperity can walk hand in hand.
+If Lucas says "Sit", Sparky sits immediately. If Lucas throws a small ball, Sparky runs happily to catch it. Sparky is very intelligent and learns new tricks every week.
 
-Dr. Sarah Bennett, the lead environmental researcher on the project, stated: "If every major capital adopted these green practices today, we would reverse global climate risks much faster. If people understand the power of collective actions, our future will be secure."`
+Lucas loves technology and often says to his friends: 
+"If I study hard today, I will become a computer engineer in the future. And if I had a spaceship, I would take Sparky to visit the stars!"`
         }
       ]
     },
 
-    // Atividades práticas interativas da aula de hoje
+    // Atividades práticas simplificadas para Nível A2 com gabarito revisado
     activities: [
       {
-        id: 'act_1_skimming',
-        category: 'Reading Comprehension',
-        type: 'skimming',
-        title: 'Técnica de Skimming: Ideia Principal',
-        question: 'Ao aplicar a técnica de Skimming (leitura rápida global) no texto "The Green Metropolises of 2030", qual é o tema central?',
+        id: 'act_1_present_simple',
+        category: 'Revisão: Present Simple',
+        title: 'Atividade 1: Rotina com He/She/It',
+        question: 'No Present Simple, quando falamos de He, She ou It, o verbo ganha a letra "S".\nComplete a frase:\n"Lucas _______ (study) English every day."',
         options: [
-          'A história da construção de estradas no século XIX.',
-          'Como projetos de sustentabilidade urbana e energia verde estão transformando uma metrópole moderna.',
-          'Um guia passo a passo para consertar painéis solares danificados.',
-          'A biografia da infância da pesquisadora Dr. Sarah Bennett.'
-        ],
-        correctIndex: 1,
-        explanation: 'Excelente! O Skimming foca na essência do texto: uma cidade moderna implantando reformas ecológicas e energia limpa.',
-        xp: 30,
-        coins: 5
-      },
-      {
-        id: 'act_2_scanning',
-        category: 'Reading Comprehension',
-        type: 'scanning',
-        title: 'Técnica de Scanning: Localizando Dados',
-        question: 'Aplicando Scanning (busca de número/ano específico), qual é o ano em que EcoMetropolis promete alcançar emissões líquidas zero?',
-        options: [
-          'Ano de 2021',
-          'Ano de 2025',
-          'Ano de 2030',
-          'Ano de 2050'
-        ],
-        correctIndex: 2,
-        explanation: 'Correto! Com Scanning você localizou rapidamente o número "2030" associado a "zero net carbon emissions".',
-        xp: 30,
-        coins: 5
-      },
-      {
-        id: 'act_3_inference',
-        category: 'Context Inference',
-        type: 'inference',
-        title: 'Inferência Contextual de Vocabulário',
-        question: 'No terceiro parágrafo, a expressão "The local green economy is thriving after these green reforms" indica que a economia está:',
-        options: [
-          'Prosperando e crescendo com muito vigor',
-          'Entrando em falência e demitindo funcionários',
-          'Completamente parada e estagnada',
-          'Cancelada pelas autoridades locais'
+          'studies',
+          'study',
+          'studying',
+          'studied'
         ],
         correctIndex: 0,
-        explanation: 'Muito bem! "Thriving" significa prosperar/florescer, confirmado pela frase seguinte que menciona "record profits".',
+        explanation: 'Excelente! Com He/She/It no Present Simple, o verbo termina em -s ou -ies: "Lucas studies English every day".',
+        xp: 25,
+        coins: 5
+      },
+      {
+        id: 'act_2_present_tobe',
+        category: 'Revisão: Verbo to be',
+        title: 'Atividade 2: Verbo to be no Presente',
+        question: 'Qual é o verbo "to be" correto para a frase:\n"If the weather _______ (be) sunny today, Lucas is happy."',
+        options: [
+          'is',
+          'are',
+          'am',
+          'be'
+        ],
+        correctIndex: 0,
+        explanation: 'Muito bem! "The weather" corresponde a "It", por isso usamos "is".',
+        xp: 25,
+        coins: 5
+      },
+      {
+        id: 'act_3_skimming',
+        category: 'Leitura A2 (Skimming)',
+        title: 'Atividade 3: Ideia Principal do Texto',
+        question: 'Fazendo um Skimming (leitura rápida) no texto "Lucas and His Smart Pet", qual é o assunto principal?',
+        options: [
+          'Um garoto de 14 anos chamado Lucas e seu cachorro-robô inteligente Sparky.',
+          'Uma receita de bolo de chocolate para o café da manhã.',
+          'A história das pirâmides antigas do Egito.',
+          'Um manual de conserto de carros velhos.'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! O texto fala sobre a rotina de Lucas e de seu robozinho amigo Sparky.',
         xp: 30,
         coins: 5
       },
       {
-        id: 'act_4_zero_cond',
-        category: 'Grammar - Conditionals',
-        type: 'zero_conditional',
-        title: 'Zero Conditional: Fatos Universais',
-        question: 'Complete a oração com a regra da Zero Conditional (If + Present Simple, Present Simple):\n"If you heat ice, it _______ (melt)."',
+        id: 'act_4_scanning',
+        category: 'Leitura A2 (Scanning)',
+        title: 'Atividade 4: Encontrando Números no Texto',
+        question: 'Usando a técnica de Scanning (buscar números com os olhos), em que ano Lucas criou o Sparky no projeto da escola?',
         options: [
-          'melts',
-          'will melt',
-          'would melt',
-          'melted'
+          'No ano de 2024',
+          'No ano de 2018',
+          'No ano de 2020',
+          'No ano de 2010'
         ],
         correctIndex: 0,
-        explanation: 'Perfeito! Na Zero Conditional expressamos verdades universais e leis da física com os dois verbos no Present Simple: "it melts".',
-        xp: 35,
+        explanation: 'Perfeito! No segundo parágrafo encontramos facilmente o número "2024"!',
+        xp: 30,
+        coins: 5
+      },
+      {
+        id: 'act_5_zero_conditional',
+        category: 'Gramática: Zero Conditional',
+        title: 'Atividade 5: Causa e Efeito Simples',
+        question: 'Complete a frase da Zero Conditional (verdade simples do texto):\n"If Lucas says \'Sit\', Sparky _______ (sit) immediately."',
+        options: [
+          'sits',
+          'will sit',
+          'would sit',
+          'sat'
+        ],
+        correctIndex: 0,
+        explanation: 'Show de bola! Na Zero Conditional usamos o verbo no presente em ambos os lados: "If Lucas says... Sparky sits".',
+        xp: 30,
         coins: 6
       },
       {
-        id: 'act_5_first_cond',
-        category: 'Grammar - Conditionals',
-        type: 'first_conditional',
-        title: 'First Conditional: Situação Real no Futuro',
-        question: 'Qual alternativa completa corretamente a First Conditional?\n"If it _______ tomorrow, we will stay at home."',
+        id: 'act_6_first_conditional',
+        category: 'Gramática: First Conditional',
+        title: 'Atividade 6: Plano Futuro Real',
+        question: 'Qual palavra completa a First Conditional sobre o futuro de Lucas?\n"If I study hard today, I _______ become a computer engineer."',
         options: [
-          'rains',
-          'will rain',
-          'rained',
-          'would rain'
+          'will',
+          'would',
+          'was',
+          'did'
         ],
         correctIndex: 0,
-        explanation: 'Exato! A estrutura da First Conditional é If + Present Simple (rains), will + infinitivo (we will stay).',
-        xp: 35,
-        coins: 6
-      },
-      {
-        id: 'act_6_second_cond',
-        category: 'Grammar - Conditionals',
-        type: 'second_conditional',
-        title: 'Second Conditional: Situação Hipotética',
-        question: 'Complete a frase hipotética da Second Conditional:\n"If I won the lottery, I _______ around the world."',
-        options: [
-          'would travel',
-          'will travel',
-          'travel',
-          'travelled'
-        ],
-        correctIndex: 0,
-        explanation: 'Show! Na Second Conditional usamos If + Past Simple (won) seguido de would + verbo base (would travel).',
+        explanation: 'Correto! A First Conditional usa "will" para falar do futuro que vai acontecer se você estudar!',
         xp: 35,
         coins: 6
       },
       {
         id: 'act_7_second_cond_were',
-        category: 'Grammar - Conditionals',
-        type: 'second_conditional',
-        title: 'Second Conditional: Verbo "to be"',
-        question: 'Na Second Conditional formal com o verbo "to be", qual é a forma padrão para expressar um conselho ou hipótese?\n"If I _______ you, I would accept the job offer."',
+        category: 'Gramática: Second Conditional',
+        title: 'Atividade 7: Imaginação e Sonho',
+        question: 'Complete a frase imaginária de Lucas na Second Conditional:\n"If I had a spaceship, I _______ (travel) to the stars!"',
+        options: [
+          'would travel',
+          'will travel',
+          'travels',
+          'travel'
+        ],
+        correctIndex: 0,
+        explanation: 'Acertou em cheio! Na Second Conditional (sonhos e imaginação) usamos "would + verbo": "I would travel"!',
+        xp: 35,
+        coins: 7
+      },
+      {
+        id: 'act_8_were_rule',
+        category: 'Gramática: Second Conditional',
+        title: 'Atividade 8: Dica do Prof. Vinicius Lourenço',
+        question: 'Segundo o Prof. Vinicius Lourenço, qual palavra é usada na Second Conditional para dar conselhos?\n"If I _______ you, I would practice English every day."',
         options: [
           'were',
           'was',
           'am',
-          'been'
+          'be'
         ],
         correctIndex: 0,
-        explanation: 'Excelente! "If I were you" é a forma padrão formal da Second Conditional para conselhos e hipóteses!',
+        explanation: 'Parabéns! "If I were you" é a forma padrão tradicional da língua inglesa para expressar "Se eu fosse você"!',
         xp: 40,
         coins: 8
       }
     ]
   },
 
-  // Aulas Anteriores registradas no histórico
+  // Aula Passada
   {
     id: 'lesson_past_1',
     date: '2026-09-25',
     time: '16:30',
     duration: '50 min',
     isToday: false,
-    title: 'Present Perfect vs Past Simple & Life Experiences',
-    theme: 'Verb Tenses Mastery',
-    teacher: 'Prof. English Quest',
-    room: 'Sala Virtual - Turma Alpha',
-    level: 'Intermediário (B1)',
-    summary: 'Diferenciação clara entre ações concluídas no passado com tempo determinado (Past Simple) e experiências de vida sem tempo específico (Present Perfect com Have/Has).',
+    title: 'Daily Routine & Common Action Verbs (A2)',
+    theme: 'Rotina e Vocabulário Prático',
+    teacher: 'Prof. Vinicius Lourenço',
+    room: 'Sala Presencial - Turma A2',
+    level: 'Iniciante / A2',
+    summary: 'Revisão dos verbos de rotina mais usados: wake up, take a shower, have breakfast, study, work, go to bed.',
     pdfDocument: {
-      title: 'Apostila de Aula: Present Perfect vs Past Simple',
+      title: 'Apostila de Aula: Daily Routine Verbs',
       subtitle: 'Resumo da Aula de 25 de Setembro',
-      version: 'Edição 2026.09',
-      author: 'Quest English Academic Team',
+      version: 'Edição A2',
+      author: 'Prof. Vinicius Lourenço',
       date: '2026-09-25',
       sections: [
         {
-          id: 'past_simple_rule',
-          title: '1. Past Simple (Tempo Definido)',
-          type: 'rule',
-          badge: 'Passado Concluído',
-          formula: 'Subject + Past Verb + Time Expression (yesterday, last year, in 2020)',
-          explanation: 'Usado quando o momento no passado é explicitamente dito ou conhecido.',
-          examples: [
-            { en: 'I visited London in 2022.', pt: 'Eu visitei Londres em 2022.' }
-          ]
-        },
-        {
-          id: 'present_perfect_rule',
-          title: '2. Present Perfect (Experiência ou Conexão com o Presente)',
-          type: 'rule',
-          badge: 'Experiência de Vida',
-          formula: 'Subject + have/has + Past Participle',
-          explanation: 'Usado para falar sobre experiências sem importar quando ocorreram, ou ações que continuam até o presente.',
-          examples: [
-            { en: 'I have visited London three times.', pt: 'Eu já visitei Londres três vezes.' }
-          ]
+          id: 'routine_verbs',
+          title: 'Verbos Mais Usados do Dia a Dia',
+          type: 'theory',
+          content: 'Aprenda os verbos essenciais para descrever seu dia em inglês de forma natural.'
         }
       ]
     },
     activities: [
       {
         id: 'past_act_1',
-        category: 'Grammar',
-        title: 'Past Simple vs Present Perfect',
-        question: 'Escolha a opção correta: "I _______ to Paris two years ago."',
-        options: ['went', 'have gone', 'go', 'was going'],
+        category: 'Vocabulário A2',
+        title: 'Verbo de Manhã',
+        question: 'Como se diz "tomar café da manhã" em inglês?',
+        options: ['have breakfast', 'drink breakfast', 'make bed', 'take lunch'],
         correctIndex: 0,
-        explanation: 'Com marcador de tempo fixo ("two years ago"), usamos o Past Simple (went).',
-        xp: 30,
-        coins: 5
-      }
-    ]
-  },
-
-  {
-    id: 'lesson_past_2',
-    date: '2026-09-22',
-    time: '16:30',
-    duration: '50 min',
-    isToday: false,
-    title: 'Modal Verbs: Advice, Obligation & Deduction',
-    theme: 'Modal Verbs (Should, Must, Could, Might)',
-    teacher: 'Prof. English Quest',
-    room: 'Sala Presencial - Turma Alpha',
-    level: 'Intermediário (B1)',
-    summary: 'Uso de verbos modais em contextos reais: conselhos (should/ought to), obrigações (must/have to) e deduções lógicas (can/might/could).',
-    pdfDocument: {
-      title: 'Apostila de Aula: Modal Verbs in Daily English',
-      subtitle: 'Resumo da Aula de 22 de Setembro',
-      version: 'Edição 2026.09',
-      author: 'Quest English Academic Team',
-      date: '2026-09-22',
-      sections: [
-        {
-          id: 'modals_summary',
-          title: '1. Principais Verbos Modais',
-          type: 'cards',
-          techniques: [
-            { icon: '💡', name: 'Should', desc: 'Conselhos e recomendações ("You should drink more water").' },
-            { icon: '🔒', name: 'Must', desc: 'Obrigação forte ou necessidade inadiável ("You must wear a seatbelt").' },
-            { icon: '🔮', name: 'Might / Could', desc: 'Possibilidade no presente ou futuro ("It might rain later").' }
-          ]
-        }
-      ]
-    },
-    activities: [
-      {
-        id: 'past_act_2',
-        category: 'Grammar',
-        title: 'Modal Verbs: Recomendações',
-        question: 'Qual modal expressa conselho amigável? "You look tired, you _______ rest."',
-        options: ['should', 'must', 'might', 'shall'],
-        correctIndex: 0,
-        explanation: '"Should" é o modal por excelência para dar conselhos e sugestões.',
-        xp: 30,
+        explanation: 'Em inglês a expressão natural é "have breakfast".',
+        xp: 25,
         coins: 5
       }
     ]
