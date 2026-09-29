@@ -806,21 +806,35 @@ export default function StudentPage() {
   const renderActivityCard = (p, idx) => {
     const isCompleted = p.status === 'completed';
     const isOpen = !!openCards[p.id];
+    const exType = p.exercise?.type || 'text';
+
+    // Skill icons & color scheme
+    let typeConfig = { label: '🧩 Prática', color: '#00e5ff', bg: 'rgba(0, 229, 255, 0.1)' };
+    if (exType === 'speaking') {
+      typeConfig = { label: '🎙️ Pronúncia', color: '#48c78e', bg: 'rgba(72, 199, 142, 0.12)' };
+    } else if (exType === 'quiz') {
+      typeConfig = { label: '🧠 Quiz', color: '#00b4d8', bg: 'rgba(0, 180, 216, 0.12)' };
+    } else if (isWriting(p)) {
+      typeConfig = { label: '✍️ Escrita', color: '#b388ff', bg: 'rgba(179, 136, 255, 0.12)' };
+    } else if (isFlashcard(p)) {
+      typeConfig = { label: '🎴 Flashcard', color: '#ffb74d', bg: 'rgba(255, 183, 77, 0.12)' };
+    }
 
     return (
       <Card
         key={p.id}
         sx={{
-          mb: 2.5,
-          borderRadius: 4,
+          mb: 2,
+          borderRadius: 3.5,
           overflow: 'hidden',
-          background: 'rgba(13, 27, 42, 0.35)',
-          border: `1px solid ${isCompleted ? 'rgba(72, 199, 142, 0.2)' : isOpen ? 'rgba(0, 180, 216, 0.35)' : 'rgba(255,255,255,0.06)'}`,
-          boxShadow: isOpen ? '0 12px 30px rgba(0, 180, 216, 0.1)' : 'none',
-          transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          background: isOpen 
+            ? 'linear-gradient(145deg, rgba(13, 27, 42, 0.7), rgba(7, 15, 25, 0.8))' 
+            : 'rgba(13, 27, 42, 0.4)',
+          border: `1px solid ${isCompleted ? 'rgba(72, 199, 142, 0.3)' : isOpen ? 'rgba(0, 180, 216, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
+          boxShadow: isOpen ? '0 8px 30px rgba(0, 180, 216, 0.15)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
+          transition: 'all 0.25s ease',
           '&:hover': {
-            border: `1px solid ${isCompleted ? 'rgba(72, 199, 142, 0.35)' : 'rgba(0, 180, 216, 0.5)'}`,
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+            border: `1px solid ${isCompleted ? 'rgba(72, 199, 142, 0.5)' : 'rgba(0, 180, 216, 0.6)'}`,
             transform: 'translateY(-2px)'
           }
         }}
@@ -833,92 +847,122 @@ export default function StudentPage() {
             flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: 'space-between',
             alignItems: { xs: 'stretch', sm: 'center' },
-            gap: 2,
-            p: 2.5,
+            gap: 1.5,
+            p: 2,
             cursor: 'pointer',
             background: isCompleted
-              ? 'linear-gradient(90deg, rgba(72, 199, 142, 0.05), rgba(72, 199, 142, 0.01))'
+              ? 'linear-gradient(90deg, rgba(72, 199, 142, 0.06), transparent)'
               : isOpen
-              ? 'linear-gradient(90deg, rgba(0, 180, 216, 0.06), rgba(0, 180, 216, 0.01))'
-              : 'transparent',
-            '&:hover': { filter: 'brightness(1.1)' },
+              ? 'linear-gradient(90deg, rgba(0, 180, 216, 0.08), transparent)'
+              : 'transparent'
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+            {/* Status icon badge */}
             <Box sx={{
-              p: 1.2,
-              borderRadius: 3.5,
-              bgcolor: isCompleted ? 'rgba(72, 199, 142, 0.12)' : 'rgba(0, 180, 216, 0.12)',
+              width: 40,
+              height: 40,
+              borderRadius: 3,
+              bgcolor: isCompleted ? 'rgba(72, 199, 142, 0.15)' : 'rgba(0, 180, 216, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: isCompleted ? '0 0 10px rgba(72, 199, 142, 0.15)' : 'none'
+              flexShrink: 0
             }}>
               {isCompleted
-                ? <CheckCircleIcon sx={{ color: '#48c78e', fontSize: 24 }} />
-                : <PendingIcon sx={{ color: '#00b4d8', fontSize: 24 }} />
+                ? <CheckCircleIcon sx={{ color: '#48c78e', fontSize: 22 }} />
+                : <PendingIcon sx={{ color: '#00b4d8', fontSize: 22 }} />
               }
             </Box>
-            <Box>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {p.exercise?.title || `Atividade ${idx + 1}`}
               </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1.2, mt: 0.8 }}>
+              
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 0.5 }}>
                 <Chip
-                  label={TYPE_LABELS[p.exercise?.type] || p.exercise?.type}
+                  label={typeConfig.label}
                   size="small"
-                  sx={{ height: 22, fontSize: '0.72rem', fontWeight: 800, bgcolor: 'rgba(255,255,255,0.06)', color: '#eee' }}
+                  sx={{
+                    height: 20,
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    bgcolor: typeConfig.bg,
+                    color: typeConfig.color,
+                    border: `1px solid ${typeConfig.color}40`
+                  }}
                 />
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
+
+                <Chip
+                  label="+100 XP"
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.65rem',
+                    fontWeight: 850,
+                    bgcolor: 'rgba(255, 215, 0, 0.12)',
+                    color: '#ffd426',
+                    border: '1px solid rgba(255, 215, 0, 0.25)'
+                  }}
+                />
+
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
                   {isCompleted
-                    ? (p.totalQuestions > 0 ? `Resultado: ${p.score}/${p.totalQuestions}` : 'Concluída')
-                    : `Nível: ${p.exercise?.level ? p.exercise.level.toUpperCase() : 'GERAL'}`
+                    ? (p.totalQuestions > 0 ? `Score: ${p.score}/${p.totalQuestions}` : '✓ Concluída')
+                    : (p.exercise?.level ? `Nível ${p.exercise.level.toUpperCase()}` : 'Geral')
                   }
                 </Typography>
               </Box>
             </Box>
           </Box>
+
+          {/* Action Button & Status Chip */}
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: { xs: 'space-between', sm: 'flex-end' },
             width: { xs: '100%', sm: 'auto' },
-            gap: 2
+            gap: 1.5,
+            flexShrink: 0
           }}>
             <Chip
               label={isCompleted ? 'Concluída' : 'Pendente'}
               size="small"
               sx={{
                 fontWeight: 800,
-                fontSize: '0.72rem',
-                height: 24,
+                fontSize: '0.68rem',
+                height: 22,
                 bgcolor: isCompleted ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 183, 77, 0.12)',
                 color: isCompleted ? '#48c78e' : '#ffb74d',
                 border: `1px solid ${isCompleted ? 'rgba(72, 199, 142, 0.25)' : 'rgba(255, 183, 77, 0.25)'}`
               }}
             />
+
             <Button
               size="small"
               variant="contained"
               sx={{
-                fontWeight: 800,
+                fontWeight: 850,
                 borderRadius: 2.5,
                 textTransform: 'none',
-                px: 2.5,
-                background: isCompleted 
-                  ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01))' 
+                fontSize: '0.8rem',
+                px: 2,
+                py: 0.6,
+                background: isCompleted
+                  ? 'rgba(255, 255, 255, 0.08)'
                   : 'linear-gradient(135deg, #00b4d8, #0077b6)',
-                border: isCompleted ? '1px solid rgba(255, 255, 255, 0.15)' : 'none',
+                border: isCompleted ? '1px solid rgba(255, 255, 255, 0.12)' : 'none',
                 color: '#fff',
+                boxShadow: isCompleted ? 'none' : '0 2px 10px rgba(0, 180, 216, 0.3)',
                 '&:hover': {
-                  background: isCompleted 
-                    ? 'rgba(255,255,255,0.1)' 
-                    : 'linear-gradient(135deg, #00c0f0, #0096c7)',
-                  boxShadow: isCompleted ? 'none' : '0 4px 12px rgba(0, 180, 216, 0.3)'
+                  background: isCompleted
+                    ? 'rgba(255, 255, 255, 0.15)'
+                    : 'linear-gradient(135deg, #00c0f0, #0096c7)'
                 }
               }}
             >
-              {isOpen ? 'Fechar' : 'Abrir'}
+              {isOpen ? 'Fechar' : isCompleted ? 'Revisar' : 'Praticar →'}
             </Button>
           </Box>
         </Box>
@@ -926,7 +970,7 @@ export default function StudentPage() {
         {/* Expandable Workspace */}
         <Collapse in={isOpen}>
           <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
-          <Box sx={{ p: 3, bgcolor: 'rgba(0, 0, 0, 0.15)' }}>
+          <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'rgba(0, 0, 0, 0.2)' }}>
             {isCompleted ? renderCompletedBody(p) : (
               <ExerciseCard
                 exercise={{ ...(p.exercise || {}), userId: user?.id }}
@@ -1214,10 +1258,12 @@ export default function StudentPage() {
               {penaltyMessage}
             </Alert>
           )}
-          <Grid container spacing={4}>
-            
-            {/* LEFT COLUMN: Student Profile & Gamification Stats */}
-            <Grid size={{ xs: 12, md: 4 }}>
+          {/* TAB 0: ACTIVITIES WITH PROFILE SIDEBAR */}
+          {dashboardTab === 0 && (
+            <Grid container spacing={4}>
+              
+              {/* LEFT COLUMN: Student Profile & Gamification Stats */}
+              <Grid size={{ xs: 12, md: 4 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 
                 {/* 1. Student Profile Card */}
@@ -1466,12 +1512,9 @@ export default function StudentPage() {
               </Box>
             </Grid>
 
-            {/* RIGHT COLUMN: Activities View, Games Zone, or Attendance Records */}
+            {/* RIGHT COLUMN: Activities View */}
             <Grid size={{ xs: 12, md: 8 }}>
-              
-              {dashboardTab === 0 && (
-                // TAB 0: ACTIVITIES PANEL
-                <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
+              <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
                   
                   {/* Title and stats bar with View Mode Switcher */}
                   <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2, mb: 3.5 }}>
@@ -2086,33 +2129,53 @@ export default function StudentPage() {
                           </Typography>
                         </Box>
                         
-                        <Card sx={{
-                          display: 'flex',
-                          bgcolor: 'rgba(0, 0, 0, 0.15)',
-                          border: '1px solid rgba(255,255,255,0.06)',
-                          borderRadius: 3.5,
-                          overflow: 'hidden'
-                        }}>
-                          <Tabs
-                            value={activityTab}
-                            onChange={(_, v) => setActivityTab(v)}
-                            sx={{
-                              minHeight: 40,
-                              '& .MuiTabs-indicator': { height: 3, bgcolor: '#00b4d8', borderRadius: '3px 3px 0 0' },
-                              '& .MuiTab-root': {
-                                minHeight: 40,
-                                px: 2.5,
-                                fontSize: '0.8rem',
-                                color: 'rgba(255,255,255,0.5)',
-                                '&.Mui-selected': { color: '#00b4d8' }
-                              },
-                            }}
-                          >
-                            <Tab label={`Todas (${totalCount})`} />
-                            <Tab label={`Pendentes (${pendingCount})`} />
-                            <Tab label={`Concluídas (${completedCount})`} />
-                          </Tabs>
-                        </Card>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {[
+                            { id: 0, label: 'Todas', count: totalCount, icon: '⚡' },
+                            { id: 1, label: 'Pendentes', count: pendingCount, icon: '⏳' },
+                            { id: 2, label: 'Concluídas', count: completedCount, icon: '✅' }
+                          ].map((pill) => {
+                            const isSelected = activityTab === pill.id;
+                            return (
+                              <Chip
+                                key={pill.id}
+                                label={
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                    <span>{pill.icon}</span>
+                                    <span>{pill.label}</span>
+                                    <span style={{
+                                      background: isSelected ? 'rgba(0, 180, 216, 0.35)' : 'rgba(255,255,255,0.12)',
+                                      padding: '1px 7px',
+                                      borderRadius: 8,
+                                      fontSize: '0.68rem',
+                                      fontWeight: 900
+                                    }}>
+                                      {pill.count}
+                                    </span>
+                                  </Box>
+                                }
+                                onClick={() => setActivityTab(pill.id)}
+                                clickable
+                                sx={{
+                                  height: 36,
+                                  borderRadius: 3,
+                                  px: 0.8,
+                                  fontWeight: 800,
+                                  fontSize: '0.8rem',
+                                  bgcolor: isSelected ? 'rgba(0, 180, 216, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                  color: isSelected ? '#00b4d8' : 'rgba(255, 255, 255, 0.7)',
+                                  border: `1.5px solid ${isSelected ? '#00b4d8' : 'rgba(255, 255, 255, 0.08)'}`,
+                                  boxShadow: isSelected ? '0 0 15px rgba(0, 180, 216, 0.2)' : 'none',
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': {
+                                    bgcolor: isSelected ? 'rgba(0, 180, 216, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                                    borderColor: '#00b4d8'
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </Box>
                       </Box>
 
                       {/* Search Bar */}
@@ -2126,18 +2189,25 @@ export default function StudentPage() {
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
-                                <SearchIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }} />
+                                <SearchIcon sx={{ color: '#00b4d8', fontSize: 20 }} />
                               </InputAdornment>
                             ),
+                            endAdornment: searchTerm ? (
+                              <InputAdornment position="end">
+                                <IconButton size="small" onClick={() => setSearchTerm('')} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.5 }}>
+                                  ✕
+                                </IconButton>
+                              </InputAdornment>
+                            ) : null
                           }}
                           sx={{
                             '& .MuiOutlinedInput-root': {
                               height: 44,
-                              borderRadius: 3.5,
+                              borderRadius: 3,
                               fontSize: '0.85rem',
-                              bgcolor: 'rgba(0, 0, 0, 0.12)',
-                              '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
-                              '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
+                              bgcolor: 'rgba(0, 0, 0, 0.2)',
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
+                              '&:hover fieldset': { borderColor: 'rgba(0, 180, 216, 0.4)' },
                               '&.Mui-focused fieldset': { borderColor: '#00b4d8' }
                             },
                             '& .MuiInputBase-input': { color: '#fff' }
@@ -2178,71 +2248,106 @@ export default function StudentPage() {
                     </Box>
                   ) : (
                     <>
-                      {/* Sub-Filters and Search Bar */}
-                      <Grid container spacing={2} sx={{ mb: 3.5 }}>
-                        <Grid size={{ xs: 12, sm: 8 }}>
-                          <Card sx={{
-                            display: 'flex',
-                            bgcolor: 'rgba(0, 0, 0, 0.15)',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                            borderRadius: 3.5,
-                            overflow: 'hidden'
-                          }}>
-                            <Tabs
-                              value={activityTab}
-                              onChange={(_, v) => setActivityTab(v)}
-                              variant="scrollable"
-                              scrollButtons="auto"
-                              sx={{
-                                minHeight: 48,
-                                '& .MuiTabs-indicator': { height: 3, bgcolor: '#00b4d8', borderRadius: '3px 3px 0 0' },
-                                '& .MuiTab-root': {
-                                  minHeight: 48,
-                                  color: 'rgba(255,255,255,0.5)',
-                                  '&.Mui-selected': { color: '#00b4d8' }
-                                },
-                              }}
-                            >
-                              <Tab label={`Todas (${totalCount})`} />
-                              <Tab label={`Pendentes (${pendingCount})`} />
-                              <Tab label={`Concluídas (${completedCount})`} />
-                              {viewMode !== 'speaking' && <Tab label="Escritas ✍️" />}
-                              {viewMode !== 'speaking' && <Tab label="Quizzes 🧠" />}
-                              {viewMode !== 'speaking' && <Tab label="Flashcards 🎴" />}
-                              {viewMode !== 'speaking' && <Tab label="Outros 🧩" />}
-                            </Tabs>
-                          </Card>
-                        </Grid>
-                        
-                        <Grid size={{ xs: 12, sm: 4 }}>
-                          <TextField
-                            fullWidth
-                            size="small"
-                            placeholder="Buscar atividade..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <SearchIcon sx={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }} />
-                                </InputAdornment>
-                              ),
-                            }}
-                            sx={{
-                              '& .MuiOutlinedInput-root': {
-                                height: 48,
-                                borderRadius: 3.5,
-                                fontSize: '0.9rem',
-                                bgcolor: 'rgba(0, 0, 0, 0.12)',
-                                '& fieldset': { borderColor: 'rgba(255,255,255,0.06)' },
-                                '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.12)' },
-                                '&.Mui-focused fieldset': { borderColor: '#00b4d8' }
-                              },
-                              '& .MuiInputBase-input': { color: '#fff' }
-                            }}
-                          />
-                        </Grid>
-                      </Grid>
+                      {/* Modern Pills Filter Bar & Search */}
+                      <Box sx={{ mb: 3 }}>
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          overflowX: 'auto',
+                          pb: 1.2,
+                          mb: 2,
+                          '&::-webkit-scrollbar': { height: 4 },
+                          '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2 }
+                        }}>
+                          {[
+                            { id: 0, label: 'Todas', count: totalCount, icon: '⚡' },
+                            { id: 1, label: 'Pendentes', count: pendingCount, icon: '⏳' },
+                            { id: 2, label: 'Concluídas', count: completedCount, icon: '✅' },
+                            { id: 3, label: 'Escritas', icon: '✍️' },
+                            { id: 4, label: 'Quizzes', icon: '🧠' },
+                            { id: 5, label: 'Flashcards', icon: '🎴' },
+                            { id: 6, label: 'Outros', icon: '🧩' }
+                          ].map((pill) => {
+                            const isSelected = activityTab === pill.id;
+                            return (
+                              <Chip
+                                key={pill.id}
+                                label={
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                    <span>{pill.icon}</span>
+                                    <span>{pill.label}</span>
+                                    {pill.count !== undefined && (
+                                      <span style={{
+                                        background: isSelected ? 'rgba(0, 180, 216, 0.35)' : 'rgba(255,255,255,0.12)',
+                                        padding: '1px 7px',
+                                        borderRadius: 8,
+                                        fontSize: '0.68rem',
+                                        fontWeight: 900
+                                      }}>
+                                        {pill.count}
+                                      </span>
+                                    )}
+                                  </Box>
+                                }
+                                onClick={() => setActivityTab(pill.id)}
+                                clickable
+                                sx={{
+                                  height: 36,
+                                  borderRadius: 3,
+                                  px: 0.8,
+                                  fontWeight: 800,
+                                  fontSize: '0.82rem',
+                                  bgcolor: isSelected ? 'rgba(0, 180, 216, 0.18)' : 'rgba(255, 255, 255, 0.04)',
+                                  color: isSelected ? '#00b4d8' : 'rgba(255, 255, 255, 0.7)',
+                                  border: `1.5px solid ${isSelected ? '#00b4d8' : 'rgba(255, 255, 255, 0.08)'}`,
+                                  boxShadow: isSelected ? '0 0 15px rgba(0, 180, 216, 0.2)' : 'none',
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': {
+                                    bgcolor: isSelected ? 'rgba(0, 180, 216, 0.25)' : 'rgba(255, 255, 255, 0.08)',
+                                    borderColor: '#00b4d8'
+                                  }
+                                }}
+                              />
+                            );
+                          })}
+                        </Box>
+
+                        {/* Search bar */}
+                        <TextField
+                          fullWidth
+                          size="small"
+                          placeholder="Buscar atividade por título ou tipo..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SearchIcon sx={{ color: '#00b4d8', fontSize: 20 }} />
+                              </InputAdornment>
+                            ),
+                            endAdornment: searchTerm ? (
+                              <InputAdornment position="end">
+                                <IconButton size="small" onClick={() => setSearchTerm('')} sx={{ color: 'rgba(255,255,255,0.5)', p: 0.5 }}>
+                                  ✕
+                                </IconButton>
+                              </InputAdornment>
+                            ) : null
+                          }}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              height: 44,
+                              borderRadius: 3,
+                              fontSize: '0.85rem',
+                              bgcolor: 'rgba(0, 0, 0, 0.2)',
+                              '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
+                              '&:hover fieldset': { borderColor: 'rgba(0, 180, 216, 0.4)' },
+                              '&.Mui-focused fieldset': { borderColor: '#00b4d8' }
+                            },
+                            '& .MuiInputBase-input': { color: '#fff' }
+                          }}
+                        />
+                      </Box>
 
                       {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>{error}</Alert>}
 
@@ -2271,11 +2376,13 @@ export default function StudentPage() {
                     </>
                   )}
                 </Box>
-              )}
+              </Grid>
+            </Grid>
+          )}
 
-              {dashboardTab === 1 && (
-                // TAB 1: ATTENDANCE HISTORY PANEL
-                <Box sx={{ animation: 'fadeIn 0.5s ease' }}>
+          {dashboardTab === 1 && (
+            // TAB 1: ATTENDANCE HISTORY PANEL (FULL WIDTH)
+            <Box sx={{ animation: 'fadeIn 0.5s ease', width: '100%' }}>
                   <Box sx={{ mb: 4 }}>
                     <Typography variant="h4" sx={{ fontWeight: 900, color: '#fff' }}>
                       🕒 Histórico de Aulas
@@ -2527,10 +2634,6 @@ export default function StudentPage() {
                   </Card>
                 </Box>
               )}
-
-            </Grid>
-
-          </Grid>
         </Container>
       {/* FOCUSED VIEW: Fullscreen focus for active RPG activity */}
       {activeFocusExercise && (

@@ -913,7 +913,7 @@ function FlashcardsRenderer({ exercise, onAllSeen }) {
 
 function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
   const sentence = exercise.content?.sentence || '';
-  const instructions = exercise.content?.instructions || 'Ouça a frase clicando no botão e grave a sua pronúncia em inglês.';
+  const instructions = exercise.content?.instructions || 'Ouça a frase com atenção e grave a sua voz em inglês.';
   
   const [isListening, setIsListening] = useState(false);
   const [spokenText, setSpokenText] = useState(answers.text || '');
@@ -924,11 +924,24 @@ function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
     setSpokenText(answers.text || '');
   }, [answers.text]);
 
-  const handleListenPhrase = () => {
+  const handleListen = (rate = 0.85) => {
     try {
       const utterance = new SpeechSynthesisUtterance(sentence);
       utterance.lang = 'en-US';
-      utterance.rate = 0.85;
+      utterance.rate = rate;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("Speech Synthesis error:", e);
+    }
+  };
+
+  const handleListenWord = (word) => {
+    try {
+      const cleanWord = word.replace(/[.,!?;:()"]/g, '').trim();
+      const utterance = new SpeechSynthesisUtterance(cleanWord);
+      utterance.lang = 'en-US';
+      utterance.rate = 0.8;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     } catch (e) {
@@ -997,91 +1010,239 @@ function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
   const targetWordsClean = originalWords.map(clean);
   const spokenWordsClean = spokenText.split(/\s+/).map(clean).filter(Boolean);
 
+  const matchedCount = targetWordsClean.filter(w => spokenWordsClean.includes(w)).length;
+  const matchPercent = targetWordsClean.length > 0 ? Math.round((matchedCount / targetWordsClean.length) * 100) : 0;
+
   return (
     <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
-      <Box sx={{ p: { xs: 1.8, md: 2.5 }, backgroundColor: 'rgba(0, 180, 216, 0.05)', borderLeft: '4px solid #00b4d8', borderRadius: 3.5, mb: 4 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>🎙️ Pronúncia de Frase:</Typography>
-        <Typography variant="body2" sx={{ color: '#eee', mt: 0.5, fontSize: { xs: '0.78rem', md: '0.875rem' } }}>{instructions}</Typography>
+      {/* Instructions header card */}
+      <Box sx={{
+        p: { xs: 2, md: 2.5 },
+        background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.12), rgba(179, 136, 255, 0.05))',
+        border: '1px solid rgba(0, 180, 216, 0.3)',
+        borderRadius: 4,
+        mb: 3
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+            🎙️ Speaking Studio
+          </Typography>
+          <Chip
+            label={spokenText ? `${matchPercent}% Precisão` : 'Aguardando voz'}
+            size="small"
+            sx={{
+              fontWeight: 800,
+              fontSize: '0.72rem',
+              bgcolor: matchPercent >= 80 ? 'rgba(72, 199, 142, 0.2)' : matchPercent > 0 ? 'rgba(255, 183, 77, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+              color: matchPercent >= 80 ? '#48c78e' : matchPercent > 0 ? '#ffb74d' : 'rgba(255,255,255,0.6)',
+              border: `1px solid ${matchPercent >= 80 ? 'rgba(72, 199, 142, 0.4)' : matchPercent > 0 ? 'rgba(255, 183, 77, 0.4)' : 'transparent'}`
+            }}
+          />
+        </Box>
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.84rem' }}>
+          {instructions} Toque em qualquer palavra para ouvir o áudio individual!
+        </Typography>
       </Box>
 
-      <Card sx={{ p: 3, bgcolor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3.5, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center', p: 2, bgcolor: 'rgba(0,0,0,0.15)', borderRadius: '12px', minWidth: '100%', boxSizing: 'border-box' }}>
+      {/* Main interactive phrase card */}
+      <Card sx={{
+        p: { xs: 2.5, md: 4 },
+        background: 'rgba(13, 27, 42, 0.5)',
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+        borderRadius: 4,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 3,
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+      }}>
+        {/* Interactive words container */}
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 1.2,
+          justifyContent: 'center',
+          p: { xs: 2, md: 3 },
+          bgcolor: 'rgba(0, 0, 0, 0.3)',
+          border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: 3.5,
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
           {originalWords.map((word, idx) => {
             const wordClean = targetWordsClean[idx];
             const wasSpoken = spokenWordsClean.includes(wordClean);
             
             return (
-              <Typography 
+              <Box
                 key={idx}
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 900, 
-                  color: wasSpoken ? '#48c78e' : (spokenText ? '#ff5a79' : 'rgba(255,255,255,0.4)'),
-                  textDecoration: wasSpoken ? 'none' : 'underline',
-                  textDecorationColor: 'rgba(255,255,255,0.08)',
-                  transition: 'color 0.25s ease',
-                  fontFamily: 'Outfit, sans-serif',
-                  fontSize: { xs: '1.2rem', sm: '1.5rem' }
+                onClick={() => handleListenWord(word)}
+                title="Toque para ouvir apenas esta palavra!"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1.5,
+                  py: 0.8,
+                  borderRadius: 2.5,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  bgcolor: wasSpoken ? 'rgba(72, 199, 142, 0.15)' : spokenText ? 'rgba(255, 90, 121, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                  border: `1.5px solid ${wasSpoken ? 'rgba(72, 199, 142, 0.5)' : spokenText ? 'rgba(255, 90, 121, 0.3)' : 'rgba(255, 255, 255, 0.08)'}`,
+                  boxShadow: wasSpoken ? '0 0 12px rgba(72, 199, 142, 0.2)' : 'none',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#00b4d8',
+                    bgcolor: 'rgba(0, 180, 216, 0.12)'
+                  }
                 }}
               >
-                {word}
-              </Typography>
+                <Typography
+                  sx={{
+                    fontWeight: 900,
+                    color: wasSpoken ? '#48c78e' : (spokenText ? '#ff8fa3' : '#fff'),
+                    fontFamily: '"Outfit", "Inter", sans-serif',
+                    fontSize: { xs: '1.15rem', sm: '1.4rem' },
+                    lineHeight: 1
+                  }}
+                >
+                  {word}
+                </Typography>
+                <Typography sx={{ fontSize: '0.75rem', opacity: 0.5, color: '#00b4d8' }}>🔊</Typography>
+              </Box>
             );
           })}
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+        {/* Audio Listen Buttons (Normal 1.0x & Slow 0.75x) */}
+        <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button
             variant="outlined"
-            onClick={handleListenPhrase}
+            onClick={() => handleListen(0.9)}
             sx={{
-              borderRadius: '12px',
+              borderRadius: 3,
               textTransform: 'none',
               fontWeight: 800,
-              px: 3.5,
-              py: 1.5,
+              fontSize: '0.85rem',
+              px: 2.5,
+              py: 1,
               borderColor: 'rgba(0, 180, 216, 0.4)',
               color: '#00b4d8',
+              bgcolor: 'rgba(0, 180, 216, 0.04)',
               '&:hover': {
                 borderColor: '#00b4d8',
-                bgcolor: 'rgba(0, 180, 216, 0.05)'
+                bgcolor: 'rgba(0, 180, 216, 0.12)'
               }
             }}
           >
-            🔊 Ouvir Frase
+            🔊 Ouvir Normal (1.0x)
           </Button>
 
+          <Button
+            variant="outlined"
+            onClick={() => handleListen(0.7)}
+            sx={{
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 800,
+              fontSize: '0.85rem',
+              px: 2.5,
+              py: 1,
+              borderColor: 'rgba(255, 183, 77, 0.4)',
+              color: '#ffb74d',
+              bgcolor: 'rgba(255, 183, 77, 0.04)',
+              '&:hover': {
+                borderColor: '#ffb74d',
+                bgcolor: 'rgba(255, 183, 77, 0.12)'
+              }
+            }}
+          >
+            🐢 Ouvir Devagar (0.7x)
+          </Button>
+        </Box>
+
+        {/* Main Recording Mic Button & Soundwave */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: '100%' }}>
           <Button
             variant="contained"
             onClick={handleToggleListening}
             disabled={!!validation}
             sx={{
-              borderRadius: '12px',
+              borderRadius: 4,
               textTransform: 'none',
               fontWeight: 900,
-              px: 3.5,
-              py: 1.5,
-              bgcolor: isListening ? '#ff5a79' : '#7c4dff',
-              boxShadow: isListening ? '0 0 16px rgba(255, 90, 121, 0.4)' : '0 2px 10px rgba(124, 77, 255, 0.3)',
+              fontSize: '1rem',
+              px: 5,
+              py: 1.8,
+              background: isListening 
+                ? 'linear-gradient(135deg, #ff5a79, #d90429)' 
+                : 'linear-gradient(135deg, #00b4d8, #7c4dff)',
+              boxShadow: isListening 
+                ? '0 0 25px rgba(255, 90, 121, 0.6)' 
+                : '0 8px 25px rgba(0, 180, 216, 0.35)',
               color: '#fff',
+              transition: 'all 0.25s ease',
               '&:hover': {
-                bgcolor: isListening ? '#ff3b5c' : '#b388ff'
+                transform: 'translateY(-2px)',
+                boxShadow: isListening ? '0 0 30px rgba(255, 90, 121, 0.8)' : '0 12px 30px rgba(0, 180, 216, 0.5)'
               }
             }}
           >
-            {isListening ? '⏹️ Parar' : '🎙️ Gravar Pronúncia'}
+            {isListening ? '⏹️ Parar Gravação' : '🎙️ Gravar Minha Voz'}
           </Button>
+
+          {/* Soundwave animation while listening */}
+          {isListening && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, height: 28, my: 0.5 }}>
+              {[0.4, 0.8, 1.2, 0.6, 1.4, 0.9, 0.5, 1.1, 0.7].map((heightScale, i) => (
+                <Box
+                  key={i}
+                  sx={{
+                    width: 4,
+                    height: '100%',
+                    bgcolor: '#00b4d8',
+                    borderRadius: 2,
+                    animation: `soundWave 1s infinite ease-in-out alternate`,
+                    animationDelay: `${i * 0.1}s`,
+                    '@keyframes soundWave': {
+                      '0%': { transform: 'scaleY(0.2)', bgcolor: '#00b4d8' },
+                      '100%': { transform: `scaleY(${heightScale})`, bgcolor: '#ff5a79' }
+                    }
+                  }}
+                />
+              ))}
+              <Typography variant="caption" sx={{ ml: 1, color: '#ff5a79', fontWeight: 800 }}>
+                Ouvindo sua pronúncia...
+              </Typography>
+            </Box>
+          )}
         </Box>
 
+        {/* Transcribed User Text Box */}
         {spokenText && (
-          <Box sx={{ width: '100%', mt: 1, p: 2, bgcolor: 'rgba(255,255,255,0.01)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '10px' }}>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, textTransform: 'uppercase', display: 'block', mb: 0.5, fontSize: '0.7rem' }}>O sistema entendeu:</Typography>
-            <Typography variant="body2" sx={{ color: '#fff', fontStyle: 'italic', fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>"{spokenText}"</Typography>
+          <Box sx={{
+            width: '100%',
+            p: 2.5,
+            bgcolor: 'rgba(0, 0, 0, 0.25)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 3
+          }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.45)', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: 0.5 }}>
+                O que você falou:
+              </Typography>
+              <Typography variant="caption" sx={{ color: matchPercent >= 80 ? '#48c78e' : '#ffb74d', fontWeight: 900 }}>
+                {matchPercent >= 80 ? '⭐⭐⭐ Excelente!' : matchPercent >= 50 ? '⭐⭐ Bom!' : '⭐ Tente novamente'}
+              </Typography>
+            </Box>
+            <Typography variant="body1" sx={{ color: '#fff', fontStyle: 'italic', fontWeight: 700, fontSize: { xs: '0.9rem', md: '1rem' } }}>
+              "{spokenText}"
+            </Typography>
           </Box>
         )}
 
         {recognitionError && (
-          <Alert severity="error" sx={{ width: '100%', borderRadius: '10px', bgcolor: 'rgba(255, 90, 121, 0.1)', color: '#ffcbd5', border: '1px solid rgba(255, 90, 121, 0.2)' }}>
+          <Alert severity="error" sx={{ width: '100%', borderRadius: 3, bgcolor: 'rgba(255, 90, 121, 0.1)', color: '#ffcbd5', border: '1px solid rgba(255, 90, 121, 0.25)' }}>
             {recognitionError}
           </Alert>
         )}
