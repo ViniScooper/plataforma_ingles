@@ -37,122 +37,309 @@ function wordCount(text = '') {
 
 // --- Quiz (multiple choice cards) ---
 function QuizRenderer({ exercise, answers, setAnswers, validation }) {
+  const text = exercise.content?.text || '';
+  const questions = Array.isArray(exercise.content?.questions) ? exercise.content.questions : [];
+  const [currentStep, setCurrentStep] = useState(0);
+  const [mode, setMode] = useState('carousel'); // 'carousel' | 'list'
+  const [playingContext, setPlayingContext] = useState(false);
+
+  const total = questions.length;
+  const answeredCount = questions.filter((_, idx) => answers[idx] !== undefined && answers[idx] !== '').length;
+
+  const handleSpeakText = (phrase) => {
+    setPlayingContext(true);
+    speechService.speak(phrase, 0.85, null, () => setPlayingContext(false));
+  };
+
+  const renderSingleQuestion = (q, idx) => {
+    const result = validation?.results?.[idx];
+    const studentChoice = answers[idx] || '';
+
+    return (
+      <Box key={idx} sx={{ animation: 'fadeIn 0.25s ease' }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '1.08rem', display: 'flex', gap: 1, alignItems: 'center' }}>
+            <span style={{ color: '#00b4d8', fontWeight: 900 }}>{idx + 1}.</span> {q.question || q.q}
+          </Typography>
+          <Tooltip title="Ouvir pergunta em inglês">
+            <IconButton
+              size="small"
+              onClick={() => handleSpeakText(q.question || q.q)}
+              sx={{ color: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.1)', flexShrink: 0, '&:hover': { bgcolor: '#00b4d8', color: '#fff' } }}
+            >
+              <VolumeUpIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {Array.isArray(q.options) && q.options.map((opt) => {
+            const isSelected = studentChoice === opt;
+            const isCorrectOpt = result ? (q.correct === opt || q.a === opt) : false;
+            const isStudentIncorrect = result ? (!result.isCorrect && studentChoice === opt) : false;
+            
+            let borderColor = 'rgba(255, 255, 255, 0.08)';
+            let bgcolor = 'rgba(255, 255, 255, 0.02)';
+            let glowColor = 'transparent';
+            let textColor = '#cbd5e1';
+            
+            if (isSelected && !validation) {
+              borderColor = '#00b4d8';
+              bgcolor = 'rgba(0, 180, 216, 0.08)';
+              glowColor = 'rgba(0, 180, 216, 0.2)';
+              textColor = '#fff';
+            }
+            
+            if (validation) {
+              const correctVal = q.correct || q.a || '';
+              if (opt === correctVal) {
+                borderColor = '#48c78e';
+                bgcolor = 'rgba(72, 199, 142, 0.12)';
+                glowColor = 'rgba(72, 199, 142, 0.1)';
+                textColor = '#a5d6a7';
+              } else if (isStudentIncorrect) {
+                borderColor = '#ff8fa3';
+                bgcolor = 'rgba(255, 143, 163, 0.12)';
+                textColor = '#ffcbd5';
+              } else {
+                bgcolor = 'rgba(255,255,255,0.01)';
+                textColor = 'rgba(255,255,255,0.25)';
+                borderColor = 'transparent';
+              }
+            }
+            
+            return (
+              <Box
+                key={opt}
+                onClick={() => !validation && setAnswers({ ...answers, [idx]: opt })}
+                sx={{
+                  p: 2.2,
+                  borderRadius: 3.5,
+                  border: `1.5px solid ${borderColor}`,
+                  bgcolor: bgcolor,
+                  cursor: validation ? 'default' : 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  boxShadow: glowColor !== 'transparent' ? `0 0 15px ${glowColor}` : 'none',
+                  '&:hover': {
+                    border: validation ? borderColor : '1.5px solid #00b4d8',
+                    bgcolor: validation ? bgcolor : 'rgba(0, 180, 216, 0.05)',
+                    transform: validation ? 'none' : 'translateX(4px)'
+                  }
+                }}
+              >
+                <Typography sx={{ color: textColor, fontWeight: isSelected || isCorrectOpt ? 700 : 500, fontSize: '0.95rem' }}>
+                  {opt}
+                </Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {validation ? (
+                    (opt === q.correct || opt === q.a) ? (
+                      <span style={{ color: '#48c78e', fontWeight: 900, fontSize: '1.2rem' }}>✓</span>
+                    ) : isStudentIncorrect ? (
+                      <span style={{ color: '#ff8fa3', fontWeight: 900, fontSize: '1.2rem' }}>✗</span>
+                    ) : null
+                  ) : (
+                    <Box sx={{
+                      width: 20, height: 20,
+                      borderRadius: '50%',
+                      border: isSelected ? '6px solid #00b4d8' : '2px solid rgba(255,255,255,0.2)',
+                      transition: 'all 0.2s ease',
+                      bgcolor: 'transparent'
+                    }} />
+                  )}
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+    );
+  };
+
   return (
     <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
-      {exercise.content?.text && (
+      {text && (
         <Box sx={{
           p: 3,
           backgroundColor: 'rgba(0, 180, 216, 0.05)',
           borderLeft: '4px solid #00b4d8',
           borderRadius: 3.5,
-          mb: 4,
+          mb: 3,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
         }}>
-          <Typography variant="subtitle2" sx={{ color: '#00b4d8', mb: 1, fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
-            📖 Reading Context:
-          </Typography>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#cbd5e1', fontSize: '1.02rem' }}>
-            {exercise.content.text}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ color: '#00b4d8', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
+              📖 Contexto de Leitura:
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<VolumeUpIcon sx={{ fontSize: 16 }} />}
+              onClick={() => handleSpeakText(text)}
+              sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 800, fontSize: '0.75rem', borderColor: 'rgba(0, 180, 216, 0.4)', color: '#00b4d8' }}
+            >
+              {playingContext ? 'Ouvindo...' : '🔊 Ouvir Texto'}
+            </Button>
+          </Box>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#cbd5e1', fontSize: '1rem' }}>
+            {text}
           </Typography>
         </Box>
       )}
-      
-      {Array.isArray(exercise.content?.questions) && exercise.content.questions.map((q, idx) => {
-        const result = validation?.results?.[idx];
-        const studentChoice = answers[idx] || '';
-        
-        return (
-          <Box key={idx} sx={{ mb: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, color: '#fff', fontSize: '1.1rem', display: 'flex', gap: 1 }}>
-              <span style={{ color: '#00b4d8' }}>{idx + 1}.</span> {q.question || q.q}
+
+      {/* Mode Switch & Step Navigation Header if multiple questions */}
+      {total > 1 && (
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2.5,
+          pb: 1.5,
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          flexWrap: 'wrap',
+          gap: 1.5
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#00b4d8', fontSize: '0.88rem' }}>
+              🎯 Questão {currentStep + 1} de {total}
             </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              {Array.isArray(q.options) && q.options.map((opt) => {
-                const isSelected = studentChoice === opt;
-                const isCorrectOpt = result ? (q.correct === opt || q.a === opt) : false;
-                const isStudentIncorrect = result ? (!result.isCorrect && studentChoice === opt) : false;
-                
-                let borderColor = 'rgba(255, 255, 255, 0.08)';
-                let bgcolor = 'rgba(255, 255, 255, 0.02)';
-                let glowColor = 'transparent';
-                let textColor = '#cbd5e1';
-                
-                if (isSelected && !validation) {
-                  borderColor = '#00b4d8';
-                  bgcolor = 'rgba(0, 180, 216, 0.08)';
-                  glowColor = 'rgba(0, 180, 216, 0.2)';
-                  textColor = '#fff';
-                }
-                
-                if (validation) {
-                  const correctVal = q.correct || q.a || '';
-                  if (opt === correctVal) {
-                    borderColor = '#48c78e';
-                    bgcolor = 'rgba(72, 199, 142, 0.12)';
-                    glowColor = 'rgba(72, 199, 142, 0.1)';
-                    textColor = '#a5d6a7';
-                  } else if (isStudentIncorrect) {
-                    borderColor = '#ff8fa3';
-                    bgcolor = 'rgba(255, 143, 163, 0.12)';
-                    textColor = '#ffcbd5';
-                  } else {
-                    bgcolor = 'rgba(255,255,255,0.01)';
-                    textColor = 'rgba(255,255,255,0.25)';
-                    borderColor = 'transparent';
-                  }
-                }
-                
-                return (
-                  <Box
-                    key={opt}
-                    onClick={() => !validation && setAnswers({ ...answers, [idx]: opt })}
-                    sx={{
-                      p: 2.2,
-                      borderRadius: 3.5,
-                      border: `1.5px solid ${borderColor}`,
-                      bgcolor: bgcolor,
-                      cursor: validation ? 'default' : 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      boxShadow: glowColor !== 'transparent' ? `0 0 15px ${glowColor}` : 'none',
-                      '&:hover': {
-                        border: validation ? borderColor : '1.5px solid #00b4d8',
-                        bgcolor: validation ? bgcolor : 'rgba(0, 180, 216, 0.05)',
-                        transform: validation ? 'none' : 'translateX(4px)'
-                      }
-                    }}
-                  >
-                    <Typography sx={{ color: textColor, fontWeight: isSelected || isCorrectOpt ? 700 : 500, fontSize: '0.95rem' }}>
-                      {opt}
-                    </Typography>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      {validation ? (
-                        (opt === q.correct || opt === q.a) ? (
-                          <span style={{ color: '#48c78e', fontWeight: 900, fontSize: '1.2rem' }}>✓</span>
-                        ) : isStudentIncorrect ? (
-                          <span style={{ color: '#ff8fa3', fontWeight: 900, fontSize: '1.2rem' }}>✗</span>
-                        ) : null
-                      ) : (
-                        <Box sx={{
-                          width: 20, height: 20,
-                          borderRadius: '50%',
-                          border: isSelected ? '6px solid #00b4d8' : '2px solid rgba(255,255,255,0.2)',
-                          transition: 'all 0.2s ease',
-                          bgcolor: 'transparent'
-                        }} />
-                      )}
-                    </Box>
-                  </Box>
-                );
-              })}
-            </Box>
+            <Chip
+              label={`${answeredCount}/${total} respondidas`}
+              size="small"
+              sx={{ bgcolor: answeredCount === total ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255,255,255,0.06)', color: answeredCount === total ? '#48c78e' : 'rgba(255,255,255,0.6)', fontWeight: 800, fontSize: '0.68rem' }}
+            />
           </Box>
-        );
-      })}
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant={mode === 'carousel' ? 'contained' : 'outlined'}
+              onClick={() => setMode('carousel')}
+              sx={{
+                borderRadius: 2,
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.4,
+                px: 1.5,
+                bgcolor: mode === 'carousel' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(0, 180, 216, 0.4)',
+                color: mode === 'carousel' ? '#fff' : '#00b4d8'
+              }}
+            >
+              ⬅️ ➡️ Passando pro lado
+            </Button>
+            <Button
+              size="small"
+              variant={mode === 'list' ? 'contained' : 'outlined'}
+              onClick={() => setMode('list')}
+              sx={{
+                borderRadius: 2,
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.4,
+                px: 1.5,
+                bgcolor: mode === 'list' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: mode === 'list' ? '#fff' : 'rgba(255,255,255,0.6)'
+              }}
+            >
+              📑 Ver Todas
+            </Button>
+          </Box>
+        </Box>
+      )}
+
+      {/* Step Dots Indicator */}
+      {total > 1 && mode === 'carousel' && (
+        <Box sx={{ display: 'flex', gap: 0.8, alignItems: 'center', mb: 3, flexWrap: 'wrap' }}>
+          {questions.map((_, i) => {
+            const isCurrent = i === currentStep;
+            const isAns = answers[i] !== undefined && answers[i] !== '';
+            return (
+              <Box
+                key={i}
+                onClick={() => setCurrentStep(i)}
+                sx={{
+                  width: isCurrent ? 28 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  bgcolor: isCurrent ? '#00b4d8' : isAns ? '#48c78e' : 'rgba(255,255,255,0.15)',
+                  boxShadow: isCurrent ? '0 0 10px rgba(0,180,216,0.6)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  '&:hover': { transform: 'scale(1.2)' }
+                }}
+                title={`Ir para questão ${i + 1}`}
+              />
+            );
+          })}
+        </Box>
+      )}
+
+      {/* Render Questions */}
+      {mode === 'carousel' && total > 1 ? (
+        <Box key={currentStep}>
+          {renderSingleQuestion(questions[currentStep], currentStep)}
+
+          {/* Carousel Footer Navigation */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <Button
+              variant="outlined"
+              disabled={currentStep === 0}
+              onClick={() => setCurrentStep(prev => prev - 1)}
+              sx={{
+                borderRadius: 3,
+                fontWeight: 800,
+                textTransform: 'none',
+                color: '#fff',
+                borderColor: 'rgba(255,255,255,0.2)',
+                px: 3,
+                py: 0.9,
+                '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0,180,216,0.08)' }
+              }}
+            >
+              ⬅️ Anterior
+            </Button>
+
+            {currentStep < total - 1 ? (
+              <Button
+                variant="contained"
+                onClick={() => setCurrentStep(prev => prev + 1)}
+                sx={{
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  bgcolor: '#00b4d8',
+                  color: '#fff',
+                  px: 3,
+                  py: 0.9,
+                  boxShadow: '0 4px 15px rgba(0,180,216,0.3)',
+                  '&:hover': { bgcolor: '#0096c7' }
+                }}
+              >
+                Próxima Questão ➡️
+              </Button>
+            ) : (
+              <Chip
+                label="✓ Última questão"
+                size="small"
+                sx={{ bgcolor: 'rgba(72, 199, 142, 0.15)', color: '#48c78e', fontWeight: 800, border: '1px solid rgba(72,199,142,0.3)' }}
+              />
+            )}
+          </Box>
+        </Box>
+      ) : (
+        questions.map((q, idx) => (
+          <Box key={idx} sx={{ mb: 4 }}>
+            {renderSingleQuestion(q, idx)}
+          </Box>
+        ))
+      )}
     </Box>
   );
 }
@@ -323,10 +510,151 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
   const text = exercise.content?.text || '';
   const statements = exercise.content?.statements || [];
   const [playingIdx, setPlayingIdx] = useState(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [mode, setMode] = useState('carousel'); // 'carousel' | 'list'
+
+  const total = statements.length;
+  const answeredCount = statements.filter((_, idx) => answers[idx] !== undefined).length;
 
   const handleSpeak = (phrase, idx = null) => {
     setPlayingIdx(idx);
     speechService.speak(phrase, 0.85, null, () => setPlayingIdx(null));
+  };
+
+  const renderSingleStatement = (st, idx) => {
+    const selected = answers[idx];
+    const isCorrect = validation ? (selected === st.correct) : null;
+    const isPlayingThis = playingIdx === idx;
+
+    return (
+      <Card key={idx} sx={{
+        p: { xs: 2.5, md: 3 },
+        mb: 2,
+        background: isCorrect === true
+          ? 'rgba(72, 199, 142, 0.05)'
+          : isCorrect === false
+          ? 'rgba(255, 90, 121, 0.05)'
+          : 'rgba(255,255,255,0.01)',
+        border: '1.5px solid',
+        borderColor: validation
+          ? (isCorrect ? 'rgba(72, 199, 142, 0.5)' : 'rgba(255, 90, 121, 0.5)')
+          : 'rgba(255,255,255,0.08)',
+        borderLeft: validation ? `5px solid ${isCorrect ? '#48c78e' : '#ff5a79'}` : '1.5px solid rgba(255,255,255,0.08)',
+        borderRadius: 4,
+        boxShadow: validation && isCorrect ? '0 0 15px rgba(72, 199, 142, 0.1)' : 'none',
+        transition: 'all 0.3s ease',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2.5 }}>
+          <Typography variant="body1" sx={{ fontWeight: 800, color: '#fff', fontSize: { xs: '1rem', md: '1.1rem' }, lineHeight: 1.5 }}>
+            <span style={{ color: '#00b4d8', marginRight: '6px' }}>{idx + 1}.</span> {st.statement}
+          </Typography>
+          <Tooltip title="Ouvir afirmação em inglês">
+            <IconButton
+              size="small"
+              onClick={() => handleSpeak(st.statement, idx)}
+              sx={{
+                color: isPlayingThis ? '#fff' : '#00b4d8',
+                bgcolor: isPlayingThis ? '#00b4d8' : 'rgba(0, 180, 216, 0.12)',
+                border: '1px solid rgba(0, 180, 216, 0.3)',
+                flexShrink: 0,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: '#00b4d8',
+                  color: '#fff',
+                  transform: 'scale(1.1)'
+                }
+              }}
+            >
+              <VolumeUpIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {[true, false].map((val) => {
+            const label = val ? '✓ True (Verdadeiro)' : '✗ False (Falso)';
+            const isSelected = selected === val;
+            const isThisCorrect = validation && st.correct === val;
+            
+            let borderColor = 'rgba(255, 255, 255, 0.08)';
+            let bgcolor = 'rgba(255, 255, 255, 0.02)';
+            let color = '#cbd5e1';
+            let shadow = 'none';
+
+            if (isSelected && !validation) {
+              borderColor = val ? '#48c78e' : '#ff8fa3';
+              bgcolor = val ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 143, 163, 0.12)';
+              color = '#fff';
+              shadow = val ? '0 0 15px rgba(72, 199, 142, 0.25)' : '0 0 15px rgba(255, 143, 163, 0.25)';
+            }
+
+            if (validation) {
+              if (isThisCorrect) {
+                borderColor = '#48c78e';
+                bgcolor = 'rgba(72, 199, 142, 0.18)';
+                color = '#a5d6a7';
+                shadow = '0 0 12px rgba(72, 199, 142, 0.2)';
+              } else if (isSelected && !isCorrect) {
+                borderColor = '#ff8fa3';
+                bgcolor = 'rgba(255, 143, 163, 0.18)';
+                color = '#ffcbd5';
+              } else {
+                bgcolor = 'rgba(255,255,255,0.01)';
+                color = 'rgba(255,255,255,0.2)';
+                borderColor = 'transparent';
+              }
+            }
+
+            return (
+              <Button
+                key={String(val)}
+                variant="contained"
+                size="medium"
+                disabled={!!validation}
+                onClick={() => setAnswers({ ...answers, [idx]: val })}
+                sx={{
+                  flex: 1,
+                  bgcolor,
+                  color,
+                  fontWeight: 800,
+                  py: 1.4,
+                  borderRadius: 3,
+                  textTransform: 'none',
+                  fontSize: '0.95rem',
+                  border: `1.5px solid ${borderColor}`,
+                  boxShadow: shadow,
+                  '&:hover': {
+                    bgcolor: validation ? bgcolor : (val ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255, 143, 163, 0.15)'),
+                    border: validation ? borderColor : `1.5px solid ${val ? '#48c78e' : '#ff8fa3'}`,
+                    transform: validation ? 'none' : 'translateY(-1px)'
+                  },
+                  '&.Mui-disabled': { bgcolor, color, opacity: 1 },
+                }}
+              >
+                {label}
+              </Button>
+            );
+          })}
+        </Box>
+        
+        {validation && (
+          <Box sx={{
+            mt: 2,
+            p: 1.5,
+            borderRadius: 2.5,
+            bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.1)' : 'rgba(255, 90, 121, 0.1)',
+            border: `1px solid ${isCorrect ? 'rgba(72, 199, 142, 0.2)' : 'rgba(255, 90, 121, 0.2)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}>
+            <Typography variant="body2" sx={{ fontWeight: 800, color: isCorrect ? '#48c78e' : '#ff5a79', fontSize: '0.85rem' }}>
+              {isCorrect ? '✅ Resposta correta! Parabéns.' : `❌ Incorreto! A resposta certa é: ${st.correct ? 'True (Verdadeiro)' : 'False (Falso)'}`}
+            </Typography>
+          </Box>
+        )}
+      </Card>
+    );
   };
 
   return (
@@ -337,7 +665,7 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
           backgroundColor: 'rgba(72, 199, 142, 0.04)',
           borderLeft: '4px solid #48c78e',
           borderRadius: 3.5,
-          mb: 4,
+          mb: 3,
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
@@ -369,144 +697,152 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
         </Box>
       )}
 
-      <Typography variant="caption" sx={{ fontWeight: 800, mb: 2.5, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>
-        Marque cada afirmação como Verdadeira (True) ou Falsa (False):
-      </Typography>
+      {/* Mode Switch & Step Navigation Header */}
+      {total > 1 && (
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 2.5,
+          pb: 1.5,
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          flexWrap: 'wrap',
+          gap: 1.5
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#00b4d8', fontSize: '0.88rem' }}>
+              🎯 Afirmação {currentStep + 1} de {total}
+            </Typography>
+            <Chip
+              label={`${answeredCount}/${total} respondidas`}
+              size="small"
+              sx={{ bgcolor: answeredCount === total ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255,255,255,0.06)', color: answeredCount === total ? '#48c78e' : 'rgba(255,255,255,0.6)', fontWeight: 800, fontSize: '0.68rem' }}
+            />
+          </Box>
 
-      {statements.map((st, idx) => {
-        const selected = answers[idx];
-        const isCorrect = validation ? (selected === st.correct) : null;
-        const isPlayingThis = playingIdx === idx;
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant={mode === 'carousel' ? 'contained' : 'outlined'}
+              onClick={() => setMode('carousel')}
+              sx={{
+                borderRadius: 2,
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.4,
+                px: 1.5,
+                bgcolor: mode === 'carousel' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(0, 180, 216, 0.4)',
+                color: mode === 'carousel' ? '#fff' : '#00b4d8'
+              }}
+            >
+              ⬅️ ➡️ Passando pro lado
+            </Button>
+            <Button
+              size="small"
+              variant={mode === 'list' ? 'contained' : 'outlined'}
+              onClick={() => setMode('list')}
+              sx={{
+                borderRadius: 2,
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.4,
+                px: 1.5,
+                bgcolor: mode === 'list' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: mode === 'list' ? '#fff' : 'rgba(255,255,255,0.6)'
+              }}
+            >
+              📑 Ver Todas
+            </Button>
+          </Box>
+        </Box>
+      )}
 
-        return (
-          <Card key={idx} sx={{
-            p: 3, mb: 3,
-            background: isCorrect === true
-              ? 'rgba(72, 199, 142, 0.05)'
-              : isCorrect === false
-              ? 'rgba(255, 90, 121, 0.05)'
-              : 'rgba(255,255,255,0.01)',
-            border: '1.5px solid',
-            borderColor: validation
-              ? (isCorrect ? 'rgba(72, 199, 142, 0.5)' : 'rgba(255, 90, 121, 0.5)')
-              : 'rgba(255,255,255,0.08)',
-            borderLeft: validation ? `5px solid ${isCorrect ? '#48c78e' : '#ff5a79'}` : '1.5px solid rgba(255,255,255,0.08)',
-            borderRadius: 4,
-            boxShadow: validation && isCorrect ? '0 0 15px rgba(72, 199, 142, 0.1)' : 'none',
-            transition: 'all 0.3s ease',
-          }}>
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2.5 }}>
-              <Typography variant="body1" sx={{ fontWeight: 800, color: '#fff', fontSize: '1.05rem', lineHeight: 1.5 }}>
-                <span style={{ color: '#00b4d8', marginRight: '6px' }}>{idx + 1}.</span> {st.statement}
-              </Typography>
-              <Tooltip title="Ouvir afirmação em inglês">
-                <IconButton
-                  size="small"
-                  onClick={() => handleSpeak(st.statement, idx)}
-                  sx={{
-                    color: isPlayingThis ? '#fff' : '#00b4d8',
-                    bgcolor: isPlayingThis ? '#00b4d8' : 'rgba(0, 180, 216, 0.12)',
-                    border: '1px solid rgba(0, 180, 216, 0.3)',
-                    flexShrink: 0,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: '#00b4d8',
-                      color: '#fff',
-                      transform: 'scale(1.1)'
-                    }
-                  }}
-                >
-                  <VolumeUpIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {[true, false].map((val) => {
-                const label = val ? '✓ True (Verdadeiro)' : '✗ False (Falso)';
-                const isSelected = selected === val;
-                const isThisCorrect = validation && st.correct === val;
-                
-                let borderColor = 'rgba(255, 255, 255, 0.08)';
-                let bgcolor = 'rgba(255, 255, 255, 0.02)';
-                let color = '#cbd5e1';
-                let shadow = 'none';
+      {/* Step Dots Indicator */}
+      {total > 1 && mode === 'carousel' && (
+        <Box sx={{ display: 'flex', gap: 0.8, alignItems: 'center', mb: 3, flexWrap: 'wrap' }}>
+          {statements.map((_, i) => {
+            const isCurrent = i === currentStep;
+            const isAns = answers[i] !== undefined;
+            return (
+              <Box
+                key={i}
+                onClick={() => setCurrentStep(i)}
+                sx={{
+                  width: isCurrent ? 28 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  bgcolor: isCurrent ? '#00b4d8' : isAns ? '#48c78e' : 'rgba(255,255,255,0.15)',
+                  boxShadow: isCurrent ? '0 0 10px rgba(0,180,216,0.6)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  '&:hover': { transform: 'scale(1.2)' }
+                }}
+                title={`Ir para afirmação ${i + 1}`}
+              />
+            );
+          })}
+        </Box>
+      )}
 
-                if (isSelected && !validation) {
-                  borderColor = val ? '#48c78e' : '#ff8fa3';
-                  bgcolor = val ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 143, 163, 0.12)';
-                  color = '#fff';
-                  shadow = val ? '0 0 15px rgba(72, 199, 142, 0.25)' : '0 0 15px rgba(255, 143, 163, 0.25)';
-                }
+      {/* Render Statements */}
+      {mode === 'carousel' && total > 1 ? (
+        <Box key={currentStep}>
+          {renderSingleStatement(statements[currentStep], currentStep)}
 
-                if (validation) {
-                  if (isThisCorrect) {
-                    borderColor = '#48c78e';
-                    bgcolor = 'rgba(72, 199, 142, 0.18)';
-                    color = '#a5d6a7';
-                    shadow = '0 0 12px rgba(72, 199, 142, 0.2)';
-                  } else if (isSelected && !isCorrect) {
-                    borderColor = '#ff8fa3';
-                    bgcolor = 'rgba(255, 143, 163, 0.18)';
-                    color = '#ffcbd5';
-                  } else {
-                    bgcolor = 'rgba(255,255,255,0.01)';
-                    color = 'rgba(255,255,255,0.2)';
-                    borderColor = 'transparent';
-                  }
-                }
+          {/* Carousel Footer Navigation */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, pt: 2, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <Button
+              variant="outlined"
+              disabled={currentStep === 0}
+              onClick={() => setCurrentStep(prev => prev - 1)}
+              sx={{
+                borderRadius: 3,
+                fontWeight: 800,
+                textTransform: 'none',
+                color: '#fff',
+                borderColor: 'rgba(255,255,255,0.2)',
+                px: 3,
+                py: 0.9,
+                '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0,180,216,0.08)' }
+              }}
+            >
+              ⬅️ Anterior
+            </Button>
 
-                return (
-                  <Button
-                    key={String(val)}
-                    variant="contained"
-                    size="medium"
-                    disabled={!!validation}
-                    onClick={() => setAnswers({ ...answers, [idx]: val })}
-                    sx={{
-                      flex: 1,
-                      bgcolor,
-                      color,
-                      fontWeight: 800,
-                      py: 1.4,
-                      borderRadius: 3,
-                      textTransform: 'none',
-                      fontSize: '0.95rem',
-                      border: `1.5px solid ${borderColor}`,
-                      boxShadow: shadow,
-                      '&:hover': {
-                        bgcolor: validation ? bgcolor : (val ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255, 143, 163, 0.15)'),
-                        border: validation ? borderColor : `1.5px solid ${val ? '#48c78e' : '#ff8fa3'}`,
-                        transform: validation ? 'none' : 'translateY(-1px)'
-                      },
-                      '&.Mui-disabled': { bgcolor, color, opacity: 1 },
-                    }}
-                  >
-                    {label}
-                  </Button>
-                );
-              })}
-            </Box>
-            
-            {validation && (
-              <Box sx={{
-                mt: 2,
-                p: 1.5,
-                borderRadius: 2.5,
-                bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.1)' : 'rgba(255, 90, 121, 0.1)',
-                border: `1px solid ${isCorrect ? 'rgba(72, 199, 142, 0.2)' : 'rgba(255, 90, 121, 0.2)'}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1
-              }}>
-                <Typography variant="body2" sx={{ fontWeight: 800, color: isCorrect ? '#48c78e' : '#ff5a79', fontSize: '0.85rem' }}>
-                  {isCorrect ? '✅ Resposta correta! Parabéns.' : `❌ Incorreto! A resposta certa é: ${st.correct ? 'True (Verdadeiro)' : 'False (Falso)'}`}
-                </Typography>
-              </Box>
+            {currentStep < total - 1 ? (
+              <Button
+                variant="contained"
+                onClick={() => setCurrentStep(prev => prev + 1)}
+                sx={{
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  bgcolor: '#00b4d8',
+                  color: '#fff',
+                  px: 3,
+                  py: 0.9,
+                  boxShadow: '0 4px 15px rgba(0,180,216,0.3)',
+                  '&:hover': { bgcolor: '#0096c7' }
+                }}
+              >
+                Próxima Afirmação ➡️
+              </Button>
+            ) : (
+              <Chip
+                label="✓ Todas visualizadas"
+                size="small"
+                sx={{ bgcolor: 'rgba(72, 199, 142, 0.15)', color: '#48c78e', fontWeight: 800, border: '1px solid rgba(72,199,142,0.3)' }}
+              />
             )}
-          </Card>
-        );
-      })}
+          </Box>
+        </Box>
+      ) : (
+        statements.map((st, idx) => renderSingleStatement(st, idx))
+      )}
     </Box>
   );
 }

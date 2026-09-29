@@ -194,6 +194,8 @@ export default function StudentPage() {
   // Activity Filters (sub-tab)
   const [activityTab, setActivityTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activityViewLayout, setActivityViewLayout] = useState('focus'); // 'focus' (passando pro lado) | 'list'
+  const [focusActivityIdx, setFocusActivityIdx] = useState(0);
 
   // Backend gamification states
   const [backendCoins, setBackendCoins] = useState(0);
@@ -839,9 +841,9 @@ export default function StudentPage() {
     );
   };
 
-  const renderActivityCard = (p, idx) => {
+  const renderActivityCard = (p, idx, forceOpen = false) => {
     const isCompleted = p.status === 'completed';
-    const isOpen = !!openCards[p.id];
+    const isOpen = forceOpen ? (openCards[p.id] !== false) : !!openCards[p.id];
     const exType = p.exercise?.type || 'text';
 
     // Skill icons & color scheme
@@ -1068,6 +1070,193 @@ export default function StudentPage() {
           </Box>
         </Collapse>
       </Card>
+    );
+  };
+
+  useEffect(() => {
+    setFocusActivityIdx(0);
+  }, [activityTab, searchTerm, viewMode]);
+
+  const renderExerciseCollection = (exercises) => {
+    if (exercises.length === 0) return null;
+    const safeFocusIdx = Math.min(focusActivityIdx, Math.max(0, exercises.length - 1));
+
+    return (
+      <Box sx={{ animation: 'fadeIn 0.3s ease' }}>
+        {/* View Mode Bar: Modo Foco (1 por 1) vs Modo Lista */}
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          mb: 3,
+          p: 1.5,
+          px: { xs: 1.5, sm: 2.2 },
+          borderRadius: 3.5,
+          bgcolor: 'rgba(13, 27, 42, 0.5)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          flexWrap: 'wrap',
+          gap: 1.5
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fff', fontSize: '0.88rem' }}>
+              {activityViewLayout === 'focus' ? '🎯 Modo Foco: 1 por Vez (Sem Scroll)' : '📑 Modo Lista Completa'}
+            </Typography>
+            <Chip
+              label={`${exercises.length} ${exercises.length === 1 ? 'atividade' : 'atividades'}`}
+              size="small"
+              sx={{ bgcolor: 'rgba(0, 180, 216, 0.15)', color: '#00b4d8', fontWeight: 800, fontSize: '0.68rem' }}
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant={activityViewLayout === 'focus' ? 'contained' : 'outlined'}
+              onClick={() => setActivityViewLayout('focus')}
+              sx={{
+                borderRadius: 2.5,
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.6,
+                px: 1.8,
+                bgcolor: activityViewLayout === 'focus' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(0, 180, 216, 0.4)',
+                color: activityViewLayout === 'focus' ? '#fff' : '#00b4d8',
+                boxShadow: activityViewLayout === 'focus' ? '0 2px 10px rgba(0,180,216,0.3)' : 'none',
+                '&:hover': { bgcolor: activityViewLayout === 'focus' ? '#0096c7' : 'rgba(0,180,216,0.1)' }
+              }}
+            >
+              ⬅️ ➡️ Passando pro Lado
+            </Button>
+            <Button
+              size="small"
+              variant={activityViewLayout === 'list' ? 'contained' : 'outlined'}
+              onClick={() => setActivityViewLayout('list')}
+              sx={{
+                borderRadius: 2.5,
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                textTransform: 'none',
+                py: 0.6,
+                px: 1.8,
+                bgcolor: activityViewLayout === 'list' ? '#00b4d8' : 'transparent',
+                borderColor: 'rgba(255,255,255,0.2)',
+                color: activityViewLayout === 'list' ? '#fff' : 'rgba(255,255,255,0.6)',
+                '&:hover': { bgcolor: activityViewLayout === 'list' ? '#0096c7' : 'rgba(255,255,255,0.06)' }
+              }}
+            >
+              📑 Ver Todas
+            </Button>
+          </Box>
+        </Box>
+
+        {activityViewLayout === 'focus' ? (
+          <Box sx={{ animation: 'fadeIn 0.3s ease' }}>
+            {/* Top Carousel Navigation Toolbar */}
+            <Box sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2.5,
+              p: 2,
+              borderRadius: 3.5,
+              background: 'linear-gradient(135deg, rgba(0, 180, 216, 0.12), rgba(13, 27, 42, 0.8))',
+              border: '1px solid rgba(0, 180, 216, 0.3)',
+              gap: 1.5,
+              flexWrap: 'wrap',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+            }}>
+              <Button
+                variant="outlined"
+                disabled={safeFocusIdx === 0}
+                onClick={() => setFocusActivityIdx(prev => Math.max(0, prev - 1))}
+                sx={{
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: '#fff',
+                  borderColor: 'rgba(255,255,255,0.25)',
+                  px: 2.5,
+                  py: 0.8,
+                  fontSize: '0.85rem',
+                  '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0,180,216,0.1)' },
+                  '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)', borderColor: 'rgba(255,255,255,0.05)' }
+                }}
+              >
+                ⬅️ Anterior
+              </Button>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.6 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#fff', fontSize: '0.94rem' }}>
+                  Atividade {safeFocusIdx + 1} de {exercises.length}
+                </Typography>
+                {/* Mini dot indicators */}
+                <Box sx={{ display: 'flex', gap: 0.6, alignItems: 'center', maxWidth: { xs: 200, sm: 360 }, overflowX: 'auto', py: 0.5 }}>
+                  {exercises.map((p, i) => {
+                    const isCur = i === safeFocusIdx;
+                    const isComp = p.status === 'completed';
+                    return (
+                      <Box
+                        key={p.id}
+                        onClick={() => setFocusActivityIdx(i)}
+                        sx={{
+                          width: isCur ? 24 : 8,
+                          height: 8,
+                          borderRadius: 4,
+                          bgcolor: isCur ? '#00b4d8' : isComp ? '#48c78e' : 'rgba(255,255,255,0.15)',
+                          boxShadow: isCur ? '0 0 10px rgba(0,180,216,0.8)' : 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.25s ease',
+                          flexShrink: 0,
+                          '&:hover': { transform: 'scale(1.25)' }
+                        }}
+                        title={`Ir para atividade ${i + 1}: ${p.exercise?.title || ''}`}
+                      />
+                    );
+                  })}
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                disabled={safeFocusIdx >= exercises.length - 1}
+                onClick={() => setFocusActivityIdx(prev => Math.min(exercises.length - 1, prev + 1))}
+                sx={{
+                  borderRadius: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  bgcolor: '#00b4d8',
+                  color: '#fff',
+                  px: 2.5,
+                  py: 0.8,
+                  fontSize: '0.85rem',
+                  boxShadow: '0 4px 15px rgba(0,180,216,0.3)',
+                  '&:hover': { bgcolor: '#0096c7' },
+                  '&.Mui-disabled': { bgcolor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)' }
+                }}
+              >
+                Próxima Atividade ➡️
+              </Button>
+            </Box>
+
+            {/* Render the single active card - auto opened so student doesn't need to click or scroll */}
+            {exercises[safeFocusIdx] && (
+              <Box key={exercises[safeFocusIdx].id} sx={{ animation: 'fadeIn 0.25s ease' }}>
+                {renderActivityCard(exercises[safeFocusIdx], safeFocusIdx, true)}
+              </Box>
+            )}
+          </Box>
+        ) : (
+          <Box>
+            {exercises.map((p, idx) => (
+              <Box key={p.id} sx={{ mb: 2 }}>
+                {renderActivityCard(p, idx)}
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
     );
   };
 
@@ -2326,13 +2515,7 @@ export default function StudentPage() {
                           </Typography>
                         </Card>
                       ) : (
-                        <Grid container spacing={3}>
-                          {filteredExercises.map((p, idx) => (
-                            <Grid size={12} key={p.id}>
-                              {renderActivityCard(p, idx)}
-                            </Grid>
-                          ))}
-                        </Grid>
+                        renderExerciseCollection(filteredExercises)
                       )}
                     </Box>
                   ) : (
@@ -2460,7 +2643,7 @@ export default function StudentPage() {
                           </Typography>
                         </Card>
                       ) : (
-                        filteredExercises.map((p, idx) => renderActivityCard(p, idx))
+                        renderExerciseCollection(filteredExercises)
                       )}
                     </>
                   )}
