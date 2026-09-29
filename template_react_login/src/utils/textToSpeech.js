@@ -73,3 +73,4 @@ class SpeechService {
 }
 
 export const speechService = new SpeechService();
+export default speechService;

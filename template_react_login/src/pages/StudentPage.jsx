@@ -22,6 +22,7 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -43,8 +44,11 @@ import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import MedalIcon from '@mui/icons-material/MilitaryTech';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { AuthContext } from '../context/AuthContext';
 import apiClient from '../utils/apiClient';
+import soundEffects from '../utils/soundEffects';
+import speechService from '../utils/textToSpeech';
 import ExerciseCard from '../components/Student/ExerciseCard';
 import { StudentAvatar } from '../components/Student/StudentAvatar';
 import AchievementsModal from '../components/Student/AchievementsModal';
@@ -668,6 +672,7 @@ export default function StudentPage() {
         totalQuestions: 0,
         result: null
       });
+      soundEffects.playSuccess();
       setActiveFocusExercise(null);
       await loadData(true);
     } catch (err) {
@@ -725,9 +730,38 @@ export default function StudentPage() {
         )}
 
         {p.exercise?.type === 'true-false' && Array.isArray(p.result?.validation) && p.result.validation.map((r, i) => (
-          <Card key={i} sx={{ p: 2, mb: 1.5, borderLeft: `4px solid ${r.isCorrect ? '#4caf50' : '#f44336'}`, bgcolor: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <Typography variant="body2" fontWeight={700} color="#eee">{r.isCorrect ? '✅' : '❌'} {r.statement}</Typography>
-            {!r.isCorrect && <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block', fontWeight: 600 }}>Correto: {r.correctAnswer ? 'True' : 'False'}</Typography>}
+          <Card key={i} sx={{
+            p: 2.5, mb: 1.8,
+            borderLeft: `5px solid ${r.isCorrect ? '#48c78e' : '#ff5a79'}`,
+            bgcolor: r.isCorrect ? 'rgba(72, 199, 142, 0.05)' : 'rgba(255, 90, 121, 0.05)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            borderRadius: 3.5,
+            boxShadow: r.isCorrect ? '0 0 12px rgba(72,199,142,0.1)' : 'none'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5 }}>
+              <Typography variant="body2" fontWeight={800} color="#eee" sx={{ fontSize: '0.95rem', lineHeight: 1.5 }}>
+                {r.isCorrect ? '✅' : '❌'} {r.statement}
+              </Typography>
+              <Tooltip title="Ouvir afirmação em inglês">
+                <IconButton
+                  size="small"
+                  onClick={() => speechService.speak(r.statement, 0.85)}
+                  sx={{
+                    color: '#00b4d8',
+                    bgcolor: 'rgba(0, 180, 216, 0.12)',
+                    flexShrink: 0,
+                    '&:hover': { bgcolor: '#00b4d8', color: '#fff', transform: 'scale(1.1)' }
+                  }}
+                >
+                  <VolumeUpIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+            {!r.isCorrect && (
+              <Typography variant="caption" sx={{ mt: 1, display: 'block', fontWeight: 800, color: '#ff8fa3', fontSize: '0.78rem' }}>
+                Resposta correta: {r.correctAnswer ? 'True (Verdadeiro)' : 'False (Falso)'}
+              </Typography>
+            )}
           </Card>
         ))}
 
@@ -816,6 +850,8 @@ export default function StudentPage() {
       typeConfig = { label: '🎙️ Pronúncia', color: '#48c78e', bg: 'rgba(72, 199, 142, 0.12)' };
     } else if (exType === 'quiz') {
       typeConfig = { label: '🧠 Quiz', color: '#00b4d8', bg: 'rgba(0, 180, 216, 0.12)' };
+    } else if (exType === 'true-false') {
+      typeConfig = { label: '⚖️ V ou F', color: '#48c78e', bg: 'rgba(72, 199, 142, 0.12)' };
     } else if (isWriting(p)) {
       typeConfig = { label: '✍️ Escrita', color: '#b388ff', bg: 'rgba(179, 136, 255, 0.12)' };
     } else if (isFlashcard(p)) {
@@ -859,7 +895,7 @@ export default function StudentPage() {
               : 'transparent'
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0, flex: 1 }}>
             {/* Status icon badge */}
             <Box sx={{
               width: 40,
@@ -877,12 +913,36 @@ export default function StudentPage() {
               }
             </Box>
 
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {p.exercise?.title || `Atividade ${idx + 1}`}
-              </Typography>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {p.exercise?.title || `Atividade ${idx + 1}`}
+                </Typography>
+                <Tooltip title="Ouvir em inglês (Prof. Vinicius)">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const speakText = p.exercise?.sentence || p.exercise?.content?.sentence || p.exercise?.title || '';
+                      if (speakText) speechService.speak(speakText, 0.85);
+                    }}
+                    sx={{
+                      color: '#00b4d8',
+                      bgcolor: 'rgba(0, 180, 216, 0.1)',
+                      p: 0.5,
+                      '&:hover': {
+                        bgcolor: '#00b4d8',
+                        color: '#fff',
+                        transform: 'scale(1.15)'
+                      }
+                    }}
+                  >
+                    <VolumeUpIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
               
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 0.5 }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.8, mt: 0.8 }}>
                 <Chip
                   label={typeConfig.label}
                   size="small"
@@ -909,10 +969,36 @@ export default function StudentPage() {
                   }}
                 />
 
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem' }}>
+                <Chip
+                  label="+10 🪙"
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.65rem',
+                    fontWeight: 850,
+                    bgcolor: 'rgba(255, 170, 0, 0.12)',
+                    color: '#ffaa00',
+                    border: '1px solid rgba(255, 170, 0, 0.25)'
+                  }}
+                />
+
+                <Chip
+                  label="👨‍🏫 Prof. Vinicius Lourenço"
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: '0.62rem',
+                    fontWeight: 750,
+                    bgcolor: 'rgba(0, 180, 216, 0.08)',
+                    color: '#00b4d8',
+                    border: '1px solid rgba(0, 180, 216, 0.2)'
+                  }}
+                />
+
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.72rem', ml: 0.5 }}>
                   {isCompleted
                     ? (p.totalQuestions > 0 ? `Score: ${p.score}/${p.totalQuestions}` : '✓ Concluída')
-                    : (p.exercise?.level ? `Nível ${p.exercise.level.toUpperCase()}` : 'Geral')
+                    : (p.exercise?.level ? `Nível ${p.exercise.level.toUpperCase()}` : 'A2 Iniciante')
                   }
                 </Typography>
               </Box>

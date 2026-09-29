@@ -123,3 +123,4 @@ class SoundManager {
 }
 
 export const soundEffects = new SoundManager();
+export default soundEffects;

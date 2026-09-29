@@ -10,8 +10,13 @@ import {
   Card,
   TextField,
   Chip,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import apiClient from '../../utils/apiClient';
+import soundEffects from '../../utils/soundEffects';
+import speechService from '../../utils/textToSpeech';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -317,40 +322,108 @@ function WritingRenderer({ exercise, answers, setAnswers, validation }) {
 function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
   const text = exercise.content?.text || '';
   const statements = exercise.content?.statements || [];
+  const [playingIdx, setPlayingIdx] = useState(null);
+
+  const handleSpeak = (phrase, idx = null) => {
+    setPlayingIdx(idx);
+    speechService.speak(phrase, 0.85, null, () => setPlayingIdx(null));
+  };
 
   return (
     <Box sx={{ mb: 3, animation: 'fadeIn 0.3s ease' }}>
       {text && (
-        <Box sx={{ p: 3, backgroundColor: 'rgba(72, 199, 142, 0.04)', borderLeft: '4px solid #48c78e', borderRadius: 3.5, mb: 4 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#48c78e', mb: 1, textTransform: 'uppercase', letterSpacing: 0.5 }}>📖 Context:</Typography>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#f1f5f9', fontSize: '1.02rem' }}>{text}</Typography>
+        <Box sx={{
+          p: 3,
+          backgroundColor: 'rgba(72, 199, 142, 0.04)',
+          borderLeft: '4px solid #48c78e',
+          borderRadius: 3.5,
+          mb: 4,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#48c78e', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+              📖 Contexto de Leitura:
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<VolumeUpIcon sx={{ fontSize: 18 }} />}
+              onClick={() => handleSpeak(text, 'context')}
+              sx={{
+                borderRadius: 2.5,
+                textTransform: 'none',
+                fontWeight: 800,
+                fontSize: '0.78rem',
+                borderColor: 'rgba(72, 199, 142, 0.4)',
+                color: '#48c78e',
+                bgcolor: playingIdx === 'context' ? 'rgba(72, 199, 142, 0.2)' : 'rgba(72, 199, 142, 0.05)',
+                '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72, 199, 142, 0.15)' }
+              }}
+            >
+              {playingIdx === 'context' ? 'Ouvindo...' : '🔊 Ouvir Texto (Prof. Vinicius)'}
+            </Button>
+          </Box>
+          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#f1f5f9', fontSize: '1.02rem' }}>
+            {text}
+          </Typography>
         </Box>
       )}
 
-      <Typography variant="caption" sx={{ fontWeight: 800, mb: 2.5, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>
-        Mark each statement as True or False:
+      <Typography variant="caption" sx={{ fontWeight: 800, mb: 2.5, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 0.8, display: 'block' }}>
+        Marque cada afirmação como Verdadeira (True) ou Falsa (False):
       </Typography>
 
       {statements.map((st, idx) => {
         const selected = answers[idx];
         const isCorrect = validation ? (selected === st.correct) : null;
+        const isPlayingThis = playingIdx === idx;
 
         return (
           <Card key={idx} sx={{
             p: 3, mb: 3,
-            background: 'rgba(255,255,255,0.01)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            borderLeft: validation ? `5px solid ${isCorrect ? '#48c78e' : '#ff5a79'}` : '1.5px solid rgba(255,255,255,0.06)',
+            background: isCorrect === true
+              ? 'rgba(72, 199, 142, 0.05)'
+              : isCorrect === false
+              ? 'rgba(255, 90, 121, 0.05)'
+              : 'rgba(255,255,255,0.01)',
+            border: '1.5px solid',
+            borderColor: validation
+              ? (isCorrect ? 'rgba(72, 199, 142, 0.5)' : 'rgba(255, 90, 121, 0.5)')
+              : 'rgba(255,255,255,0.08)',
+            borderLeft: validation ? `5px solid ${isCorrect ? '#48c78e' : '#ff5a79'}` : '1.5px solid rgba(255,255,255,0.08)',
             borderRadius: 4,
+            boxShadow: validation && isCorrect ? '0 0 15px rgba(72, 199, 142, 0.1)' : 'none',
             transition: 'all 0.3s ease',
           }}>
-            <Typography variant="body1" sx={{ fontWeight: 800, mb: 2, color: '#fff', fontSize: '1.02rem' }}>
-              {idx + 1}. {st.statement}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2.5 }}>
+              <Typography variant="body1" sx={{ fontWeight: 800, color: '#fff', fontSize: '1.05rem', lineHeight: 1.5 }}>
+                <span style={{ color: '#00b4d8', marginRight: '6px' }}>{idx + 1}.</span> {st.statement}
+              </Typography>
+              <Tooltip title="Ouvir afirmação em inglês">
+                <IconButton
+                  size="small"
+                  onClick={() => handleSpeak(st.statement, idx)}
+                  sx={{
+                    color: isPlayingThis ? '#fff' : '#00b4d8',
+                    bgcolor: isPlayingThis ? '#00b4d8' : 'rgba(0, 180, 216, 0.12)',
+                    border: '1px solid rgba(0, 180, 216, 0.3)',
+                    flexShrink: 0,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: '#00b4d8',
+                      color: '#fff',
+                      transform: 'scale(1.1)'
+                    }
+                  }}
+                >
+                  <VolumeUpIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
             
             <Box sx={{ display: 'flex', gap: 2 }}>
               {[true, false].map((val) => {
-                const label = val ? 'True (Verdadeiro)' : 'False (Falso)';
+                const label = val ? '✓ True (Verdadeiro)' : '✗ False (Falso)';
                 const isSelected = selected === val;
                 const isThisCorrect = validation && st.correct === val;
                 
@@ -361,19 +434,20 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
 
                 if (isSelected && !validation) {
                   borderColor = val ? '#48c78e' : '#ff8fa3';
-                  bgcolor = val ? 'rgba(72, 199, 142, 0.08)' : 'rgba(255, 143, 163, 0.08)';
+                  bgcolor = val ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 143, 163, 0.12)';
                   color = '#fff';
-                  shadow = val ? '0 0 12px rgba(72, 199, 142, 0.2)' : '0 0 12px rgba(255, 143, 163, 0.2)';
+                  shadow = val ? '0 0 15px rgba(72, 199, 142, 0.25)' : '0 0 15px rgba(255, 143, 163, 0.25)';
                 }
 
                 if (validation) {
                   if (isThisCorrect) {
                     borderColor = '#48c78e';
-                    bgcolor = 'rgba(72, 199, 142, 0.12)';
+                    bgcolor = 'rgba(72, 199, 142, 0.18)';
                     color = '#a5d6a7';
+                    shadow = '0 0 12px rgba(72, 199, 142, 0.2)';
                   } else if (isSelected && !isCorrect) {
                     borderColor = '#ff8fa3';
-                    bgcolor = 'rgba(255, 143, 163, 0.12)';
+                    bgcolor = 'rgba(255, 143, 163, 0.18)';
                     color = '#ffcbd5';
                   } else {
                     bgcolor = 'rgba(255,255,255,0.01)';
@@ -394,14 +468,16 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
                       bgcolor,
                       color,
                       fontWeight: 800,
-                      py: 1.2,
+                      py: 1.4,
                       borderRadius: 3,
                       textTransform: 'none',
+                      fontSize: '0.95rem',
                       border: `1.5px solid ${borderColor}`,
                       boxShadow: shadow,
                       '&:hover': {
-                        bgcolor: validation ? bgcolor : (val ? 'rgba(72, 199, 142, 0.12)' : 'rgba(255, 143, 163, 0.12)'),
-                        border: validation ? borderColor : `1.5px solid ${val ? '#48c78e' : '#ff8fa3'}`
+                        bgcolor: validation ? bgcolor : (val ? 'rgba(72, 199, 142, 0.15)' : 'rgba(255, 143, 163, 0.15)'),
+                        border: validation ? borderColor : `1.5px solid ${val ? '#48c78e' : '#ff8fa3'}`,
+                        transform: validation ? 'none' : 'translateY(-1px)'
                       },
                       '&.Mui-disabled': { bgcolor, color, opacity: 1 },
                     }}
@@ -413,9 +489,20 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
             </Box>
             
             {validation && (
-              <Typography variant="caption" sx={{ mt: 2, display: 'block', fontWeight: 800, color: isCorrect ? '#48c78e' : '#ff5a79', fontSize: '0.8rem' }}>
-                {isCorrect ? '✅ Correto!' : `❌ Incorreto! Resposta correta: ${st.correct ? 'True' : 'False'}`}
-              </Typography>
+              <Box sx={{
+                mt: 2,
+                p: 1.5,
+                borderRadius: 2.5,
+                bgcolor: isCorrect ? 'rgba(72, 199, 142, 0.1)' : 'rgba(255, 90, 121, 0.1)',
+                border: `1px solid ${isCorrect ? 'rgba(72, 199, 142, 0.2)' : 'rgba(255, 90, 121, 0.2)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1
+              }}>
+                <Typography variant="body2" sx={{ fontWeight: 800, color: isCorrect ? '#48c78e' : '#ff5a79', fontSize: '0.85rem' }}>
+                  {isCorrect ? '✅ Resposta correta! Parabéns.' : `❌ Incorreto! A resposta certa é: ${st.correct ? 'True (Verdadeiro)' : 'False (Falso)'}`}
+                </Typography>
+              </Box>
             )}
           </Card>
         );
@@ -925,28 +1012,12 @@ function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
   }, [answers.text]);
 
   const handleListen = (rate = 0.85) => {
-    try {
-      const utterance = new SpeechSynthesisUtterance(sentence);
-      utterance.lang = 'en-US';
-      utterance.rate = rate;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn("Speech Synthesis error:", e);
-    }
+    speechService.speak(sentence, rate);
   };
 
   const handleListenWord = (word) => {
-    try {
-      const cleanWord = word.replace(/[.,!?;:()"]/g, '').trim();
-      const utterance = new SpeechSynthesisUtterance(cleanWord);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.8;
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn("Speech Synthesis error:", e);
-    }
+    const cleanWord = word.replace(/[.,!?;:()"]/g, '').trim();
+    speechService.speak(cleanWord, 0.8);
   };
 
   const handleToggleListening = () => {
@@ -1025,7 +1096,7 @@ function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
       }}>
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#00b4d8', textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 1 }}>
-            🎙️ Speaking Studio
+            🎙️ Speaking Studio • Prof. Vinicius Lourenço
           </Typography>
           <Chip
             label={spokenText ? `${matchPercent}% Precisão` : 'Aguardando voz'}
@@ -1040,7 +1111,7 @@ function SpeakingRenderer({ exercise, answers, setAnswers, validation }) {
           />
         </Box>
         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.84rem' }}>
-          {instructions} Toque em qualquer palavra para ouvir o áudio individual!
+          {instructions} Toque em qualquer palavra para ouvir o áudio nativo!
         </Typography>
       </Box>
 
@@ -1421,6 +1492,17 @@ export default function ExerciseCard({ exercise, onComplete }) {
       }
 
       setValidation(validationData);
+
+      // Play celebratory or constructive feedback sounds
+      if (validationData.allCorrect) {
+        if (effectiveType === 'speaking' && validationData.scorePct === 100) {
+          soundEffects.playFanfare();
+        } else {
+          soundEffects.playSuccess();
+        }
+      } else {
+        soundEffects.playError();
+      }
 
       await apiClient.put('/progress/status', {
         userId: exercise.userId,
