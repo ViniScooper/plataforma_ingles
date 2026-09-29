@@ -186,19 +186,116 @@ Para contar histórias de forma natural, combinamos Past Simple, Past Continuous
   },
   7: {
     title: 'Future & Conditional Sentences',
-    subtitle: 'Planos futuros e hipóteses (Will, Going to, Zero/First Conditional)',
-    content: `### 📖 Explicação
-**Will vs. Going to:**
-*   **Will:** Decisões espontâneas ou previsões. Ex: *I think it will rain.*
-*   **Going to:** Planos já decididos. Ex: *I am going to travel tomorrow.*
+    subtitle: 'Zero, First, Second, Third e Mixed Conditionals com Fórmulas e Exemplos',
+    content: `### 📖 Slide 1: Visão Geral das Condicionais em Inglês
+As **Conditionals (Orações Condicionais)** expressam que uma ação só acontece se uma condição for atendida.
 
-**Conditionals:**
-*   **Zero Conditional:** Fatos gerais. *If you heat water, it boils.*
-*   **First Conditional:** Possibilidades futuras. *If it rains, we will stay home.*
+Toda oração condicional tem **duas partes principais**:
+1. **If-clause (Oração da Condição):** A parte que tem a palavra *if* (se).
+2. **Main clause (Oração Principal):** O resultado ou consequência.
 
-### ✍️ Exemplos
-*   *Next month, I am going to buy a new computer.*
-*   *If you study hard, you will pass the exam.*`
+💡 **Dica de Pontuação:**
+* Se a frase começar com **If**, usamos vírgula:
+  * *If it rains, we will stay home.*
+* Se a oração principal vier primeiro, **não** usamos vírgula:
+  * *We will stay home if it rains.*
+
+### ❄️ Slide 2: Zero Conditional (Fatos Científicos e Leis Naturais)
+A **Zero Conditional** é usada para verdades universais, leis da natureza, regras e hábitos que **sempre** acontecem.
+
+**📐 Fórmula:**
+* **If + Present Simple, ... Present Simple**
+
+**✍️ Exemplos:**
+* *If you heat ice, it melts.* (Se você aquece gelo, ele derrete - 100% de certeza científica).
+* *If you touch fire, you get burned.* (Se você tocar no fogo, você se queima).
+* *If people don't eat, they get hungry.* (Se as pessoas não comem, elas sentem fome).
+
+💡 **Dica de Ouro:** Na Zero Conditional, você pode quase sempre trocar **if** por **when** sem mudar o sentido.
+
+### 🚀 Slide 3: First Conditional (Possibilidades Reais no Futuro)
+A **First Conditional** fala sobre situações **possíveis ou prováveis** no presente/futuro e suas consequências reais.
+
+**📐 Fórmula:**
+* **If + Present Simple, ... will / won't + Verbo Base**
+
+**✍️ Exemplos:**
+* *If it rains tomorrow, I will take an umbrella.* (Se chover amanhã, levarei guarda-chuva).
+* *If you study hard, you will pass the English test.* (Se você estudar, passará na prova).
+* *If she doesn't hurry, she will miss the bus.* (Se ela não se apressar, perderá o ônibus).
+
+⚠️ **Atenção:** Nunca use "will" dentro da parte com o *If*!
+
+### 💭 Slide 4: Second Conditional (Situações Hipotéticas e Sonhos)
+A **Second Conditional** trata de hipóteses, situações irreais ou improváveis no presente/futuro. É a condicional dos sonhos e imaginação!
+
+**📐 Fórmula:**
+* **If + Past Simple, ... would / wouldn't + Verbo Base**
+
+**✍️ Exemplos:**
+* *If I won the lottery, I would travel around the world.* (Se eu ganhasse na loteria, viajaria pelo mundo).
+* *If I had a spaceship, I would visit Mars.* (Se eu tivesse uma nave, visitaria Marte).
+
+🌟 **A Regra do "WERE":** No inglês formal, usamos **WERE** para todas as pessoas:
+* *If I were you, I would study harder.*
+
+### ⏳ Slide 5: Third Conditional (Arrependimentos e o Passado)
+A **Third Conditional** fala sobre o **passado que não pode ser mudado**. É a condicional do arrependimento ou alívio por algo que já aconteceu.
+
+**📐 Fórmula:**
+* **If + Past Perfect (had + Particípio), ... would have + Particípio**
+
+**✍️ Exemplos:**
+* *If I had studied more, I would have passed the exam.* (Se eu tivesse estudado mais, teria passado — mas não passei).
+* *If you had told me, I would have helped you.* (Se você tivesse me contado, eu teria te ajudado).
+
+### 🔀 Slide 6: Mixed Conditionals (Passado afetando o Presente)
+As **Mixed Conditionals (Condicionais Mistas)** combinam momentos no tempo: **Condição no Passado com Consequência no Presente**.
+
+**📐 Fórmula:**
+* **If + Past Perfect (Passado), ... would + Verbo Base (Presente)**
+
+**✍️ Exemplos:**
+* *If I had learned English as a child, I would speak fluently today.*
+  (Se eu tivesse aprendido inglês quando criança, falaria fluentemente hoje).
+* *If he hadn't missed the train yesterday, he would be here right now.*
+
+### 🔤 Slide 7: Palavras que Substituem o "IF" (Unless, In case, As long as)
+Nem sempre uma condicional usa a palavra *If*. Fique atento a estes conectivos:
+
+1. **Unless = If not (A não ser que / A menos que):**
+   * *You will fail the test **unless** you study.*
+2. **As long as / Provided that (Contanto que / Desde que):**
+   * *You can go out **as long as** you finish your homework.*
+3. **In case (Para o caso de / Caso):**
+   * *Take an umbrella **in case** it rains.*
+
+### 🚨 Slide 8: As 4 Maiores Pegadinhas em Avaliações
+1. **Usar "will" logo após o "If":**
+   * ❌ *If it will rain...* | ✅ *If it **rains**...*
+2. **Esquecer o "have" na Third Conditional:**
+   * ❌ *I would helped* | ✅ *I **would have helped***
+3. **Confundir Second e Third Conditional:**
+   * Second = presente irreal | Third = passado irreal
+4. **Usar "Unless" com verbo negativo:**
+   * ❌ *Unless you don't study* | ✅ *Unless you **study***
+
+### 💬 Slide 9: Diálogo Real em Conversação
+Observe a conversa entre dois amigos planejando o fim de semana:
+
+* **Leo:** *"Are you going to the beach tomorrow?"*
+* **Ana:** *"**If the weather is sunny, I will go.**"* *(First Conditional)*
+* **Leo:** *"I have to work! **If I were free, I would go with you.**"* *(Second Conditional)*
+* **Ana:** *"You should have taken the day off! **If you had asked your boss on Monday, you would have gotten the day.**"* *(Third Conditional)*
+
+### 📊 Slide 10: Tabela Resumo Rápida para Salvar
+* **Zero:** If + Present, ... Present (Fatos certos)
+* **First:** If + Present, ... will + Verbo (Futuro real)
+* **Second:** If + Past (were), ... would + Verbo (Hipóteses)
+* **Third:** If + Past Perfect, ... would have + Particípio (Arrependimentos)
+* **Mista:** If + Past Perfect, ... would + Verbo (Passado alterando o presente)
+
+🎉 **Parabéns!** Você completou todos os 10 slides das Condicionais! Pratique agora nos exercícios!`
   },
   8: {
     title: 'Complex Text & Reading Comprehension',

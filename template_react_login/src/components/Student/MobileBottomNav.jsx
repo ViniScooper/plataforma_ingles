@@ -3,18 +3,17 @@ import { Box, Typography } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 
 export default function MobileBottomNav({
   activeTab,
-  onSelectTab,
-  onOpenAchievements
+  onSelectTab
 }) {
   const navItems = [
     { id: 0, label: 'Atividades', icon: SchoolIcon, color: '#00b4d8' },
-    { id: 1, label: 'Aulas', icon: EventAvailableIcon, color: '#48c78e' },
+    { id: 1, label: 'Histórico', icon: EventAvailableIcon, color: '#48c78e' },
     { id: 2, label: 'Ranking', icon: EmojiEventsIcon, color: '#ffb74d' },
-    { id: 'achievements', label: 'Conquistas', icon: MilitaryTechIcon, color: '#b388ff', action: onOpenAchievements }
+    { id: 3, label: 'Biblioteca', icon: MenuBookIcon, color: '#b388ff' }
   ];
 
   return (

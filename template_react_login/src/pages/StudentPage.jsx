@@ -55,6 +55,10 @@ import AchievementsModal from '../components/Student/AchievementsModal';
 import StreakRulesModal from '../components/Student/StreakRulesModal';
 import MobileBottomNav from '../components/Student/MobileBottomNav';
 import ClassroomHub from '../components/Student/ClassroomHub';
+import SlideLibrary from '../components/Student/SlideLibrary';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import LockIcon from '@mui/icons-material/Lock';
 import ErrorBoundary from '../components/ErrorBoundary';
 import {
   TYPE_LABELS,
@@ -236,6 +240,62 @@ export default function StudentPage() {
   });
   const [activeFocusExercise, setActiveFocusExercise] = useState(null);
   const [timerTick, setTimerTick] = useState(0);
+
+  // Daily Lesson Calendar states & midnight countdown timer
+  const [selectedDayOffset, setSelectedDayOffset] = useState(0); // 0 = Hoje
+  const [countdownToMidnight, setCountdownToMidnight] = useState('');
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diffMs = midnight - now;
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      setCountdownToMidnight(`${hours}h ${minutes}m`);
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const weekCalendarDays = useMemo(() => {
+    const days = [];
+    const today = new Date();
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    const dayLessons = {
+      '-4': { title: 'Módulo 3: Grammar Expansion', desc: 'Past Simple, verbos regulares e irregulares.', moduleId: 3 },
+      '-3': { title: 'Módulo 4: Everyday Expressions', desc: 'Expressões idiomáticas do cotidiano.', moduleId: 4 },
+      '-2': { title: 'Módulo 5: Professional Vocabulary', desc: 'Inglês para negócios, trabalho e reuniões.', moduleId: 5 },
+      '-1': { title: 'Módulo 6: Narrative & Stories', desc: 'Past Continuous e Past Perfect.', moduleId: 6 },
+      '0': { title: 'Módulo 7: Future & Conditionals', desc: 'Zero, First, Second e Third Conditionals.', moduleId: 7 },
+      '1': { title: 'Módulo 8: Complex Text & Reading', desc: 'Leitura aprofundada e vocabulário avançado.', moduleId: 8 },
+    };
+
+    for (let offset = -4; offset <= 1; offset++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + offset);
+      const isToday = offset === 0;
+      const isPast = offset < 0;
+      const isFuture = offset > 0;
+      const lesson = dayLessons[offset.toString()] || { title: `Módulo ${offset + 7}`, desc: 'Lição diária de inglês', moduleId: 1 };
+
+      days.push({
+        offset,
+        dateStr: d.toISOString().split('T')[0],
+        dayName: dayNames[d.getDay()],
+        dayNumber: d.getDate(),
+        monthName: d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', ''),
+        isToday,
+        isPast,
+        isFuture,
+        lesson
+      });
+    }
+    return days;
+  }, []);
   useEffect(() => {
     const interval = setInterval(() => {
       setTimerTick(prev => prev + 1);
@@ -1403,23 +1463,23 @@ export default function StudentPage() {
                   Ranking
                 </Button>
                 <Button
-                  onClick={() => setAchievementsOpen(true)}
+                  onClick={() => setDashboardTab(3)}
                   sx={{
-                    px: 2.5,
+                    px: 3,
                     py: 1,
                     borderRadius: 3,
-                    bgcolor: 'rgba(179, 136, 255, 0.1)',
-                    border: '1px solid rgba(179, 136, 255, 0.25)',
-                    color: '#b388ff',
+                    bgcolor: dashboardTab === 3 ? 'rgba(179, 136, 255, 0.15)' : 'transparent',
+                    border: `1px solid ${dashboardTab === 3 ? 'rgba(179, 136, 255, 0.35)' : 'transparent'}`,
+                    color: dashboardTab === 3 ? '#b388ff' : 'rgba(255,255,255,0.6)',
                     fontWeight: 800,
                     '&:hover': {
-                      bgcolor: 'rgba(179, 136, 255, 0.18)',
-                      borderColor: '#b388ff'
+                      bgcolor: 'rgba(179, 136, 255, 0.1)',
+                      color: '#b388ff'
                     }
                   }}
-                  startIcon={<MedalIcon />}
+                  startIcon={<MenuBookIcon />}
                 >
-                  Conquistas
+                  Biblioteca
                 </Button>
               </Box>
 
@@ -1470,10 +1530,10 @@ export default function StudentPage() {
                     <EmojiEventsIcon fontSize="small" /> Ranking
                   </MenuItem>
                   <MenuItem 
-                    onClick={() => { setAchievementsOpen(true); handleCloseMenu(); }}
-                    style={{ fontWeight: 700, color: '#b388ff', gap: 10 }}
+                    onClick={() => { setDashboardTab(3); handleCloseMenu(); }}
+                    style={{ fontWeight: 700, color: dashboardTab === 3 ? '#b388ff' : '#fff', gap: 10 }}
                   >
-                    <MedalIcon fontSize="small" /> Conquistas
+                    <MenuBookIcon fontSize="small" /> Biblioteca
                   </MenuItem>
                   <MenuItem 
                     onClick={() => { setStreakRulesOpen(true); handleCloseMenu(); }}
@@ -1864,6 +1924,208 @@ export default function StudentPage() {
                         </Button>
                       </Box>
                     )}
+                  </Box>
+
+                  {/* Daily Lesson Calendar & Midnight Rotation Bar */}
+                  <Box sx={{
+                    mb: 3.5,
+                    p: 2.5,
+                    borderRadius: 4,
+                    bgcolor: 'rgba(13, 27, 42, 0.65)',
+                    border: '1.5px solid rgba(0, 180, 216, 0.2)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    backdropFilter: 'blur(16px)'
+                  }}>
+                    {/* Header */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexWrap: 'wrap', gap: 1.5, mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                        <CalendarMonthIcon sx={{ color: '#00b4d8', fontSize: 24 }} />
+                        <Box>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#fff', lineHeight: 1.2 }}>
+                            Cronograma de Aulas Diárias
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem' }}>
+                            Nova aula liberada todo dia à meia-noite (00:00). Clique nos dias anteriores para rever o conteúdo!
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {countdownToMidnight && (
+                        <Chip
+                          icon={<AccessTimeIcon sx={{ fontSize: '15px !important', color: '#ffd426 !important' }} />}
+                          label={`Próxima aula em ${countdownToMidnight}`}
+                          size="small"
+                          sx={{
+                            bgcolor: 'rgba(255, 212, 38, 0.12)',
+                            color: '#ffd426',
+                            fontWeight: 800,
+                            border: '1px solid rgba(255, 212, 38, 0.3)',
+                            fontSize: '0.75rem'
+                          }}
+                        />
+                      )}
+                    </Box>
+
+                    {/* Days Horizontal Timeline Bar */}
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 1.5,
+                      overflowX: 'auto',
+                      pb: 1,
+                      '&::-webkit-scrollbar': { height: 6 },
+                      '&::-webkit-scrollbar-thumb': { bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 3 }
+                    }}>
+                      {weekCalendarDays.map((day) => {
+                        const isSelected = selectedDayOffset === day.offset;
+                        let borderColor = 'rgba(255,255,255,0.08)';
+                        let bgColor = 'rgba(255,255,255,0.02)';
+                        let textColor = 'rgba(255,255,255,0.7)';
+
+                        if (isSelected) {
+                          borderColor = day.isToday ? '#00b4d8' : '#7c4dff';
+                          bgColor = day.isToday ? 'rgba(0, 180, 216, 0.18)' : 'rgba(124, 77, 255, 0.18)';
+                          textColor = '#fff';
+                        } else if (day.isToday) {
+                          borderColor = 'rgba(0, 180, 216, 0.4)';
+                          bgColor = 'rgba(0, 180, 216, 0.08)';
+                        } else if (day.isFuture) {
+                          borderColor = 'rgba(255,255,255,0.05)';
+                          bgColor = 'rgba(0,0,0,0.2)';
+                        }
+
+                        return (
+                          <Box
+                            key={day.offset}
+                            onClick={() => {
+                              if (day.isFuture) return;
+                              setSelectedDayOffset(day.offset);
+                              if (day.lesson?.moduleId) {
+                                setRpgModuleId(day.lesson.moduleId);
+                              }
+                            }}
+                            sx={{
+                              minWidth: { xs: 72, sm: 84 },
+                              p: 1.2,
+                              borderRadius: 3.5,
+                              textAlign: 'center',
+                              bgcolor: bgColor,
+                              border: `1.5px solid ${borderColor}`,
+                              cursor: day.isFuture ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s ease',
+                              opacity: day.isFuture ? 0.45 : 1,
+                              transform: isSelected ? 'scale(1.04)' : 'none',
+                              boxShadow: isSelected ? `0 0 16px ${day.isToday ? 'rgba(0,180,216,0.3)' : 'rgba(124,77,255,0.3)'}` : 'none',
+                              '&:hover': !day.isFuture ? {
+                                transform: 'translateY(-2px)',
+                                borderColor: day.isToday ? '#00b4d8' : '#7c4dff'
+                              } : {}
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ display: 'block', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', color: day.isToday ? '#00b4d8' : 'rgba(255,255,255,0.45)' }}>
+                              {day.dayName}
+                            </Typography>
+                            <Typography variant="h6" sx={{ fontWeight: 950, color: textColor, my: 0.2, lineHeight: 1.2 }}>
+                              {day.dayNumber}
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block', fontSize: '0.62rem', color: 'rgba(255,255,255,0.35)', textTransform: 'capitalize' }}>
+                              {day.monthName}
+                            </Typography>
+
+                            {day.isToday ? (
+                              <Chip
+                                size="small"
+                                label="Hoje"
+                                sx={{
+                                  height: 16,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 900,
+                                  bgcolor: '#00b4d8',
+                                  color: '#071018',
+                                  mt: 0.6,
+                                  px: 0.3
+                                }}
+                              />
+                            ) : day.isFuture ? (
+                              <Box sx={{ mt: 0.6, display: 'flex', justifyContent: 'center' }}>
+                                <LockIcon sx={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }} />
+                              </Box>
+                            ) : (
+                              <Box sx={{ mt: 0.6, display: 'flex', justifyContent: 'center' }}>
+                                <CheckCircleIcon sx={{ fontSize: 13, color: '#48c78e' }} />
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      })}
+                    </Box>
+
+                    {/* Selected Day Content Preview Banner */}
+                    {(() => {
+                      const selectedDay = weekCalendarDays.find(d => d.offset === selectedDayOffset) || weekCalendarDays.find(d => d.isToday);
+                      if (!selectedDay) return null;
+
+                      return (
+                        <Box sx={{
+                          mt: 2,
+                          pt: 2,
+                          borderTop: '1px solid rgba(255,255,255,0.06)',
+                          display: 'flex',
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          justifyContent: 'space-between',
+                          alignItems: { xs: 'flex-start', sm: 'center' },
+                          gap: 2
+                        }}>
+                          <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                              <Chip
+                                size="small"
+                                label={selectedDay.isToday ? 'Aula de Hoje' : `Aula Passada (${selectedDay.dayName} ${selectedDay.dayNumber})`}
+                                sx={{
+                                  bgcolor: selectedDay.isToday ? 'rgba(0,180,216,0.15)' : 'rgba(124,77,255,0.15)',
+                                  color: selectedDay.isToday ? '#00b4d8' : '#b388ff',
+                                  fontWeight: 800,
+                                  fontSize: '0.7rem'
+                                }}
+                              />
+                              <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#fff' }}>
+                                {selectedDay.lesson?.title}
+                              </Typography>
+                            </Box>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem' }}>
+                              {selectedDay.lesson?.desc} {selectedDay.isToday ? '• Faça os exercícios para manter a ofensiva 🔥!' : '• Você pode folhear os slides explicativos e refazer exercícios desta data.'}
+                            </Typography>
+                          </Box>
+
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => {
+                              if (selectedDay.lesson?.moduleId) {
+                                setRpgModuleId(selectedDay.lesson.moduleId);
+                              }
+                              setExplanationPage(0);
+                              setOpenExplanationDialog(true);
+                            }}
+                            sx={{
+                              flexShrink: 0,
+                              borderRadius: 3,
+                              px: 2.2,
+                              py: 0.8,
+                              fontWeight: 900,
+                              textTransform: 'none',
+                              fontSize: '0.82rem',
+                              background: 'linear-gradient(90deg, #00b4d8, #7c4dff)',
+                              color: '#fff',
+                              boxShadow: '0 3px 12px rgba(0, 180, 216, 0.3)',
+                              '&:hover': { background: 'linear-gradient(90deg, #00c8f0, #9c27b0)' }
+                            }}
+                            startIcon={<MenuBookIcon />}
+                          >
+                            📖 Ver Slide desta Aula (10 Páginas)
+                          </Button>
+                        </Box>
+                      );
+                    })()}
                   </Box>
 
                   {/* General Progress Bar */}
@@ -2836,6 +3098,11 @@ export default function StudentPage() {
                   </Card>
                 </Box>
               )}
+
+          {/* TAB 3: SLIDE & SUMMARY LIBRARY */}
+          {dashboardTab === 3 && (
+            <SlideLibrary />
+          )}
         </Container>
       {/* FOCUSED VIEW: Fullscreen focus for active RPG activity */}
       {activeFocusExercise && (
