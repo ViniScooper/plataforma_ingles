@@ -1,5 +1,5 @@
 // src/data/classroomsData.js
-// Dados de Aulas, Apostilas em PDF, Apresentação de Slides (10 páginas) e Atividades Expandidas (Nível A2)
+// Dados de Aulas, Apostilas em PDF, Apresentação de Slides (10 páginas com Quizzes Interativos) e Atividades Expandidas (Nível A2)
 // Professor: Prof. Vinicius Lourenço
 
 export const getTodayDateString = () => {
@@ -39,7 +39,7 @@ export const CLASSROOM_LESSONS = [
     level: 'Iniciante / Elementar (Nível A2)',
     summary: 'Começamos revisando o Present Simple para dar total segurança aos alunos iniciantes, e em seguida aprendemos como montar as orações condicionais (Zero, First e Second) de forma simples e direta, com leitura guiada passo a passo.',
 
-    // APRESENTAÇÃO DE SLIDES COM 10 PÁGINAS DETALHADAS
+    // APRESENTAÇÃO DE SLIDES COM 10 PÁGINAS DETALHADAS E ATIVIDADES INTERATIVAS POR SLIDE
     slides: [
       {
         pageNumber: 1,
@@ -53,7 +53,17 @@ export const CLASSROOM_LESSONS = [
           '🎒 **Nível**: A2 (Iniciante / Elementar) - com linguagem simples, sem termos difíceis!',
           '💡 **Dica Inicial**: Você não precisa traduzir tudo ao pé da letra. O segredo é entender o contexto!'
         ],
-        highlight: 'Prepare seu caderno e vamos aprender passo a passo de forma leve e divertida!'
+        highlight: 'Prepare seu caderno e vamos aprender passo a passo de forma leve e divertida!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 1: Qual é o principal objetivo desta aula com o Prof. Vinicius?',
+          options: [
+            'Aprender Present Simple, Conditionals e Leitura A2 sem complicações',
+            'Decorar o dicionário de inglês inteiro de A a Z',
+            'Traduzir textos técnicos de física quântica'
+          ],
+          correctIndex: 0,
+          explanation: 'Isso aí! Nosso foco é aprender com calma e segurança as estruturas essenciais do inglês!'
+        }
       },
       {
         pageNumber: 2,
@@ -68,7 +78,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *Exemplo 2*: "We live in Brazil." (Nós moramos no Brasil).'
         ],
         formula: 'Sujeito (I / You / We / They) + Verbo Normal',
-        highlight: 'Muito fácil! Com I, You, We e They você não precisa mexer no verbo!'
+        highlight: 'Muito fácil! Com I, You, We e They você não precisa mexer no verbo!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 2: No Present Simple, com os sujeitos I, You, We e They, como o verbo se comporta?',
+          options: [
+            'O verbo permanece na sua forma normal, sem alteração',
+            'O verbo sempre precisa ganhar a terminação -ing',
+            'O verbo deve ser colocado obrigatoriamente no passado'
+          ],
+          correctIndex: 0,
+          explanation: 'Correto! Com I, You, We e They usamos o verbo base: "I live", "We study", "They speak".'
+        }
       },
       {
         pageNumber: 3,
@@ -83,7 +103,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *Verbo to be*: Usa-se **is** para he/she/it e **are** para you/we/they.'
         ],
         formula: 'He / She / It + Verbo com "-S" ou "-ES"',
-        highlight: 'Guardou a regra do -S? Excelente! Ela vai ser fundamental para montar as condicionais!'
+        highlight: 'Guardou a regra do -S? Excelente! Ela vai ser fundamental para montar as condicionais!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 3: Quando falamos de He, She ou It no presente, qual é a regra do verbo?',
+          options: [
+            'O verbo ganha a letra -S ou -ES no final (ex: Lucas studies)',
+            'O verbo precisa da palavra would',
+            'O verbo nunca pode ser conjugado'
+          ],
+          correctIndex: 0,
+          explanation: 'Exato! He, She e It recebem o -S no Present Simple: "She lives", "He studies", "It rains".'
+        }
       },
       {
         pageNumber: 4,
@@ -98,7 +128,17 @@ export const CLASSROOM_LESSONS = [
           '⚖️ A primeira parte é a **Condição** (If...). A segunda parte é o **Resultado**!'
         ],
         formula: 'IF (Se) + [Condição], [Resultado]',
-        highlight: 'Se você entender o "IF", você domina qualquer condicional em inglês!'
+        highlight: 'Se você entender o "IF", você domina qualquer condicional em inglês!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 4: O que significa a palavra "IF" e qual é a sua função principal?',
+          options: [
+            'Significa "SE" e conecta uma condição a um resultado dependente',
+            'Significa "QUANDO" e serve apenas para falar do passado',
+            'Significa "PORQUE" e serve para pedir desculpas'
+          ],
+          correctIndex: 0,
+          explanation: 'Perfeito! "IF" significa "SE" e introduz uma condição na frase.'
+        }
       },
       {
         pageNumber: 5,
@@ -114,7 +154,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *No nosso texto*: "If Lucas says \'Sit\', Sparky sits immediately."'
         ],
         formula: 'If + Present Simple, Present Simple',
-        highlight: 'Dica do Prof. Vinicius: Como é fato garantido, não usamos "will" nem "would" aqui!'
+        highlight: 'Dica do Prof. Vinicius: Como é fato garantido, não usamos "will" nem "would" aqui!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 5: Na Zero Conditional ("If you heat ice, it melts"), como ficam os dois verbos?',
+          options: [
+            'Os dois verbos ficam no Present Simple (presente)',
+            'O primeiro no passado e o segundo com will',
+            'O primeiro no futuro e o segundo com would'
+          ],
+          correctIndex: 0,
+          explanation: 'Correto! Fatos comprovados e verdades da natureza usam o Present Simple nos dois verbos!'
+        }
       },
       {
         pageNumber: 6,
@@ -130,7 +180,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *No nosso texto*: "If I study hard today, I will become an engineer."'
         ],
         formula: 'If + Present Simple, will + verbo normal',
-        highlight: 'Lembre-se: O "will" NUNCA vai grudado com a palavra If! Ele vai no resultado!'
+        highlight: 'Lembre-se: O "will" NUNCA vai grudado com a palavra If! Ele vai no resultado!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 6: Onde colocamos a palavra "WILL" na First Conditional?',
+          options: [
+            'Na oração do resultado futuro (ex: "...we will stay at home")',
+            'Diretamente colado na palavra If (ex: "If will rain...")',
+            'No início de qualquer pergunta sem verbo'
+          ],
+          correctIndex: 0,
+          explanation: 'Muito bem! "Will" vai na consequência futura: If + Presente, WILL + verbo base!'
+        }
       },
       {
         pageNumber: 7,
@@ -146,7 +206,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *No texto*: "If I had a spaceship, I would take Sparky to visit the stars!"'
         ],
         formula: 'If + Past Simple, would + verbo normal',
-        highlight: 'O "would" serve para colocar o verbo no futuro do pretérito: would travel = viajaria!'
+        highlight: 'O "would" serve para colocar o verbo no futuro do pretérito: would travel = viajaria!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 7: Para falar de imaginação e sonhos ("If I had a spaceship..."), qual palavra usamos no resultado?',
+          options: [
+            'WOULD (ex: "I would take Sparky to visit the stars")',
+            'WILL (ex: "I will take Sparky")',
+            'DO (ex: "I do take Sparky")'
+          ],
+          correctIndex: 0,
+          explanation: 'Show! Na Second Conditional usamos WOULD para expressar sonhos e hipóteses (viajaria, compraria).'
+        }
       },
       {
         pageNumber: 8,
@@ -161,7 +231,17 @@ export const CLASSROOM_LESSONS = [
           '👉 *Outro exemplo*: "If he were here, he would help us."'
         ],
         formula: 'If I were you, I would + verbo...',
-        highlight: 'Guardou essa dica? Nas provas e entrevistas de emprego isso demonstra um inglês muito bem preparado!'
+        highlight: 'Guardou essa dica? Nas provas e entrevistas de emprego isso demonstra um inglês muito bem preparado!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 8: Segundo o Prof. Vinicius Lourenço, qual é a forma padrão para dar conselhos?',
+          options: [
+            '"If I were you, I would..."',
+            '"If I was you, I will..."',
+            '"If I am you, I do..."'
+          ],
+          correctIndex: 0,
+          explanation: 'Perfeito! "If I were you" é a forma padrão tradicional da língua inglesa para expressar "Se eu fosse você"!'
+        }
       },
       {
         pageNumber: 9,
@@ -175,7 +255,17 @@ export const CLASSROOM_LESSONS = [
           '🧠 **Inferência Contextual**: Deduzir o significado de uma palavra desconhecida olhando as palavras vizinhas e o sentido geral da frase.'
         ],
         formula: 'Skimming (Geral) + Scanning (Detalhes) = Leitura 100% Eficaz',
-        highlight: 'Nunca tente traduzir palavra por palavra! Use essas 3 técnicas e você lerá com velocidade!'
+        highlight: 'Nunca tente traduzir palavra por palavra! Use essas 3 técnicas e você lerá com velocidade!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 9: Se você precisa encontrar a data "2024" no texto rapidamente, qual técnica você usa?',
+          options: [
+            'Scanning (correr os olhos buscando o número específico)',
+            'Skimming (ler o texto inteiro devagar)',
+            'Tradução com dicionário palavra por palavra'
+          ],
+          correctIndex: 0,
+          explanation: 'Exato! Scanning é a busca visual rápida por dados específicos como números e nomes.'
+        }
       },
       {
         pageNumber: 10,
@@ -190,7 +280,17 @@ export const CLASSROOM_LESSONS = [
           '4️⃣ **Second Conditional**: `If + Passado, would + verbo` (Se eu tivesse dinheiro, viajaria).',
           '5️⃣ **Conselho Elegante**: `If I were you, I would...`'
         ],
-        highlight: '🎉 Parabéns! Você concluiu a apresentação. Agora faça os exercícios práticos abaixo para fixar tudo!'
+        highlight: '🎉 Parabéns! Você concluiu a apresentação. Agora faça os exercícios práticos abaixo para fixar tudo!',
+        quiz: {
+          question: '⚡ Mini-Desafio do Slide 10: Qual frase é um exemplo perfeito de First Conditional?',
+          options: [
+            'If you practice every day, you will speak English fluently.',
+            'If you heated ice, it would melt.',
+            'If I am you, I study.'
+          ],
+          correctIndex: 0,
+          explanation: 'Sensacional! "If you practice (Presente), you will speak (Futuro com Will)" é a First Conditional perfeita!'
+        }
       }
     ],
 
@@ -312,7 +412,7 @@ Lucas loves technology and often says to his friends:
       ]
     },
 
-    // 16 ATIVIDADES EXPANDIDAS E PRÁTICAS (NÍVEL A2) COM GABARITO PRECISO
+    // BANCO EXPANDIDO: 22 ATIVIDADES PRÁTICAS FOCADAS NOS SLIDES E CONDIÇÕES
     activities: [
       {
         id: 'act_1_present_simple',
@@ -569,6 +669,104 @@ Lucas loves technology and often says to his friends:
         explanation: 'Sensacional! Situação 100% imaginária leva "would + verbo base": "I would visit"!',
         xp: 40,
         coins: 8
+      },
+
+      // NOVAS QUESTÕES ESPECÍFICAS SOBRE OS SLIDES E CONDIÇÕES
+      {
+        id: 'act_17_slide_conditionals_diff',
+        category: 'Desafio dos Slides: Conditionals',
+        title: 'Atividade 17: Diferença entre First e Second Conditional',
+        question: 'Conforme explicado nos Slides 6 e 7 pelo Prof. Vinicius Lourenço:\nQual é a principal diferença entre a First Conditional e a Second Conditional?',
+        options: [
+          'A First fala de coisas reais e prováveis no futuro (will), enquanto a Second fala de sonhos e imaginação hipotética (would).',
+          'A First fala do passado distante e a Second fala de animais.',
+          'Não há nenhuma diferença, ambas significam exatamente a mesma coisa.',
+          'A Second Conditional só pode ser usada em dias de chuva.'
+        ],
+        correctIndex: 0,
+        explanation: 'Perfeito! Slide 6 = real e provável no futuro (will). Slide 7 = imaginação, sonho e hipótese (would)!',
+        xp: 35,
+        coins: 7
+      },
+      {
+        id: 'act_18_slide_zero_button',
+        category: 'Desafio dos Slides: Zero Conditional',
+        title: 'Atividade 18: Zero Conditional - Causa Imediata',
+        question: 'No Slide 5, vimos que a Zero Conditional expressa resultados certos e imediatos.\nComplete:\n"If you press this green button, the robot _______ (start)."',
+        options: [
+          'starts',
+          'would start',
+          'started',
+          'will to start'
+        ],
+        correctIndex: 0,
+        explanation: 'Correto! Fatos mecânicos e certezas imediatas usam a Zero Conditional: "the robot starts".',
+        xp: 35,
+        coins: 7
+      },
+      {
+        id: 'act_19_slide_first_schedule',
+        category: 'Desafio dos Slides: First Conditional',
+        title: 'Atividade 19: First Conditional - Horário da Aula',
+        question: 'No Slide 6, vimos que "If + Presente" leva "will + verbo" no resultado.\nComplete:\n"If we leave now at 16:15, we _______ (arrive) on time for the English class."',
+        options: [
+          'will arrive',
+          'would arrive',
+          'arrived',
+          'arrives'
+        ],
+        correctIndex: 0,
+        explanation: 'Muito bem! Situação real e provável: If + presente (leave) -> will arrive (chegaremos a tempo)!',
+        xp: 35,
+        coins: 7
+      },
+      {
+        id: 'act_20_slide_second_freetime',
+        category: 'Desafio dos Slides: Second Conditional',
+        title: 'Atividade 20: Second Conditional - Se eu tivesse mais tempo',
+        question: 'No Slide 7, praticamos situações hipotéticas com "If + Past Simple, would + verbo".\nComplete a oração:\n"If I had more free time, I _______ (read) more books in English."',
+        options: [
+          'would read',
+          'will read',
+          'reads',
+          'readed'
+        ],
+        correctIndex: 0,
+        explanation: 'Sensacional! Como é uma situação hipotética no presente ("se eu tivesse"), usamos "would read" (eu leria)!',
+        xp: 40,
+        coins: 8
+      },
+      {
+        id: 'act_21_slide_were_advice',
+        category: 'Desafio dos Slides: Dica de Ouro do Prof. Vinicius',
+        title: 'Atividade 21: Conselho Perfeito com "If I were you"',
+        question: 'No Slide 8, o Prof. Vinicius Lourenço ensinou o segredo do "If I were you".\nQual frase está 100% correta de acordo com a norma culta?',
+        options: [
+          'If I were you, I would drink more water during the day.',
+          'If I was you, I will drink more water.',
+          'If I am you, I would drank water.',
+          'If I be you, I drink water.'
+        ],
+        correctIndex: 0,
+        explanation: 'Show! "If I were you, I would..." é a estrutura padrão formal para expressar conselhos com elegância.',
+        xp: 40,
+        coins: 8
+      },
+      {
+        id: 'act_22_slide_master_choice',
+        category: 'Desafio dos Slides: Escolha da Condicional',
+        title: 'Atividade 22: Desafio Mestre dos Slides',
+        question: 'Lucas quer dizer ao seu amigo: "Se chover amanhã, nós não iremos ao parque."\nQual condicional ele deve usar de acordo com a apresentação?',
+        options: [
+          'First Conditional: "If it rains tomorrow, we will not go to the park."',
+          'Zero Conditional: "If it rains, we went to park."',
+          'Second Conditional: "If it rained tomorrow, we go."',
+          'Nenhuma das anteriores.'
+        ],
+        correctIndex: 0,
+        explanation: 'Parabéns! Como é uma situação real e altamente provável no futuro (amanhã), usamos a First Conditional!',
+        xp: 45,
+        coins: 10
       }
     ]
   },
