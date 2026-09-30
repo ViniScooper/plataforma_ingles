@@ -1,5 +1,5 @@
 // src/components/Student/LessonSlidesModal.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -12,7 +12,8 @@ import {
   Chip,
   LinearProgress,
   Paper,
-  Tooltip
+  Tooltip,
+  useMediaQuery
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
@@ -25,9 +26,13 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 export default function LessonSlidesModal({ open, onClose, lesson }) {
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   // Answers for each slide's mini-quiz: { [slideIndex]: { chosenIndex, isSubmitted, isCorrect } }
   const [slideAnswers, setSlideAnswers] = useState({});
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   const slides = lesson?.slides || [];
   const totalSlides = slides.length;
@@ -94,6 +99,26 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
     });
   };
 
+  const handleTouchStart = (e) => {
+    if (e.targetTouches && e.targetTouches[0]) {
+      touchStartX.current = e.targetTouches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      touchEndX.current = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX.current;
+      if (Math.abs(diff) > 45) {
+        if (diff > 0) {
+          handleNext();
+        } else if (diff < 0) {
+          handlePrev();
+        }
+      }
+    }
+  };
+
   if (!open || totalSlides === 0) return null;
 
   const progressPercent = Math.round(((currentSlideIndex + 1) / totalSlides) * 100);
@@ -103,20 +128,21 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
     <Dialog
       open={open}
       onClose={onClose}
+      fullScreen={isMobile}
       maxWidth={false}
       fullWidth
       PaperProps={{
         sx: {
           bgcolor: '#070f1e',
           color: '#ffffff',
-          width: { xs: '98vw', md: '92vw' },
-          maxWidth: '1280px',
-          height: { xs: '96vh', md: '92vh' },
-          maxHeight: '96vh',
-          m: { xs: 0.5, sm: 2 },
-          borderRadius: { xs: 2.5, sm: 4.5 },
-          border: '1.5px solid rgba(0, 180, 216, 0.35)',
-          boxShadow: '0 30px 90px rgba(0, 0, 0, 0.9)',
+          width: isMobile ? '100vw' : { xs: '98vw', md: '92vw' },
+          maxWidth: isMobile ? '100vw' : '1280px',
+          height: isMobile ? '100dvh' : '92vh',
+          maxHeight: isMobile ? '100dvh' : '96vh',
+          m: isMobile ? 0 : { xs: 0.5, sm: 2 },
+          borderRadius: isMobile ? 0 : { xs: 2.5, sm: 4.5 },
+          border: isMobile ? 'none' : '1.5px solid rgba(0, 180, 216, 0.35)',
+          boxShadow: isMobile ? 'none' : '0 30px 90px rgba(0, 0, 0, 0.9)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -126,39 +152,55 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
       {/* Header com indicador de progresso */}
       <DialogTitle
         sx={{
-          py: 1.5,
-          px: { xs: 2, sm: 3 },
+          py: { xs: 1.2, sm: 1.5 },
+          px: { xs: 1.5, sm: 3 },
           bgcolor: '#0d1b2a',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 1.5
+          gap: 1
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
           <Box
             sx={{
-              width: 40,
-              height: 40,
+              width: { xs: 34, sm: 40 },
+              height: { xs: 34, sm: 40 },
               borderRadius: 2.5,
               bgcolor: 'rgba(0, 180, 216, 0.18)',
               border: '1px solid rgba(0, 180, 216, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#00b4d8'
+              color: '#00b4d8',
+              flexShrink: 0
             }}
           >
-            <SlideshowIcon />
+            <SlideshowIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
           </Box>
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#fff', lineHeight: 1.2, fontSize: { xs: '0.95rem', sm: '1.1rem' } }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle1" sx={{ 
+              fontWeight: 900, 
+              color: '#fff', 
+              lineHeight: 1.2, 
+              fontSize: { xs: '0.9rem', sm: '1.1rem' },
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
               Apresentação da Aula das 16:30
             </Typography>
-            <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 700 }}>
-              {teacherName} · 10 Slides Interativos com Quizzes (Nível A2)
+            <Typography variant="caption" sx={{ 
+              color: '#38bdf8', 
+              fontWeight: 700,
+              fontSize: { xs: '0.68rem', sm: '0.78rem' },
+              display: 'block',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
+              {teacherName} · {totalSlides} Slides
             </Typography>
           </Box>
         </Box>
@@ -197,25 +239,30 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
 
       {/* Área Central do Slide (Tela do Projetor) */}
       <DialogContent
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
         sx={{
-          p: { xs: 2, sm: 3.5, md: 4 },
+          p: { xs: 1, sm: 2.5, md: 4 },
           bgcolor: '#070b14',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
-          overflowY: 'auto'
+          justifyContent: 'flex-start',
+          overflowY: 'auto',
+          flex: 1
         }}
       >
         <Paper
-          elevation={8}
+          elevation={isMobile ? 0 : 8}
           sx={{
             width: '100%',
             maxWidth: 1040,
-            minHeight: { xs: 'auto', md: 480 },
-            p: { xs: 2.5, sm: 4, md: 5 },
+            minHeight: isMobile ? 'auto' : { xs: 'auto', md: 480 },
+            flex: 1,
+            p: { xs: 1.8, sm: 3.5, md: 5 },
             bgcolor: '#0e1e32',
             color: '#f8fafc',
-            borderRadius: { xs: 3, sm: 5 },
+            borderRadius: { xs: 2.5, sm: 5 },
             border: `2px solid ${currentSlide.color || '#00b4d8'}`,
             boxShadow: `0 15px 50px rgba(0, 0, 0, 0.8), 0 0 30px ${currentSlide.color || '#00b4d8'}25`,
             display: 'flex',
@@ -448,35 +495,53 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
               </Typography>
             </Box>
           )}
+          {/* Mobile swipe gesture tip */}
+          {isMobile && (
+            <Box sx={{ 
+              mt: 'auto', 
+              pt: 1.5, 
+              borderTop: '1px dashed rgba(255,255,255,0.08)', 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              opacity: 0.5 
+            }}>
+              <Typography variant="caption" sx={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                💡 Deslize para a esquerda ou direita para trocar de slide
+              </Typography>
+            </Box>
+          )}
         </Paper>
       </DialogContent>
 
       {/* Barra de Navegação Inferior (Anterior, Próximo e Pílulas de Seleção Direta) */}
       <DialogActions
         sx={{
-          py: 2,
-          px: { xs: 2, sm: 4 },
+          py: { xs: 1.2, sm: 2 },
+          px: { xs: 1.5, sm: 4 },
           bgcolor: '#0d1b2a',
           borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 1.5
+          gap: 1,
+          pb: { xs: 'max(14px, env(safe-area-inset-bottom))', sm: 2 }
         }}
       >
         <Button
           variant="outlined"
           disabled={currentSlideIndex === 0}
           onClick={handlePrev}
-          startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 14 }} />}
+          size={isMobile ? "small" : "medium"}
+          startIcon={<ArrowBackIosNewIcon sx={{ fontSize: 13 }} />}
           sx={{
             color: '#fff',
             borderColor: 'rgba(255, 255, 255, 0.25)',
             borderRadius: 2.5,
             fontWeight: 800,
             textTransform: 'none',
-            px: 2.5,
+            px: { xs: 1.5, sm: 2.5 },
+            fontSize: { xs: '0.82rem', sm: '0.9rem' },
             '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.1)' }
           }}
         >
@@ -502,27 +567,36 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
           ))}
         </Box>
 
+        {isMobile && (
+          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 800, fontSize: '0.75rem' }}>
+            {currentSlideIndex + 1} / {totalSlides}
+          </Typography>
+        )}
+
         {currentSlideIndex < totalSlides - 1 ? (
           <Button
             variant="contained"
+            size={isMobile ? "small" : "medium"}
             onClick={handleNext}
-            endIcon={<ArrowForwardIosIcon sx={{ fontSize: 14 }} />}
+            endIcon={<ArrowForwardIosIcon sx={{ fontSize: 13 }} />}
             sx={{
               bgcolor: '#00b4d8',
               color: '#fff',
               borderRadius: 2.5,
               fontWeight: 800,
               textTransform: 'none',
-              px: 3,
+              px: { xs: 2, sm: 3 },
+              fontSize: { xs: '0.82rem', sm: '0.9rem' },
               boxShadow: '0 4px 15px rgba(0, 180, 216, 0.4)',
               '&:hover': { bgcolor: '#0096c7' }
             }}
           >
-            Próximo Slide
+            Próximo
           </Button>
         ) : (
           <Button
             variant="contained"
+            size={isMobile ? "small" : "medium"}
             onClick={onClose}
             sx={{
               bgcolor: '#48c78e',
@@ -530,12 +604,13 @@ export default function LessonSlidesModal({ open, onClose, lesson }) {
               borderRadius: 2.5,
               fontWeight: 900,
               textTransform: 'none',
-              px: 3.5,
+              px: { xs: 2, sm: 3.5 },
+              fontSize: { xs: '0.82rem', sm: '0.9rem' },
               boxShadow: '0 4px 15px rgba(72, 199, 142, 0.4)',
               '&:hover': { bgcolor: '#36b37e' }
             }}
           >
-            Concluir Apresentação 🎉
+            Concluir 🎉
           </Button>
         )}
       </DialogActions>
