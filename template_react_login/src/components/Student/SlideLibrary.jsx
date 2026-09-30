@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState, Fragment, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -13,7 +13,8 @@ import {
   DialogContent,
   DialogActions,
   LinearProgress,
-  IconButton
+  IconButton,
+  useMediaQuery
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -27,6 +28,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { LIBRARY_BOOKS } from '../../data/librarySlidesData';
 
 export default function SlideLibrary() {
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
   const [activeBook, setActiveBook] = useState(null);
@@ -39,6 +41,29 @@ export default function SlideLibrary() {
       return [];
     }
   });
+
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e) => {
+    if (e.targetTouches && e.targetTouches[0]) {
+      touchStartX.current = e.targetTouches[0].clientX;
+    }
+  };
+
+  const handleTouchEnd = (e, totalPages) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      touchEndX.current = e.changedTouches[0].clientX;
+      const diff = touchStartX.current - touchEndX.current;
+      if (Math.abs(diff) > 45) {
+        if (diff > 0 && currentPage < totalPages - 1) {
+          setCurrentPage(prev => prev + 1);
+        } else if (diff < 0 && currentPage > 0) {
+          setCurrentPage(prev => prev - 1);
+        }
+      }
+    }
+  };
 
   const categories = ['Todas', 'Gramática', 'Vocabulário', 'Conversação & Escrita'];
 
@@ -410,16 +435,23 @@ export default function SlideLibrary() {
         <Dialog
           open={Boolean(activeBook)}
           onClose={handleCloseBook}
+          fullScreen={isMobile}
           maxWidth="md"
           fullWidth
           PaperProps={{
             sx: {
-              bgcolor: 'rgba(10, 20, 35, 0.96)',
+              bgcolor: 'rgba(10, 20, 35, 0.98)',
+              backgroundImage: 'radial-gradient(ellipse at top, rgba(0, 180, 216, 0.08), transparent 70%)',
               backdropFilter: 'blur(24px)',
-              border: `2px solid ${activeBook.color}50`,
-              borderRadius: 5,
+              border: isMobile ? 'none' : `2px solid ${activeBook.color}50`,
+              borderRadius: isMobile ? 0 : 5,
               color: '#fff',
-              boxShadow: `0 0 40px ${activeBook.color}25`,
+              boxShadow: isMobile ? 'none' : `0 0 40px ${activeBook.color}25`,
+              display: 'flex',
+              flexDirection: 'column',
+              height: isMobile ? '100dvh' : 'auto',
+              maxHeight: isMobile ? '100dvh' : '90vh',
+              m: isMobile ? 0 : 2,
               overflow: 'hidden'
             }
           }}
@@ -436,70 +468,107 @@ export default function SlideLibrary() {
             return (
               <>
                 {/* Dialog Header */}
-                <DialogTitle sx={{ p: 3, pb: 1.5, background: 'rgba(0, 0, 0, 0.25)' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box sx={{ pr: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                        <Typography fontSize={20}>{activeBook.icon}</Typography>
-                        <Typography variant="caption" sx={{ color: activeBook.color, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                <DialogTitle sx={{ 
+                  p: { xs: 1.5, sm: 2.5 }, 
+                  pb: { xs: 1, sm: 1.5 }, 
+                  background: 'rgba(0, 0, 0, 0.4)',
+                  borderBottom: '1px solid rgba(255,255,255,0.06)'
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                      <Typography fontSize={{ xs: 24, sm: 28 }} sx={{ flexShrink: 0 }}>
+                        {activeBook.icon}
+                      </Typography>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="caption" sx={{ 
+                          color: activeBook.color, 
+                          fontWeight: 900, 
+                          textTransform: 'uppercase', 
+                          letterSpacing: '0.8px',
+                          fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                          display: 'block',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
                           {activeBook.category} • {activeBook.title}
                         </Typography>
+                        <Typography variant="h6" sx={{ 
+                          fontWeight: 950, 
+                          color: '#fff', 
+                          lineHeight: 1.2,
+                          fontSize: { xs: '1rem', sm: '1.25rem' },
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}>
+                          {pageTitle}
+                        </Typography>
                       </Box>
-                      <Typography variant="h5" sx={{ fontWeight: 950, color: '#fff', lineHeight: 1.2 }}>
-                        {pageTitle}
-                      </Typography>
                     </Box>
 
-                    <IconButton
-                      onClick={handleCloseBook}
-                      sx={{ color: 'rgba(255,255,255,0.6)', '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.1)' } }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  </Box>
-
-                  {/* Top Progress Bar & Counter */}
-                  <Box sx={{ mt: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.8 }}>
-                      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
-                        Progresso de Leitura
-                      </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, flexShrink: 0 }}>
                       <Chip
                         size="small"
-                        label={`Página ${currentPage + 1} de ${totalPages}`}
+                        label={`${currentPage + 1}/${totalPages}`}
                         sx={{
                           bgcolor: `${activeBook.color}20`,
                           color: activeBook.color,
-                          fontWeight: 800,
-                          fontSize: '0.75rem',
+                          fontWeight: 900,
+                          fontSize: '0.72rem',
+                          height: 24,
                           border: `1px solid ${activeBook.color}40`
                         }}
                       />
+                      <IconButton
+                        onClick={handleCloseBook}
+                        size="small"
+                        sx={{ 
+                          color: 'rgba(255,255,255,0.7)', 
+                          bgcolor: 'rgba(255,255,255,0.06)',
+                          p: 0.8,
+                          '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.15)' } 
+                        }}
+                      >
+                        <CloseIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
                     </Box>
+                  </Box>
+
+                  {/* Progress Bar */}
+                  <Box sx={{ mt: 1.2 }}>
                     <LinearProgress
                       variant="determinate"
                       value={((currentPage + 1) / totalPages) * 100}
                       sx={{
-                        height: 6,
-                        borderRadius: 3,
+                        height: 5,
+                        borderRadius: 2.5,
                         bgcolor: 'rgba(255,255,255,0.08)',
                         '& .MuiLinearProgress-bar': {
                           background: `linear-gradient(90deg, ${activeBook.color}, #7c4dff)`,
-                          borderRadius: 3
+                          borderRadius: 2.5
                         }
                       }}
                     />
                   </Box>
 
                   {/* Dot step shortcuts */}
-                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.8, mt: 1.5 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center',
+                    gap: { xs: 0.6, sm: 0.8 }, 
+                    mt: 1,
+                    overflowX: 'auto',
+                    py: 0.2
+                  }}>
                     {Array.from({ length: totalPages }).map((_, idx) => (
                       <Box
                         key={idx}
                         onClick={() => setCurrentPage(idx)}
                         sx={{
-                          width: idx === currentPage ? 24 : 8,
-                          height: 8,
+                          width: idx === currentPage ? { xs: 18, sm: 24 } : { xs: 6, sm: 8 },
+                          height: { xs: 6, sm: 8 },
                           borderRadius: 4,
                           bgcolor: idx === currentPage ? activeBook.color : idx < currentPage ? '#48c78e' : 'rgba(255,255,255,0.2)',
                           cursor: 'pointer',
@@ -512,26 +581,61 @@ export default function SlideLibrary() {
                   </Box>
                 </DialogTitle>
 
-                {/* Dialog Content */}
-                <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', p: { xs: 2.5, sm: 4 }, minHeight: '360px', maxHeight: '60vh' }}>
+                {/* Dialog Content - Expands fully */}
+                <DialogContent 
+                  dividers 
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={(e) => handleTouchEnd(e, totalPages)}
+                  sx={{ 
+                    borderColor: 'rgba(255,255,255,0.06)', 
+                    p: { xs: 1.2, sm: 3 }, 
+                    flex: 1, 
+                    overflowY: 'auto',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    bgcolor: 'rgba(7, 15, 25, 0.4)'
+                  }}
+                >
                   <Box sx={{
-                    p: { xs: 2.5, sm: 3.5 },
-                    borderRadius: 4,
+                    flex: 1,
+                    p: { xs: 1.8, sm: 3 },
+                    borderRadius: { xs: 3, sm: 4 },
                     bgcolor: 'rgba(255, 255, 255, 0.02)',
-                    border: `1px solid ${activeBook.color}25`,
-                    boxShadow: 'inset 0 0 30px rgba(0, 0, 0, 0.4)'
+                    border: `1px solid ${activeBook.color}20`,
+                    boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.3)',
+                    wordBreak: 'break-word',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}>
+                    {/* Header inside slide */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, pb: 1, borderBottom: `1px solid ${activeBook.color}25` }}>
+                      <Typography variant="caption" sx={{ 
+                        bgcolor: `${activeBook.color}20`, 
+                        color: activeBook.color, 
+                        px: 1, 
+                        py: 0.3, 
+                        borderRadius: 1.5, 
+                        fontWeight: 900,
+                        fontSize: '0.7rem' 
+                      }}>
+                        Slide #{currentPage + 1}
+                      </Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#fff', fontSize: { xs: '1.02rem', sm: '1.2rem' } }}>
+                        {pageTitle}
+                      </Typography>
+                    </Box>
+
                     {paragraphs.map((para, pIdx) => {
                       if (para.includes('*') && !para.includes('|')) {
                         const lines = para.split('\n');
                         const isList = lines.some(l => l.trim().startsWith('*'));
                         if (isList) {
                           return (
-                            <Box component="ul" key={pIdx} sx={{ mb: 2.5, pl: 3 }}>
+                            <Box component="ul" key={pIdx} sx={{ mb: 2, pl: { xs: 2.2, sm: 3 }, m: 0 }}>
                               {lines.map((li, lIdx) => {
                                 const cleanLi = li.replace(/^\*\s*/, '').trim();
                                 return (
-                                  <Box component="li" key={lIdx} sx={{ mb: 1, color: '#cbd5e1', lineHeight: 1.7 }}>
+                                  <Box component="li" key={lIdx} sx={{ mb: 1, color: '#cbd5e1', lineHeight: 1.6, fontSize: { xs: '0.9rem', sm: '0.98rem' } }}>
                                     {renderFormattedText(cleanLi)}
                                   </Box>
                                 );
@@ -542,75 +646,108 @@ export default function SlideLibrary() {
                       }
 
                       return (
-                        <Typography key={pIdx} variant="body1" sx={{ mb: 2.2, color: '#cbd5e1', lineHeight: 1.8, fontSize: '0.98rem' }}>
+                        <Typography key={pIdx} variant="body1" sx={{ mb: 2, color: '#cbd5e1', lineHeight: 1.7, fontSize: { xs: '0.92rem', sm: '1rem' } }}>
                           {renderFormattedText(para)}
                         </Typography>
                       );
                     })}
+
+                    {/* Mobile swipe gesture tip */}
+                    {isMobile && (
+                      <Box sx={{ 
+                        mt: 'auto', 
+                        pt: 2, 
+                        borderTop: '1px dashed rgba(255,255,255,0.08)', 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: 0.8,
+                        opacity: 0.5 
+                      }}>
+                        <Typography variant="caption" sx={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          💡 Deslize para a esquerda ou direita para trocar de slide
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </DialogContent>
 
                 {/* Dialog Footer Actions */}
-                <DialogActions sx={{ p: 2.5, px: 3, background: 'rgba(0, 0, 0, 0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <DialogActions sx={{ 
+                  p: { xs: 1.2, sm: 2 }, 
+                  px: { xs: 1.5, sm: 3 }, 
+                  background: 'rgba(0, 0, 0, 0.4)', 
+                  borderTop: '1px solid rgba(255,255,255,0.06)',
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  pb: { xs: 'max(14px, env(safe-area-inset-bottom))', sm: 2 }
+                }}>
                   <Button
                     disabled={currentPage === 0}
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 0))}
+                    size={isMobile ? "small" : "medium"}
                     sx={{
                       color: '#fff',
                       fontWeight: 800,
                       textTransform: 'none',
-                      px: 2.5,
+                      px: { xs: 1.5, sm: 2.5 },
+                      fontSize: { xs: '0.82rem', sm: '0.9rem' },
                       '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' }
                     }}
-                    startIcon={<ArrowBackIcon />}
+                    startIcon={<ArrowBackIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                   >
                     Anterior
                   </Button>
 
-                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 800 }}>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 800, fontSize: { xs: '0.75rem', sm: '0.85rem' } }}>
                     {currentPage + 1} / {totalPages}
                   </Typography>
 
                   {currentPage < totalPages - 1 ? (
                     <Button
                       variant="contained"
+                      size={isMobile ? "small" : "medium"}
                       onClick={() => setCurrentPage(prev => prev + 1)}
                       sx={{
-                        borderRadius: 3,
+                        borderRadius: 2.5,
                         fontWeight: 900,
-                        px: 3,
-                        py: 1,
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 0.8, sm: 1 },
                         textTransform: 'none',
+                        fontSize: { xs: '0.82rem', sm: '0.9rem' },
                         background: `linear-gradient(90deg, ${activeBook.color}, #7c4dff)`,
                         color: '#fff',
                         boxShadow: `0 4px 14px ${activeBook.color}35`,
                         '&:hover': { background: `linear-gradient(90deg, ${activeBook.color}, #9c27b0)` }
                       }}
-                      endIcon={<ArrowForwardIcon />}
+                      endIcon={<ArrowForwardIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                     >
-                      Próxima Página
+                      Próxima
                     </Button>
                   ) : (
                     <Button
                       variant="contained"
+                      size={isMobile ? "small" : "medium"}
                       onClick={() => {
                         handleMarkAsRead(activeBook.id);
                         handleCloseBook();
                       }}
                       sx={{
-                        borderRadius: 3,
+                        borderRadius: 2.5,
                         fontWeight: 900,
-                        px: 3,
-                        py: 1,
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 0.8, sm: 1 },
                         textTransform: 'none',
+                        fontSize: { xs: '0.82rem', sm: '0.9rem' },
                         bgcolor: '#48c78e',
                         color: '#071018',
                         boxShadow: '0 4px 14px rgba(72, 199, 142, 0.4)',
                         '&:hover': { bgcolor: '#36b37e' }
                       }}
-                      startIcon={<CheckCircleIcon />}
+                      startIcon={<CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                     >
-                      Concluir Leitura
+                      Concluir
                     </Button>
                   )}
                 </DialogActions>

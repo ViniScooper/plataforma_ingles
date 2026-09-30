@@ -27,8 +27,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText
+  DialogContentText,
+  useMediaQuery
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MenuIcon from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -218,13 +222,36 @@ export default function StudentPage() {
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [streakRulesOpen, setStreakRulesOpen] = useState(false);
 
-  // RPG Map states
+  const isMobile = useMediaQuery('(max-width:600px)');
   const [viewMode, setViewMode] = useState('rpg'); // 'rpg' | 'list' | 'speaking'
   const [speakingCategory, setSpeakingCategory] = useState('Frases Básicas');
   const speakingExercisesRef = useRef(null);
   const [rpgModuleId, setRpgModuleId] = useState(1); // 1 to 10
   const [openExplanationDialog, setOpenExplanationDialog] = useState(false);
   const [explanationPage, setExplanationPage] = useState(0);
+
+  const slideTouchStartX = useRef(0);
+  const slideTouchEndX = useRef(0);
+
+  const handleSlideTouchStart = (e) => {
+    if (e.targetTouches && e.targetTouches[0]) {
+      slideTouchStartX.current = e.targetTouches[0].clientX;
+    }
+  };
+
+  const handleSlideTouchEnd = (e, totalPages) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+      slideTouchEndX.current = e.changedTouches[0].clientX;
+      const diff = slideTouchStartX.current - slideTouchEndX.current;
+      if (Math.abs(diff) > 45) {
+        if (diff > 0 && explanationPage < totalPages - 1) {
+          setExplanationPage(prev => prev + 1);
+        } else if (diff < 0 && explanationPage > 0) {
+          setExplanationPage(prev => prev - 1);
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     if (openExplanationDialog) {
@@ -3197,16 +3224,24 @@ export default function StudentPage() {
       <Dialog 
         open={openExplanationDialog} 
         onClose={() => setOpenExplanationDialog(false)}
+        fullScreen={isMobile}
         maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: '#0d1b2a',
-            border: '1px solid rgba(0, 180, 216, 0.25)',
-            borderRadius: 5,
+            bgcolor: 'rgba(10, 20, 35, 0.98)',
+            backgroundImage: 'radial-gradient(ellipse at top, rgba(0, 180, 216, 0.1), transparent 70%)',
+            backdropFilter: 'blur(24px)',
+            border: isMobile ? 'none' : '1px solid rgba(0, 180, 216, 0.25)',
+            borderRadius: isMobile ? 0 : 5,
             color: '#fff',
-            p: 2,
-            boxShadow: '0 0 32px rgba(0, 180, 216, 0.2)'
+            boxShadow: isMobile ? 'none' : '0 0 32px rgba(0, 180, 216, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            height: isMobile ? '100dvh' : 'auto',
+            maxHeight: isMobile ? '100dvh' : '90vh',
+            m: isMobile ? 0 : 2,
+            overflow: 'hidden'
           }
         }}
       >
@@ -3245,66 +3280,171 @@ export default function StudentPage() {
 
           return (
             <>
-              <DialogTitle sx={{ pb: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 1 }}>
-                  <Box>
-                    <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1 }}>
+              {/* Header */}
+              <DialogTitle sx={{ 
+                p: { xs: 1.5, sm: 2.5 }, 
+                pb: { xs: 1, sm: 1.5 }, 
+                background: 'rgba(0, 0, 0, 0.4)',
+                borderBottom: '1px solid rgba(255,255,255,0.06)'
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography variant="caption" sx={{ 
+                      color: '#00b4d8', 
+                      fontWeight: 900, 
+                      textTransform: 'uppercase', 
+                      letterSpacing: 0.8,
+                      fontSize: { xs: '0.65rem', sm: '0.75rem' },
+                      display: 'block',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       📖 Módulo {rpgModuleId} • Mini Livro de Explicação
                     </Typography>
-                    <Typography variant="h5" sx={{ fontWeight: 950, mt: 0.5, fontFamily: 'Outfit, sans-serif' }}>
+                    <Typography variant="h6" sx={{ 
+                      fontWeight: 950, 
+                      mt: 0.3, 
+                      color: '#fff',
+                      lineHeight: 1.2,
+                      fontSize: { xs: '1rem', sm: '1.25rem' },
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       {MODULE_EXPLANATIONS[rpgModuleId]?.title || 'Grammar Reference'}
                     </Typography>
                   </Box>
-                  <Chip 
-                    label={`Pág. ${explanationPage + 1} / ${totalPages}`} 
-                    size="small" 
-                    sx={{ bgcolor: 'rgba(0,180,216,0.15)', color: '#00b4d8', fontWeight: 800, border: '1.5px solid rgba(0,180,216,0.3)' }}
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, flexShrink: 0 }}>
+                    <Chip 
+                      label={`${explanationPage + 1}/${totalPages}`} 
+                      size="small" 
+                      sx={{ 
+                        bgcolor: 'rgba(0,180,216,0.18)', 
+                        color: '#00b4d8', 
+                        fontWeight: 900, 
+                        fontSize: '0.72rem',
+                        height: 24,
+                        border: '1px solid rgba(0,180,216,0.35)' 
+                      }}
+                    />
+                    <IconButton
+                      onClick={() => setOpenExplanationDialog(false)}
+                      size="small"
+                      sx={{ 
+                        color: 'rgba(255,255,255,0.7)', 
+                        bgcolor: 'rgba(255,255,255,0.06)',
+                        p: 0.8,
+                        '&:hover': { color: '#fff', bgcolor: 'rgba(255,255,255,0.15)' } 
+                      }}
+                    >
+                      <CloseIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                {/* Progress bar */}
+                <Box sx={{ mt: 1.2 }}>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={((explanationPage + 1) / totalPages) * 100} 
+                    sx={{ 
+                      height: 5, 
+                      borderRadius: 2.5, 
+                      bgcolor: 'rgba(255,255,255,0.08)', 
+                      '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #00b4d8, #7c4dff)' } 
+                    }}
                   />
+                </Box>
+
+                {/* Dot step shortcuts */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center',
+                  gap: { xs: 0.6, sm: 0.8 }, 
+                  mt: 1,
+                  overflowX: 'auto',
+                  py: 0.2
+                }}>
+                  {Array.from({ length: totalPages }).map((_, idx) => (
+                    <Box
+                      key={idx}
+                      onClick={() => setExplanationPage(idx)}
+                      sx={{
+                        width: idx === explanationPage ? { xs: 18, sm: 24 } : { xs: 6, sm: 8 },
+                        height: { xs: 6, sm: 8 },
+                        borderRadius: 4,
+                        bgcolor: idx === explanationPage ? '#00b4d8' : idx < explanationPage ? '#48c78e' : 'rgba(255,255,255,0.2)',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': { bgcolor: '#00b4d8' }
+                      }}
+                      title={`Ir para Página ${idx + 1}`}
+                    />
+                  ))}
                 </Box>
               </DialogTitle>
 
-              {/* Progress bar at the top of book */}
-              <LinearProgress 
-                variant="determinate" 
-                value={((explanationPage + 1) / totalPages) * 100} 
+              {/* Dialog Content - Expands fully */}
+              <DialogContent 
+                dividers 
+                onTouchStart={handleSlideTouchStart}
+                onTouchEnd={(e) => handleSlideTouchEnd(e, totalPages)}
                 sx={{ 
-                  height: 6, 
-                  mx: 3, 
-                  borderRadius: 3, 
-                  bgcolor: 'rgba(255,255,255,0.05)', 
-                  '& .MuiLinearProgress-bar': { background: 'linear-gradient(90deg, #00b4d8, #7c4dff)' } 
+                  borderColor: 'rgba(255,255,255,0.06)', 
+                  p: { xs: 1.2, sm: 3 }, 
+                  flex: 1, 
+                  overflowY: 'auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  bgcolor: 'rgba(7, 15, 25, 0.4)'
                 }}
-              />
-
-              <DialogContent dividers sx={{ borderColor: 'rgba(255,255,255,0.08)', py: 3, px: 3, minHeight: '300px' }}>
+              >
                 <Box sx={{
-                  p: 3,
-                  bgcolor: 'rgba(255, 255, 255, 0.01)',
-                  border: '1.5px solid rgba(0, 180, 216, 0.1)',
-                  borderRadius: '16px',
-                  boxShadow: 'inset 0 0 20px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2)',
-                  minHeight: '260px'
+                  flex: 1,
+                  p: { xs: 1.8, sm: 3 },
+                  borderRadius: { xs: 3, sm: 4 },
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(0, 180, 216, 0.15)',
+                  boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.3)',
+                  wordBreak: 'break-word',
+                  display: 'flex',
+                  flexDirection: 'column'
                 }}>
                   {/* Internal Page Title */}
-                  <Typography variant="h6" sx={{ color: '#00b4d8', fontWeight: 900, mb: 3, borderBottom: '1px solid rgba(0, 180, 216, 0.2)', pb: 1, fontFamily: 'Outfit, sans-serif' }}>
-                    {pageTitle}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, pb: 1, borderBottom: '1px solid rgba(0, 180, 216, 0.2)' }}>
+                    <Typography variant="caption" sx={{ 
+                      bgcolor: 'rgba(0,180,216,0.18)', 
+                      color: '#00b4d8', 
+                      px: 1, 
+                      py: 0.3, 
+                      borderRadius: 1.5, 
+                      fontWeight: 900,
+                      fontSize: '0.7rem' 
+                    }}>
+                      Página #{explanationPage + 1}
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#00b4d8', fontSize: { xs: '1.02rem', sm: '1.2rem' }, fontFamily: 'Outfit, sans-serif' }}>
+                      {pageTitle}
+                    </Typography>
+                  </Box>
 
                   {/* Body Paragraphs */}
-                  <Box sx={{ typography: 'body1', lineHeight: 1.8, color: '#cbd5e1' }}>
+                  <Box sx={{ typography: 'body1', lineHeight: 1.7, color: '#cbd5e1' }}>
                     {paragraphs.map((para, pIdx) => {
                       if (para.includes('*')) {
-                        // Check if it represents a list (multiple bullet points separated by newlines)
                         const lines = para.split('\n');
                         const isList = lines.some(l => l.trim().startsWith('*'));
                         
                         if (isList) {
                           return (
-                            <Box component="ul" key={pIdx} sx={{ mb: 2.5, pl: 3 }}>
+                            <Box component="ul" key={pIdx} sx={{ mb: 2, pl: { xs: 2.2, sm: 3 }, m: 0 }}>
                               {lines.map((li, lIdx) => {
                                 const cleanLi = li.replace(/^\*\s*/, '').trim();
                                 return (
-                                  <Box component="li" key={lIdx} sx={{ mb: 1.2, color: '#cbd5e1' }}>
+                                  <Box component="li" key={lIdx} sx={{ mb: 1, color: '#cbd5e1', lineHeight: 1.6, fontSize: { xs: '0.9rem', sm: '0.98rem' } }}>
                                     {renderFormattedText(cleanLi)}
                                   </Box>
                                 );
@@ -3314,54 +3454,90 @@ export default function StudentPage() {
                         }
                       }
                       return (
-                        <Typography key={pIdx} variant="body1" sx={{ mb: 2.5, color: '#cbd5e1', lineHeight: 1.8 }}>
+                        <Typography key={pIdx} variant="body1" sx={{ mb: 2, color: '#cbd5e1', lineHeight: 1.7, fontSize: { xs: '0.92rem', sm: '1rem' } }}>
                           {renderFormattedText(para)}
                         </Typography>
                       );
                     })}
                   </Box>
+
+                  {/* Mobile swipe gesture tip */}
+                  {isMobile && (
+                    <Box sx={{ 
+                      mt: 'auto', 
+                      pt: 2, 
+                      borderTop: '1px dashed rgba(255,255,255,0.08)', 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      gap: 0.8,
+                      opacity: 0.5 
+                    }}>
+                      <Typography variant="caption" sx={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                        💡 Deslize para a esquerda ou direita para trocar de slide
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               </DialogContent>
 
-              <DialogActions sx={{ pt: 2, px: 3, pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {/* Dialog Footer Actions */}
+              <DialogActions sx={{ 
+                p: { xs: 1.2, sm: 2 }, 
+                px: { xs: 1.5, sm: 3 }, 
+                background: 'rgba(0, 0, 0, 0.4)', 
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                pb: { xs: 'max(14px, env(safe-area-inset-bottom))', sm: 2 }
+              }}>
                 <Button 
                   disabled={explanationPage === 0} 
                   onClick={() => setExplanationPage(prev => Math.max(prev - 1, 0))}
+                  size={isMobile ? "small" : "medium"}
                   sx={{ 
                     color: '#fff', 
                     fontWeight: 800, 
                     textTransform: 'none',
-                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.15)' } 
+                    px: { xs: 1.5, sm: 2.5 },
+                    fontSize: { xs: '0.82rem', sm: '0.9rem' },
+                    '&.Mui-disabled': { color: 'rgba(255,255,255,0.2)' } 
                   }}
+                  startIcon={<ArrowBackIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                 >
-                  ⬅️ Anterior
+                  Anterior
                 </Button>
 
-                <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'rgba(255,255,255,0.4)', fontFamily: 'Outfit, sans-serif' }}>
-                  Página {explanationPage + 1} de {totalPages}
+                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 800, fontSize: { xs: '0.75rem', sm: '0.85rem' } }}>
+                  {explanationPage + 1} / {totalPages}
                 </Typography>
 
                 {explanationPage < totalPages - 1 ? (
                   <Button 
                     variant="contained" 
+                    size={isMobile ? "small" : "medium"}
                     onClick={() => setExplanationPage(prev => prev + 1)}
                     sx={{ 
                       borderRadius: 2.5, 
                       fontWeight: 900,
-                      px: 3,
+                      px: { xs: 2, sm: 3 },
+                      py: { xs: 0.8, sm: 1 },
                       textTransform: 'none',
+                      fontSize: { xs: '0.82rem', sm: '0.9rem' },
                       background: 'linear-gradient(90deg, #00b4d8, #7c4dff)',
                       color: '#fff',
-                      boxShadow: '0 2px 10px rgba(0, 180, 216, 0.3)',
+                      boxShadow: '0 4px 14px rgba(0, 180, 216, 0.35)',
                       '&:hover': { background: 'linear-gradient(90deg, #00c8f0, #9c27b0)' }
                     }}
+                    endIcon={<ArrowForwardIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                   >
-                    Próxima ➡️
+                    Próxima
                   </Button>
                 ) : (
                   <Button 
                     variant="contained" 
-                    color="success"
+                    size={isMobile ? "small" : "medium"}
                     onClick={() => {
                       markExplanationCompleted(rpgModuleId);
                       setOpenExplanationDialog(false);
@@ -3370,15 +3546,18 @@ export default function StudentPage() {
                     sx={{ 
                       borderRadius: 2.5, 
                       fontWeight: 900,
-                      px: 3,
+                      px: { xs: 2, sm: 3 },
+                      py: { xs: 0.8, sm: 1 },
                       textTransform: 'none',
+                      fontSize: { xs: '0.82rem', sm: '0.9rem' },
                       bgcolor: '#48c78e',
-                      color: '#000',
-                      boxShadow: '0 2px 10px rgba(72,199,142,0.3)',
+                      color: '#071018',
+                      boxShadow: '0 4px 14px rgba(72,199,142,0.4)',
                       '&:hover': { bgcolor: '#38a876' }
                     }}
+                    startIcon={<CheckCircleIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />}
                   >
-                    Concluir Leitura 🏆
+                    Concluir
                   </Button>
                 )}
               </DialogActions>
