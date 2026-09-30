@@ -552,7 +552,7 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
   const [playingIdx, setPlayingIdx] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState('carousel'); // 'carousel' | 'list'
-  const [hintPopover, setHintPopover] = useState({ anchorEl: null, st: null, idx: null });
+  const [openHintIdx, setOpenHintIdx] = useState(null);
 
   const total = statements.length;
   const answeredCount = statements.filter((_, idx) => answers[idx] !== undefined).length;
@@ -562,19 +562,12 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
     speechService.speak(phrase, rate, null, () => setPlayingIdx(null));
   };
 
-  const handleToggleHint = (event, st, idx) => {
-    if (hintPopover.anchorEl && hintPopover.idx === idx) {
-      setHintPopover({ anchorEl: null, st: null, idx: null });
-    } else {
-      setHintPopover({ anchorEl: event.currentTarget, st, idx });
-    }
-  };
-
   const renderSingleStatement = (st, idx) => {
     const selected = answers[idx];
     const isCorrect = validation ? (selected === st.correct) : null;
     const isPlayingNormal = playingIdx === `${idx}-normal`;
     const isPlayingSlow = playingIdx === `${idx}-slow`;
+    const isHintOpen = openHintIdx === idx;
 
     return (
       <Card key={idx} sx={{
@@ -664,37 +657,93 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
               </Button>
             </Tooltip>
 
-            {(st.translation || st.explanation) && (
-              <Tooltip title="Ver tradução e dica da questão">
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={(e) => handleToggleHint(e, st, idx)}
-                  sx={{
-                    minWidth: 'auto',
-                    px: 1.2,
-                    py: 0.4,
-                    borderRadius: 2,
-                    fontSize: '0.75rem',
-                    fontWeight: 800,
-                    textTransform: 'none',
-                    color: hintPopover.idx === idx ? '#fff' : '#fbbf24',
-                    bgcolor: hintPopover.idx === idx ? '#f59e0b' : 'rgba(251, 191, 36, 0.1)',
-                    borderColor: 'rgba(251, 191, 36, 0.4)',
-                    boxShadow: hintPopover.idx === idx ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
-                    '&:hover': {
-                      bgcolor: '#f59e0b',
-                      color: '#fff',
-                      borderColor: '#f59e0b'
-                    }
-                  }}
-                >
-                  💡 Dica
-                </Button>
-              </Tooltip>
-            )}
+            <Tooltip title={isHintOpen ? "Fechar balão de dica" : "Ver tradução e dica gramatical da questão"}>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setOpenHintIdx(isHintOpen ? null : idx)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.2,
+                  py: 0.4,
+                  borderRadius: 2,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: isHintOpen ? '#fff' : '#fbbf24',
+                  bgcolor: isHintOpen ? '#f59e0b' : 'rgba(251, 191, 36, 0.1)',
+                  borderColor: isHintOpen ? '#f59e0b' : 'rgba(251, 191, 36, 0.4)',
+                  boxShadow: isHintOpen ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
+                  '&:hover': {
+                    bgcolor: '#f59e0b',
+                    color: '#fff',
+                    borderColor: '#f59e0b'
+                  }
+                }}
+              >
+                💡 {isHintOpen ? 'Fechar Dica' : 'Dica'}
+              </Button>
+            </Tooltip>
           </Box>
         </Box>
+
+        {/* Balão com a Dica e Tradução (Speech Bubble com seta apontando pro botão) */}
+        {isHintOpen && (
+          <Box sx={{
+            mb: 2.5,
+            p: 2,
+            borderRadius: 3.5,
+            bgcolor: '#0f172a',
+            border: '1.5px solid rgba(251, 191, 36, 0.55)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.65), 0 0 16px rgba(251, 191, 36, 0.2)',
+            position: 'relative',
+            animation: 'fadeIn 0.2s ease',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: -8,
+              right: { xs: 20, sm: 30 },
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderBottom: '8px solid rgba(251, 191, 36, 0.7)'
+            }
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.2, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 0.8 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.88rem' }}>
+                💡 Balão de Dica & Tradução
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setOpenHintIdx(null)}
+                sx={{ color: 'rgba(255,255,255,0.5)', p: 0.3, '&:hover': { color: '#fff' } }}
+              >
+                <span style={{ fontSize: '13px', lineHeight: 1 }}>✕</span>
+              </IconButton>
+            </Box>
+
+            {st.translation && (
+              <Box sx={{ mb: 1.2 }}>
+                <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.3 }}>
+                  🇧🇷 Tradução:
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#f1f5f9', fontWeight: 600, fontSize: '0.92rem', lineHeight: 1.5 }}>
+                  {st.translation}
+                </Typography>
+              </Box>
+            )}
+
+            <Box>
+              <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.3 }}>
+                📝 Explicação Gramatical:
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#cbd5e1', display: 'block', lineHeight: 1.5, fontWeight: 500, fontSize: '0.86rem' }}>
+                {st.explanation || 'Analise a estrutura verbal e o contexto temporal para identificar se a afirmação está correta (True) ou incorreta (False).'}
+              </Typography>
+            </Box>
+          </Box>
+        )}
         
         <Box sx={{ display: 'flex', gap: 2 }}>
           {[true, false].map((val) => {
@@ -951,70 +1000,6 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
       ) : (
         statements.map((st, idx) => renderSingleStatement(st, idx))
       )}
-
-      {/* Balão com a Dica e Tradução */}
-      <Popover
-        open={Boolean(hintPopover.anchorEl && hintPopover.st)}
-        anchorEl={hintPopover.anchorEl}
-        onClose={() => setHintPopover({ anchorEl: null, st: null, idx: null })}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
-        slotProps={{
-          paper: {
-            sx: {
-              p: 2,
-              mt: 1,
-              maxWidth: { xs: 290, sm: 360 },
-              borderRadius: 3.5,
-              bgcolor: '#0f172a',
-              border: '1.5px solid rgba(251, 191, 36, 0.45)',
-              boxShadow: '0 12px 36px rgba(0,0,0,0.7), 0 0 16px rgba(251, 191, 36, 0.2)',
-              color: '#fff'
-            }
-          }
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.2, borderBottom: '1px solid rgba(255,255,255,0.08)', pb: 0.8 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: 0.8, fontSize: '0.88rem' }}>
-            💡 Dica & Tradução
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={() => setHintPopover({ anchorEl: null, st: null, idx: null })}
-            sx={{ color: 'rgba(255,255,255,0.5)', p: 0.3, '&:hover': { color: '#fff' } }}
-          >
-            <span style={{ fontSize: '13px', lineHeight: 1 }}>✕</span>
-          </IconButton>
-        </Box>
-
-        {hintPopover.st?.translation && (
-          <Box sx={{ mb: hintPopover.st?.explanation ? 1.4 : 0 }}>
-            <Typography variant="caption" sx={{ color: '#00b4d8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.3 }}>
-              🇧🇷 Tradução:
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#f1f5f9', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1.5 }}>
-              {hintPopover.st.translation}
-            </Typography>
-          </Box>
-        )}
-
-        {hintPopover.st?.explanation && (
-          <Box>
-            <Typography variant="caption" sx={{ color: '#48c78e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.3 }}>
-              📝 Explicação Gramatical:
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#cbd5e1', display: 'block', lineHeight: 1.5, fontWeight: 500, fontSize: '0.84rem' }}>
-              {hintPopover.st.explanation}
-            </Typography>
-          </Box>
-        )}
-      </Popover>
     </Box>
   );
 }

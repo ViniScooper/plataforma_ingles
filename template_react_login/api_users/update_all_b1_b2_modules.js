@@ -139,11 +139,36 @@ const MODULE_DEFINITIONS = {
         content: {
           text: 'Identifique se o uso dos comparativos e superlativos está correto.',
           statements: [
-            { statement: "This international train is more faster than the bus.", correct: false },
-            { statement: "Tokyo is one of the most expensive cities in the world.", correct: true },
-            { statement: "My new apartment is further from the center than before.", correct: true },
-            { statement: "She is the goodest student in our English class.", correct: false },
-            { statement: "Travelling by plane is safer than travelling by car.", correct: true }
+            {
+              statement: "This international train is more faster than the bus.",
+              translation: "Este trem internacional é mais rápido do que o ônibus.",
+              explanation: "Incorreto! Não combinamos 'more' com '-er' (duplo comparativo). O correto para adjetivos curtos é apenas 'faster'.",
+              correct: false
+            },
+            {
+              statement: "Tokyo is one of the most expensive cities in the world.",
+              translation: "Tóquio é uma das cidades mais caras do mundo.",
+              explanation: "Correto! Para adjetivos de três ou mais sílabas (expensive), usamos 'the most expensive' no superlativo.",
+              correct: true
+            },
+            {
+              statement: "My new apartment is further from the center than before.",
+              translation: "Meu novo apartamento é mais longe do centro do que antes.",
+              explanation: "Correto! 'Far' é um adjetivo irregular cujo comparativo pode ser 'further' ou 'farther'.",
+              correct: true
+            },
+            {
+              statement: "She is the goodest student in our English class.",
+              translation: "Ela é a melhor aluna da nossa aula de inglês.",
+              explanation: "Incorreto! O adjetivo 'good' é irregular. O superlativo correto é 'the best' (e nunca 'goodest').",
+              correct: false
+            },
+            {
+              statement: "Travelling by plane is safer than travelling by car.",
+              translation: "Viajar de avião é mais seguro do que viajar de carro.",
+              explanation: "Correto! Adjetivos curtos terminados em 'e' (safe) formam o comparativo com '-r' (safer) + than.",
+              correct: true
+            }
           ]
         }
       },
