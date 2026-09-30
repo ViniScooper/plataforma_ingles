@@ -1,208 +1,150 @@
 [
   {
-    "title": "Módulo 2 - Present Continuous (Quiz)",
+    "title": "M2.1: Past Simple Irregular Verbs",
     "type": "quiz",
-    "level": "Beginner",
+    "level": "Intermediate",
     "content": {
-      "text": "Choose the best option:",
+      "text": "Choose the correct past simple form for each irregular verb.",
       "questions": [
-        { "question": "They ___ playing football now.", "options": ["is", "are", "am"], "correct": "are" },
-        { "question": "I ___ studying English at the moment.", "options": ["is", "are", "am"], "correct": "am" },
-        { "question": "She ___ watching TV.", "options": ["isn't", "aren't", "am not"], "correct": "isn't" }
+        { "question": "What is the past simple of 'Go'?", "options": ["Goed", "Went", "Gone", "Going"], "correct": "Went" },
+        { "question": "What is the past simple of 'Buy'?", "options": ["Buyed", "Bought", "Brought", "Bins"], "correct": "Bought" },
+        { "question": "What is the past simple of 'Write'?", "options": ["Writed", "Wrote", "Written", "Writing"], "correct": "Wrote" },
+        { "question": "What is the past simple of 'Choose'?", "options": ["Choosed", "Chose", "Chosen", "Choosing"], "correct": "Chose" },
+        { "question": "What is the past simple of 'Speak'?", "options": ["Speaked", "Spoke", "Spoken", "Speaking"], "correct": "Spoke" }
       ]
     }
   },
   {
-    "title": "Módulo 2 - Past Simple (Quiz)",
+    "title": "M2.2: Prepositions of Place & Time",
+    "type": "matching",
+    "level": "Intermediate",
+    "content": {
+      "instructions": "Relacione as preposições de tempo e lugar ao seu contexto correto.",
+      "pairs": [
+        { "left": "At", "right": "Horas específicas e locais pontuais (Ex: at 7 PM, at school)" },
+        { "left": "On", "right": "Dias da semana, datas e superfícies (Ex: on Friday, on the table)" },
+        { "left": "In", "right": "Meses, anos, cidades e espaços fechados (Ex: in July, in Brazil)" },
+        { "left": "Under", "right": "Diretamente abaixo de uma superfície (Ex: under the bed)" },
+        { "left": "Between", "right": "No meio de dois pontos ou pessoas (Ex: between two trees)" }
+      ]
+    }
+  },
+  {
+    "title": "M2.3: Present Perfect vs Past Simple",
+    "type": "true-false",
+    "level": "Intermediate",
+    "content": {
+      "text": "Julgue se o tempo verbal (Past Simple com tempo determinado vs Present Perfect para experiências) está correto.",
+      "statements": [
+        { "statement": "I have visited Rome in 2021.", "correct": false },
+        { "statement": "She has already finished her university degree.", "correct": true },
+        { "statement": "They lived in London two years ago.", "correct": true },
+        { "statement": "He has saw that famous film last night.", "correct": false },
+        { "statement": "We have known each other for ten years.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "M2.4: Essential B1 Phrasal Verbs",
+    "type": "flashcards",
+    "level": "Intermediate",
+    "content": {
+      "instructions": "Domine o significado e uso destes verbos compostos essenciais do nível B1.",
+      "cards": [
+        { "front": "Give up", "back": "Desistir de algo / Abandonar um hábito", "example": "Never give up on learning English." },
+        { "front": "Look for", "back": "Procurar / Buscar algo ou alguém", "example": "I am looking for my passport right now." },
+        { "front": "Run out of", "back": "Esgotar / Ficar sem suprimento", "example": "We ran out of coffee this morning." },
+        { "front": "Find out", "back": "Descobrir / Obter uma informação", "example": "I need to find out what time the flight departs." },
+        { "front": "Set off", "back": "Partir / Iniciar uma viagem ou jornada", "example": "We set off early to avoid morning traffic." }
+      ]
+    }
+  },
+  {
+    "title": "M2.5: Complex Sentence Builder",
+    "type": "sentence-order",
+    "level": "Intermediate",
+    "content": {
+      "instructions": "Ordene as palavras para formar frases gramaticalmente corretas no nível B1.",
+      "sentences": [
+        { "words": ["If", "it", "rains", "we", "will", "stay", "home"], "correct": "If it rains we will stay home" },
+        { "words": ["I", "have", "already", "packed", "my", "suitcase"], "correct": "I have already packed my suitcase" },
+        { "words": ["This", "is", "the", "hotel", "we", "booked", "yesterday"], "correct": "This is the hotel we booked yesterday" },
+        { "words": ["She", "has", "lived", "here", "since", "last", "year"], "correct": "She has lived here since last year" },
+        { "words": ["We", "arrived", "at", "the", "station", "on", "time"], "correct": "We arrived at the station on time" }
+      ]
+    }
+  },
+  {
+    "title": "M2.6: First Conditional Clauses",
     "type": "quiz",
-    "level": "Beginner",
+    "level": "Intermediate",
     "content": {
-      "text": "Choose the correct past form:",
+      "text": "Complete as sentenças com a estrutura correta da First Conditional (If + Present Simple, will + Verb).",
       "questions": [
-        { "question": "He ___ to the park yesterday.", "options": ["go", "went", "goes"], "correct": "went" },
-        { "question": "We ___ a great movie last night.", "options": ["see", "saw", "seeing"], "correct": "saw" },
-        { "question": "They ___ play tennis.", "options": ["didn't", "don't", "doesn't"], "correct": "didn't" }
+        { "question": "If he studies hard, he ___ the exam.", "options": ["pass", "passes", "will pass", "passed"], "correct": "will pass" },
+        { "question": "We will go to the beach if the weather ___ good.", "options": ["is", "will be", "are", "was"], "correct": "is" },
+        { "question": "If you don't call me, I ___ know when to pick you up.", "options": ["won't", "don't", "am not", "wouldn't"], "correct": "won't" },
+        { "question": "What will you do if the flight ___ cancelled?", "options": ["is", "will be", "be", "was"], "correct": "is" },
+        { "question": "If they ___ tickets today, they will save money.", "options": ["buy", "will buy", "bought", "buying"], "correct": "buy" }
       ]
     }
   },
   {
-    "title": "Módulo 2 - Future with Will (Quiz)",
+    "title": "M2.7: Travel & Airport Vocabulary",
+    "type": "matching",
+    "level": "Intermediate",
+    "content": {
+      "instructions": "Relacione os termos essenciais de aeroporto e viagem com seus significados.",
+      "pairs": [
+        { "left": "Boarding pass", "right": "Cartão de embarque oficial" },
+        { "left": "Luggage allowance", "right": "Limite de peso e volume de bagagem" },
+        { "left": "Departure gate", "right": "Portão de saída para o avião" },
+        { "left": "Flight delay", "right": "Atraso na decolagem do voo" },
+        { "left": "Customs declaration", "right": "Declaração alfandegária de bens" }
+      ]
+    }
+  },
+  {
+    "title": "M2.8: Comparatives and Superlatives",
+    "type": "true-false",
+    "level": "Intermediate",
+    "content": {
+      "text": "Identifique se o uso dos comparativos e superlativos está correto.",
+      "statements": [
+        { "statement": "This international train is more faster than the bus.", "correct": false },
+        { "statement": "Tokyo is one of the most expensive cities in the world.", "correct": true },
+        { "statement": "My new apartment is further from the center than before.", "correct": true },
+        { "statement": "She is the goodest student in our English class.", "correct": false },
+        { "statement": "Travelling by plane is safer than travelling by car.", "correct": true }
+      ]
+    }
+  },
+  {
+    "title": "M2.9: Journey to London - Reading Comprehension",
     "type": "quiz",
-    "level": "Beginner",
+    "level": "Intermediate",
     "content": {
-      "text": "Choose the best option for the future:",
+      "text": "Lucas travelled to London last autumn for an international design seminar. He arrived at Heathrow Airport early in the morning, but his luggage had been mistakenly transferred to Dublin. Fortunately, the airline staff tracked his suitcase within three hours and delivered it straight to his hotel in Westminster. Despite the initial stress, Lucas enjoyed walking along the Thames and visiting the British Museum.",
       "questions": [
-        { "question": "I think it ___ rain tomorrow.", "options": ["will", "is", "does"], "correct": "will" },
-        { "question": "She ___ call you later.", "options": ["wills", "will", "willing"], "correct": "will" },
-        { "question": "___ you help me with this?", "options": ["Will", "Do", "Are"], "correct": "Will" }
+        { "question": "Why did Lucas travel to London?", "options": ["For a family holiday", "For a design seminar", "To visit a museum", "To buy a car"], "correct": "For a design seminar" },
+        { "question": "What problem happened upon his arrival?", "options": ["His flight was cancelled", "His luggage was sent to Dublin", "His hotel was closed", "He lost his passport"], "correct": "His luggage was sent to Dublin" },
+        { "question": "How long did it take the airline staff to locate his suitcase?", "options": ["One day", "Three hours", "Five hours", "A week"], "correct": "Three hours" },
+        { "question": "Where was Lucas's hotel located?", "options": ["Heathrow", "Dublin", "Westminster", "Kensington"], "correct": "Westminster" }
       ]
     }
   },
   {
-    "title": "Módulo 2 - Describe a Trip (Escrita)",
-    "type": "writing",
-    "level": "Intermediate",
-    "content": { "prompt": "Write about your last vacation trip. Where did you go?", "minWords": 40 }
-  },
-  {
-    "title": "Módulo 2 - Your Future Plans (Escrita)",
-    "type": "writing",
-    "level": "Intermediate",
-    "content": { "prompt": "What are your plans for the next 5 years?", "minWords": 40 }
-  },
-  {
-    "title": "Módulo 2 - A Memorable Event (Escrita)",
-    "type": "writing",
-    "level": "Intermediate",
-    "content": { "prompt": "Describe an event that changed your life.", "minWords": 40 }
-  },
-  {
-    "title": "Módulo 2 - Reading Comprehension 1 (V ou F)",
-    "type": "true-false",
-    "level": "Beginner",
-    "content": {
-      "text": "John is a doctor. He works at a hospital in London. He loves his job because he helps people.",
-      "statements": [
-        { "statement": "John works in New York.", "correct": false },
-        { "statement": "John is a doctor.", "correct": true }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Reading Comprehension 2 (V ou F)",
-    "type": "true-false",
-    "level": "Beginner",
-    "content": {
-      "text": "The Amazon rainforest is the largest tropical rainforest in the world. It is located in South America.",
-      "statements": [
-        { "statement": "The Amazon is a desert.", "correct": false },
-        { "statement": "It is the largest tropical rainforest.", "correct": true }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Reading Comprehension 3 (V ou F)",
-    "type": "true-false",
-    "level": "Beginner",
-    "content": {
-      "text": "Water boils at 100 degrees Celsius at standard atmospheric pressure.",
-      "statements": [
-        { "statement": "Water boils at 50 degrees Celsius.", "correct": false },
-        { "statement": "It boils at 100 degrees Celsius.", "correct": true }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Present Continuous Sentences (Frases)",
+    "title": "M2.10: Travel Word Order & Expressions",
     "type": "sentence-order",
-    "level": "Beginner",
+    "level": "Intermediate",
     "content": {
-      "instructions": "Order the words to make present continuous sentences:",
+      "instructions": "Ordene as palavras para formar perguntas e frases úteis para viagens.",
       "sentences": [
-        { "words": ["playing", "are", "soccer", "They"], "correct": "They are playing soccer" },
-        { "words": ["is", "reading", "book", "She", "a"], "correct": "She is reading a book" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Past Simple Sentences (Frases)",
-    "type": "sentence-order",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Order the words to make past simple sentences:",
-      "sentences": [
-        { "words": ["went", "I", "market", "the", "to"], "correct": "I went to the market" },
-        { "words": ["movie", "watched", "a", "We"], "correct": "We watched a movie" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Questions (Frases)",
-    "type": "sentence-order",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Order the words to form questions:",
-      "sentences": [
-        { "words": ["you", "Where", "live", "do", "?"], "correct": "Where do you live ?" },
-        { "words": ["name", "What", "your", "is", "?"], "correct": "What is your name ?" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Animals (Relacionar)",
-    "type": "matching",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Match the animals:",
-      "pairs": [
-        { "left": "Dog", "right": "Cachorro" },
-        { "left": "Cat", "right": "Gato" },
-        { "left": "Bird", "right": "Pássaro" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Colors (Relacionar)",
-    "type": "matching",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Match the colors:",
-      "pairs": [
-        { "left": "Red", "right": "Vermelho" },
-        { "left": "Blue", "right": "Azul" },
-        { "left": "Green", "right": "Verde" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Numbers (Relacionar)",
-    "type": "matching",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Match the numbers:",
-      "pairs": [
-        { "left": "One", "right": "Um" },
-        { "left": "Two", "right": "Dois" },
-        { "left": "Three", "right": "Três" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Travel Vocab (Vocabulário)",
-    "type": "flashcards",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Study these travel words:",
-      "cards": [
-        { "front": "Airport", "back": "Aeroporto" },
-        { "front": "Flight", "back": "Voo" },
-        { "front": "Luggage", "back": "Bagagem" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Food Vocab (Vocabulário)",
-    "type": "flashcards",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Study these food words:",
-      "cards": [
-        { "front": "Bread", "back": "Pão" },
-        { "front": "Cheese", "back": "Queijo" },
-        { "front": "Water", "back": "Água" }
-      ]
-    }
-  },
-  {
-    "title": "Módulo 2 - Jobs (Vocabulário)",
-    "type": "flashcards",
-    "level": "Beginner",
-    "content": {
-      "instructions": "Study these professions:",
-      "cards": [
-        { "front": "Teacher", "back": "Professor(a)" },
-        { "front": "Doctor", "back": "Médico(a)" },
-        { "front": "Engineer", "back": "Engenheiro(a)" }
+        { "words": ["Where", "can", "I", "collect", "my", "luggage"], "correct": "Where can I collect my luggage" },
+        { "words": ["Could", "you", "please", "check", "my", "reservation"], "correct": "Could you please check my reservation" },
+        { "words": ["The", "flight", "has", "been", "delayed", "by", "two", "hours"], "correct": "The flight has been delayed by two hours" },
+        { "words": ["Do", "I", "need", "to", "show", "my", "passport"], "correct": "Do I need to show my passport" },
+        { "words": ["We", "are", "looking", "for", "the", "information", "desk"], "correct": "We are looking for the information desk" }
       ]
     }
   }

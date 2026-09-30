@@ -183,7 +183,7 @@ async function main() {
       }
     ];
 
-    // 4. Definir as 10 Atividades do Módulo 2 (Intermediate)
+    // 4. Definir as 10 Atividades do Módulo 2 (Intermediate / CEFR B1.1)
     const m2Exercises = [
       {
         title: 'M2.1: Past Simple Irregular Verbs',
@@ -191,11 +191,13 @@ async function main() {
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          text: 'Choose the correct past simple forms.',
+          text: 'Choose the correct past simple form for each irregular verb.',
           questions: [
-            { question: "What is the past simple of 'Go'?", options: ["Goed", "Gone", "Went", "Goes"], correct: "Went" },
+            { question: "What is the past simple of 'Go'?", options: ["Goed", "Went", "Gone", "Going"], correct: "Went" },
             { question: "What is the past simple of 'Buy'?", options: ["Buyed", "Bought", "Brought", "Bins"], correct: "Bought" },
-            { question: "What is the past simple of 'Write'?", options: ["Writed", "Written", "Wrote", "Write"], correct: "Wrote" }
+            { question: "What is the past simple of 'Write'?", options: ["Writed", "Wrote", "Written", "Writing"], correct: "Wrote" },
+            { question: "What is the past simple of 'Choose'?", options: ["Choosed", "Chose", "Chosen", "Choosing"], correct: "Chose" },
+            { question: "What is the past simple of 'Speak'?", options: ["Speaked", "Spoke", "Spoken", "Speaking"], correct: "Spoke" }
           ]
         }
       },
@@ -205,42 +207,45 @@ async function main() {
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          instructions: 'Relacione as preposições com suas regras de uso comuns.',
+          instructions: 'Relacione as preposições de tempo e lugar ao seu contexto correto.',
           pairs: [
-            { left: 'At', right: 'Usada para horas específicas (Ex: at 5 PM)' },
-            { left: 'On', right: 'Usada para dias da semana e datas (Ex: on Monday)' },
-            { left: 'In', right: 'Usada para meses, anos e períodos (Ex: in 2026)' },
-            { left: 'Under', right: 'Usada para posições diretamente abaixo (Ex: under the table)' }
+            { left: 'At', right: 'Horas específicas e locais pontuais (Ex: at 7 PM, at school)' },
+            { left: 'On', right: 'Dias da semana, datas e superfícies (Ex: on Friday, on the table)' },
+            { left: 'In', right: 'Meses, anos, cidades e espaços fechados (Ex: in July, in Brazil)' },
+            { left: 'Under', right: 'Diretamente abaixo de uma superfície (Ex: under the bed)' },
+            { left: 'Between', right: 'No meio de dois pontos ou pessoas (Ex: between two trees)' }
           ]
         }
       },
       {
-        title: 'M2.3: Present Perfect Form Check',
+        title: 'M2.3: Present Perfect vs Past Simple',
         type: 'true-false',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          text: 'Julgue se o uso do Present Perfect está correto.',
+          text: 'Julgue se o tempo verbal (Past Simple com tempo determinado vs Present Perfect para experiências) está correto.',
           statements: [
-            { statement: 'I have visited France twice.', correct: true },
-            { statement: 'She has saw that movie already.', correct: false },
-            { statement: 'They have lived here since 2010.', correct: true },
-            { statement: 'He have finished his work.', correct: false }
+            { statement: "I have visited Rome in 2021.", correct: false },
+            { statement: "She has already finished her university degree.", correct: true },
+            { statement: "They lived in London two years ago.", correct: true },
+            { statement: "He has saw that famous film last night.", correct: false },
+            { statement: "We have known each other for ten years.", correct: true }
           ]
         }
       },
       {
-        title: 'M2.4: Common Phrasal Verbs',
+        title: 'M2.4: Essential B1 Phrasal Verbs',
         type: 'flashcards',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          instructions: 'Estude o significado de verbos compostos comuns (Phrasal Verbs).',
+          instructions: 'Domine o significado e uso destes verbos compostos essenciais do nível B1.',
           cards: [
-            { front: 'Give up', back: 'Desistir / Entregar', example: 'Never give up on your dreams.' },
-            { front: 'Look for', back: 'Procurar', example: 'I am looking for my keys.' },
-            { front: 'Run out of', back: 'Ficar sem / Esgotar', example: 'We ran out of milk.' },
-            { front: 'Wake up', back: 'Acordar', example: 'I wake up at 7 AM.' }
+            { front: 'Give up', back: 'Desistir de algo / Abandonar um hábito', example: 'Never give up on learning English.' },
+            { front: 'Look for', back: 'Procurar / Buscar algo ou alguém', example: 'I am looking for my passport right now.' },
+            { front: 'Run out of', back: 'Esgotar / Ficar sem suprimento', example: 'We ran out of coffee this morning.' },
+            { front: 'Find out', back: 'Descobrir / Obter uma informação', example: 'I need to find out what time the flight departs.' },
+            { front: 'Set off', back: 'Partir / Iniciar uma viagem ou jornada', example: 'We set off early to avoid morning traffic.' }
           ]
         }
       },
@@ -250,40 +255,45 @@ async function main() {
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          instructions: 'Organize as palavras para formar frases condicionais ou complexas.',
+          instructions: 'Ordene as palavras para formar frases gramaticalmente corretas no nível B1.',
           sentences: [
-            { words: ['it', 'rain', 'If', 'will', 'stay', 'I', 'rains,', 'home'], correct: 'If it rains, I will stay home' },
-            { words: ['already', 'have', 'lunch', 'eaten', 'I'], correct: 'I have already eaten lunch' },
-            { words: ['is', 'book', 'the', 'This', 'I', 'yesterday', 'bought'], correct: 'This is the book I bought yesterday' }
+            { words: ['If', 'it', 'rains', 'we', 'will', 'stay', 'home'], correct: 'If it rains we will stay home' },
+            { words: ['I', 'have', 'already', 'packed', 'my', 'suitcase'], correct: 'I have already packed my suitcase' },
+            { words: ['This', 'is', 'the', 'hotel', 'we', 'booked', 'yesterday'], correct: 'This is the hotel we booked yesterday' },
+            { words: ['She', 'has', 'lived', 'here', 'since', 'last', 'year'], correct: 'She has lived here since last year' },
+            { words: ['We', 'arrived', 'at', 'the', 'station', 'on', 'time'], correct: 'We arrived at the station on time' }
           ]
         }
       },
       {
-        title: 'M2.6: Conditional Clauses (Type 1)',
+        title: 'M2.6: First Conditional Clauses',
         type: 'quiz',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          text: 'Complete a primeira condicional de forma correta.',
+          text: 'Complete as sentenças com a estrutura correta da First Conditional (If + Present Simple, will + Verb).',
           questions: [
             { question: "If he studies hard, he ___ the exam.", options: ["pass", "passes", "will pass", "passed"], correct: "will pass" },
             { question: "We will go to the beach if the weather ___ good.", options: ["is", "will be", "are", "was"], correct: "is" },
-            { question: "If you don't call me, I ___ come.", options: ["won't", "don't", "am not", "wouldn't"], correct: "won't" }
+            { question: "If you don't call me, I ___ know when to pick you up.", options: ["won't", "don't", "am not", "wouldn't"], correct: "won't" },
+            { question: "What will you do if the flight ___ cancelled?", options: ["is", "will be", "be", "was"], correct: "is" },
+            { question: "If they ___ tickets today, they will save money.", options: ["buy", "will buy", "bought", "buying"], correct: "buy" }
           ]
         }
       },
       {
-        title: 'M2.7: Travel Vocabulary Match',
+        title: 'M2.7: Travel & Airport Vocabulary',
         type: 'matching',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          instructions: 'Relacione as palavras com o contexto de viagem correto.',
+          instructions: 'Relacione os termos essenciais de aeroporto e viagem com seus significados.',
           pairs: [
-            { left: 'Boarding pass', right: 'Cartão de embarque do avião' },
-            { left: 'Luggage', right: 'Malas e pertences da viagem' },
-            { left: 'Delay', right: 'Atraso no vôo ou partida' },
-            { left: 'Gate', right: 'Portão de embarque no aeroporto' }
+            { left: 'Boarding pass', right: 'Cartão de embarque oficial' },
+            { left: 'Luggage allowance', right: 'Limite de peso e volume de bagagem' },
+            { left: 'Departure gate', right: 'Portão de saída para o avião' },
+            { left: 'Flight delay', right: 'Atraso na decolagem do voo' },
+            { left: 'Customs declaration', right: 'Declaração alfandegária de bens' }
           ]
         }
       },
@@ -293,38 +303,45 @@ async function main() {
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          text: 'Julgue a correção dos graus de comparação dos adjetivos.',
+          text: 'Identifique se o uso dos comparativos e superlativos está correto.',
           statements: [
-            { statement: 'This book is more interesting than that one.', correct: true },
-            { statement: 'He is the most tallest boy in class.', correct: false },
-            { statement: 'Gold is more expensive than silver.', correct: true },
-            { statement: 'His car is gooder than mine.', correct: false }
+            { statement: "This international train is more faster than the bus.", correct: false },
+            { statement: "Tokyo is one of the most expensive cities in the world.", correct: true },
+            { statement: "My new apartment is further from the center than before.", correct: true },
+            { statement: "She is the goodest student in our English class.", correct: false },
+            { statement: "Travelling by plane is safer than travelling by car.", correct: true }
           ]
         }
       },
       {
-        title: 'M2.9: The Future of AI - Text Reading',
+        title: 'M2.9: Journey to London - Reading Comprehension',
         type: 'quiz',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          text: 'Artificial Intelligence (AI) is transforming the way we work and learn. Many experts believe that AI will automate routine tasks, allowing humans to focus on creative and complex problems. However, education must adapt to prepare students for this new future.',
+          text: "Lucas travelled to London last autumn for an international design seminar. He arrived at Heathrow Airport early in the morning, but his luggage had been mistakenly transferred to Dublin. Fortunately, the airline staff tracked his suitcase within three hours and delivered it straight to his hotel in Westminster. Despite the initial stress, Lucas enjoyed walking along the Thames and visiting the British Museum.",
           questions: [
-            { question: "What is AI transforming according to the text?", options: ["Only finance", "The way we work and learn", "Ancient histories", "Farming only"], correct: "The way we work and learn" },
-            { question: "What will AI automate?", options: ["All jobs", "Routine tasks", "Nothing", "Creative problems"], correct: "Routine tasks" },
-            { question: "What must adapt to prepare students?", options: ["Government", "AI models", "Education", "Companies"], correct: "Education" }
+            { question: "Why did Lucas travel to London?", options: ["For a family holiday", "For a design seminar", "To visit a museum", "To buy a car"], correct: "For a design seminar" },
+            { question: "What problem happened upon his arrival?", options: ["His flight was cancelled", "His luggage was sent to Dublin", "His hotel was closed", "He lost his passport"], correct: "His luggage was sent to Dublin" },
+            { question: "How long did it take the airline staff to locate his suitcase?", options: ["One day", "Three hours", "Five hours", "A week"], correct: "Three hours" },
+            { question: "Where was Lucas's hotel located?", options: ["Heathrow", "Dublin", "Westminster", "Kensington"], correct: "Westminster" }
           ]
         }
       },
       {
-        title: 'M2.10: Your Dream Vacation',
-        type: 'writing',
+        title: 'M2.10: Travel Word Order & Expressions',
+        type: 'sentence-order',
         level: 'Intermediate',
         planId: planIntermediate.id,
         content: {
-          prompt: 'Descreva suas férias dos sonhos. Para onde você iria, o que faria e com quem iria? Escreva em inglês de forma detalhada (mínimo de 40 palavras).',
-          minWords: 40,
-          tips: ['My dream vacation is...', 'I would love to visit...', 'We would travel by...', 'I want to see...']
+          instructions: 'Ordene as palavras para formar perguntas e frases úteis para viagens.',
+          sentences: [
+            { words: ['Where', 'can', 'I', 'collect', 'my', 'luggage'], correct: 'Where can I collect my luggage' },
+            { words: ['Could', 'you', 'please', 'check', 'my', 'reservation'], correct: 'Could you please check my reservation' },
+            { words: ['The', 'flight', 'has', 'been', 'delayed', 'by', 'two', 'hours'], correct: 'The flight has been delayed by two hours' },
+            { words: ['Do', 'I', 'need', 'to', 'show', 'my', 'passport'], correct: 'Do I need to show my passport' },
+            { words: ['We', 'are', 'looking', 'for', 'the', 'information', 'desk'], correct: 'We are looking for the information desk' }
+          ]
         }
       }
     ];

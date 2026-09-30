@@ -1800,9 +1800,10 @@ export default function ExerciseCard({ exercise, onComplete }) {
       } else if (effectiveType === 'sentence-order') {
         const sentences = exercise.content?.sentences || [];
         totalQuestions = sentences.length;
+        const cleanStr = (s) => (s || '').toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?"']/g, '').replace(/\s+/g, ' ').trim();
         results = sentences.map((sentence, idx) => {
           const userSentence = (answers[idx]?.selected || []).join(' ');
-          const isCorrect = userSentence.trim().toLowerCase() === sentence.correct.trim().toLowerCase();
+          const isCorrect = cleanStr(userSentence) === cleanStr(sentence.correct);
           if (isCorrect) score++;
           return { sentence: sentence.correct, userAnswer: userSentence, isCorrect };
         });
