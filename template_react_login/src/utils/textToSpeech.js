@@ -21,7 +21,7 @@ class SpeechService {
     this.voices = this.synth.getVoices().filter(v => v.lang.startsWith('en'));
   }
 
-  speak(text, rate = 1.0, onStart = null, onEnd = null) {
+  speak(text, rate = 0.8, onStart = null, onEnd = null) {
     if (!this.synth) {
       console.warn('SpeechSynthesis is not supported on this browser.');
       return;
@@ -32,7 +32,7 @@ class SpeechService {
 
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
-    utterance.rate = rate; // 1.0 = normal, 0.75 = slow for A2 students
+    utterance.rate = rate; // 0.8 = natural comfortable pace for learners, 0.58 = slow pace
     utterance.pitch = 1.0;
 
     // Select natural English voice if available

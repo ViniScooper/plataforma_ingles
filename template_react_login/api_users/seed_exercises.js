@@ -225,11 +225,36 @@ async function main() {
         content: {
           text: 'Julgue se o tempo verbal (Past Simple com tempo determinado vs Present Perfect para experiências) está correto.',
           statements: [
-            { statement: "I have visited Rome in 2021.", correct: false },
-            { statement: "She has already finished her university degree.", correct: true },
-            { statement: "They lived in London two years ago.", correct: true },
-            { statement: "He has saw that famous film last night.", correct: false },
-            { statement: "We have known each other for ten years.", correct: true }
+            {
+              statement: "I have visited Rome in 2021.",
+              translation: "Eu visitei Roma em 2021.",
+              explanation: "Incorreto! Com datas ou anos definidos no passado (in 2021), usamos o Past Simple ('I visited Rome in 2021') e não o Present Perfect.",
+              correct: false
+            },
+            {
+              statement: "She has already finished her university degree.",
+              translation: "Ela já concluiu sua graduação universitária.",
+              explanation: "Correto! 'Already' (já) é usado com o Present Perfect para indicar que uma ação foi concluída antes do esperado.",
+              correct: true
+            },
+            {
+              statement: "They lived in London two years ago.",
+              translation: "Eles moraram em Londres há dois anos.",
+              explanation: "Correto! Expressões com 'ago' (two years ago) indicam tempo encerrado no passado e exigem o Past Simple ('lived').",
+              correct: true
+            },
+            {
+              statement: "He has saw that famous film last night.",
+              translation: "Ele viu aquele filme famoso ontem à noite.",
+              explanation: "Incorreto! Dois erros: 1) O particípio de 'see' é 'seen' (não 'saw'). 2) 'Last night' exige o Past Simple ('He saw that film last night').",
+              correct: false
+            },
+            {
+              statement: "We have known each other for ten years.",
+              translation: "Nós nos conhecemos há dez anos.",
+              explanation: "Correto! Expressa uma ação contínua que iniciou no passado e permanece verdadeira no presente ('for ten years').",
+              correct: true
+            }
           ]
         }
       },

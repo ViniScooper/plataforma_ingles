@@ -41,35 +41,83 @@ function QuizRenderer({ exercise, answers, setAnswers, validation }) {
   const questions = Array.isArray(exercise.content?.questions) ? exercise.content.questions : [];
   const [currentStep, setCurrentStep] = useState(0);
   const [mode, setMode] = useState('carousel'); // 'carousel' | 'list'
-  const [playingContext, setPlayingContext] = useState(false);
+  const [playingKey, setPlayingKey] = useState(null);
 
   const total = questions.length;
   const answeredCount = questions.filter((_, idx) => answers[idx] !== undefined && answers[idx] !== '').length;
 
-  const handleSpeakText = (phrase) => {
-    setPlayingContext(true);
-    speechService.speak(phrase, 0.85, null, () => setPlayingContext(false));
+  const handleSpeakText = (phrase, rate = 0.8, key = 'context') => {
+    setPlayingKey(key);
+    speechService.speak(phrase, rate, null, () => setPlayingKey(null));
   };
 
   const renderSingleQuestion = (q, idx) => {
     const result = validation?.results?.[idx];
     const studentChoice = answers[idx] || '';
+    const isPlayingNormal = playingKey === `q-${idx}-normal`;
+    const isPlayingSlow = playingKey === `q-${idx}-slow`;
 
     return (
       <Box key={idx} sx={{ animation: 'fadeIn 0.25s ease' }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '1.08rem', display: 'flex', gap: 1, alignItems: 'center' }}>
-            <span style={{ color: '#00b4d8', fontWeight: 900 }}>{idx + 1}.</span> {q.question || q.q}
-          </Typography>
-          <Tooltip title="Ouvir pergunta em inglês">
-            <IconButton
-              size="small"
-              onClick={() => handleSpeakText(q.question || q.q)}
-              sx={{ color: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.1)', flexShrink: 0, '&:hover': { bgcolor: '#00b4d8', color: '#fff' } }}
-            >
-              <VolumeUpIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 800, color: '#fff', fontSize: '1.08rem', display: 'flex', gap: 1, alignItems: 'center' }}>
+              <span style={{ color: '#00b4d8', fontWeight: 900 }}>{idx + 1}.</span> {q.question || q.q}
+            </Typography>
+            {q.translation && (
+              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block', mt: 0.5, fontStyle: 'italic' }}>
+                🇧🇷 {q.translation}
+              </Typography>
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, flexShrink: 0 }}>
+            <Tooltip title="Ouvir pergunta em velocidade normal (0.8x)">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeakText(q.question || q.q, 0.8, `q-${idx}-normal`)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.2,
+                  py: 0.35,
+                  borderRadius: 2,
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: isPlayingNormal ? '#fff' : '#00b4d8',
+                  bgcolor: isPlayingNormal ? '#00b4d8' : 'rgba(0, 180, 216, 0.08)',
+                  borderColor: 'rgba(0, 180, 216, 0.3)',
+                  boxShadow: isPlayingNormal ? '0 0 10px rgba(0, 180, 216, 0.4)' : 'none',
+                  '&:hover': { bgcolor: '#00b4d8', color: '#fff' }
+                }}
+              >
+                🔊 {isPlayingNormal ? '...' : 'Normal'}
+              </Button>
+            </Tooltip>
+            <Tooltip title="Ouvir mais lento e pausado (0.58x)">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeakText(q.question || q.q, 0.58, `q-${idx}-slow`)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.2,
+                  py: 0.35,
+                  borderRadius: 2,
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: isPlayingSlow ? '#fff' : '#48c78e',
+                  bgcolor: isPlayingSlow ? '#48c78e' : 'rgba(72, 199, 142, 0.08)',
+                  borderColor: 'rgba(72, 199, 142, 0.3)',
+                  boxShadow: isPlayingSlow ? '0 0 10px rgba(72, 199, 142, 0.4)' : 'none',
+                  '&:hover': { bgcolor: '#48c78e', color: '#fff' }
+                }}
+              >
+                🐢 {isPlayingSlow ? '...' : 'Lento'}
+              </Button>
+            </Tooltip>
+          </Box>
         </Box>
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -174,15 +222,43 @@ function QuizRenderer({ exercise, answers, setAnswers, validation }) {
             <Typography variant="subtitle2" sx={{ color: '#00b4d8', fontWeight: 800, letterSpacing: 0.5, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 1 }}>
               📖 Contexto de Leitura:
             </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<VolumeUpIcon sx={{ fontSize: 16 }} />}
-              onClick={() => handleSpeakText(text)}
-              sx={{ borderRadius: 2.5, textTransform: 'none', fontWeight: 800, fontSize: '0.75rem', borderColor: 'rgba(0, 180, 216, 0.4)', color: '#00b4d8' }}
-            >
-              {playingContext ? 'Ouvindo...' : '🔊 Ouvir Texto'}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<VolumeUpIcon sx={{ fontSize: 16 }} />}
+                onClick={() => handleSpeakText(text, 0.8, 'context-normal')}
+                sx={{
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  borderColor: 'rgba(0, 180, 216, 0.4)',
+                  color: '#00b4d8',
+                  bgcolor: playingKey === 'context-normal' ? 'rgba(0, 180, 216, 0.25)' : 'rgba(0, 180, 216, 0.05)',
+                  '&:hover': { borderColor: '#00b4d8', bgcolor: 'rgba(0, 180, 216, 0.15)' }
+                }}
+              >
+                {playingKey === 'context-normal' ? '🔊 Ouvindo...' : '🔊 Ouvir Normal'}
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeakText(text, 0.58, 'context-slow')}
+                sx={{
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.75rem',
+                  borderColor: 'rgba(72, 199, 142, 0.4)',
+                  color: '#48c78e',
+                  bgcolor: playingKey === 'context-slow' ? 'rgba(72, 199, 142, 0.25)' : 'rgba(72, 199, 142, 0.05)',
+                  '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72, 199, 142, 0.15)' }
+                }}
+              >
+                {playingKey === 'context-slow' ? '🐢 Ouvindo Lento...' : '🐢 Ouvir Lento (0.6x)'}
+              </Button>
+            </Box>
           </Box>
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#cbd5e1', fontSize: '1rem' }}>
             {text}
@@ -516,15 +592,16 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
   const total = statements.length;
   const answeredCount = statements.filter((_, idx) => answers[idx] !== undefined).length;
 
-  const handleSpeak = (phrase, idx = null) => {
-    setPlayingIdx(idx);
-    speechService.speak(phrase, 0.85, null, () => setPlayingIdx(null));
+  const handleSpeak = (phrase, idKey = null, rate = 0.8) => {
+    setPlayingIdx(idKey);
+    speechService.speak(phrase, rate, null, () => setPlayingIdx(null));
   };
 
   const renderSingleStatement = (st, idx) => {
     const selected = answers[idx];
     const isCorrect = validation ? (selected === st.correct) : null;
-    const isPlayingThis = playingIdx === idx;
+    const isPlayingNormal = playingIdx === `${idx}-normal`;
+    const isPlayingSlow = playingIdx === `${idx}-slow`;
 
     return (
       <Card key={idx} sx={{
@@ -544,30 +621,86 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
         boxShadow: validation && isCorrect ? '0 0 15px rgba(72, 199, 142, 0.1)' : 'none',
         transition: 'all 0.3s ease',
       }}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2.5 }}>
-          <Typography variant="body1" sx={{ fontWeight: 800, color: '#fff', fontSize: { xs: '1rem', md: '1.1rem' }, lineHeight: 1.5 }}>
-            <span style={{ color: '#00b4d8', marginRight: '6px' }}>{idx + 1}.</span> {st.statement}
-          </Typography>
-          <Tooltip title="Ouvir afirmação em inglês">
-            <IconButton
-              size="small"
-              onClick={() => handleSpeak(st.statement, idx)}
-              sx={{
-                color: isPlayingThis ? '#fff' : '#00b4d8',
-                bgcolor: isPlayingThis ? '#00b4d8' : 'rgba(0, 180, 216, 0.12)',
-                border: '1px solid rgba(0, 180, 216, 0.3)',
-                flexShrink: 0,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: '#00b4d8',
-                  color: '#fff',
-                  transform: 'scale(1.1)'
-                }
-              }}
-            >
-              <VolumeUpIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body1" sx={{ fontWeight: 800, color: '#fff', fontSize: { xs: '1rem', md: '1.1rem' }, lineHeight: 1.5 }}>
+              <span style={{ color: '#00b4d8', marginRight: '6px' }}>{idx + 1}.</span> {st.statement}
+            </Typography>
+
+            {/* Translation & Grammar Tip Box */}
+            {(st.translation || st.explanation) && (
+              <Box sx={{
+                mt: 1.2,
+                p: 1.2,
+                borderRadius: 2.5,
+                bgcolor: 'rgba(0, 180, 216, 0.06)',
+                border: '1px solid rgba(0, 180, 216, 0.18)',
+                borderLeft: '3px solid #00b4d8'
+              }}>
+                {st.translation && (
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.92)', fontSize: '0.88rem' }}>
+                    🇧🇷 <strong>Tradução:</strong> {st.translation}
+                  </Typography>
+                )}
+                {st.explanation && (
+                  <Typography variant="caption" sx={{ color: '#90caf9', display: 'block', mt: 0.5, fontWeight: 600, lineHeight: 1.4 }}>
+                    💡 <em>Dica: {st.explanation}</em>
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Box>
+
+          {/* Dual Audio Speed Controls: Normal (0.8x) & Slow (0.58x) */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, flexShrink: 0 }}>
+            <Tooltip title="Ouvir em velocidade normal (0.8x)">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeak(st.statement, `${idx}-normal`, 0.8)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.2,
+                  py: 0.4,
+                  borderRadius: 2,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: isPlayingNormal ? '#fff' : '#00b4d8',
+                  bgcolor: isPlayingNormal ? '#00b4d8' : 'rgba(0, 180, 216, 0.08)',
+                  borderColor: 'rgba(0, 180, 216, 0.3)',
+                  boxShadow: isPlayingNormal ? '0 0 10px rgba(0, 180, 216, 0.4)' : 'none',
+                  '&:hover': { bgcolor: '#00b4d8', color: '#fff' }
+                }}
+              >
+                🔊 {isPlayingNormal ? 'Tocando...' : 'Normal'}
+              </Button>
+            </Tooltip>
+
+            <Tooltip title="Ouvir mais lento e pausado (0.58x)">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeak(st.statement, `${idx}-slow`, 0.58)}
+                sx={{
+                  minWidth: 'auto',
+                  px: 1.2,
+                  py: 0.4,
+                  borderRadius: 2,
+                  fontSize: '0.75rem',
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  color: isPlayingSlow ? '#fff' : '#48c78e',
+                  bgcolor: isPlayingSlow ? '#48c78e' : 'rgba(72, 199, 142, 0.08)',
+                  borderColor: 'rgba(72, 199, 142, 0.3)',
+                  boxShadow: isPlayingSlow ? '0 0 10px rgba(72, 199, 142, 0.4)' : 'none',
+                  '&:hover': { bgcolor: '#48c78e', color: '#fff' }
+                }}
+              >
+                🐢 {isPlayingSlow ? 'Lento...' : 'Lento'}
+              </Button>
+            </Tooltip>
+          </Box>
         </Box>
         
         <Box sx={{ display: 'flex', gap: 2 }}>
@@ -672,24 +805,43 @@ function TrueFalseRenderer({ exercise, answers, setAnswers, validation }) {
             <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#48c78e', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
               📖 Contexto de Leitura:
             </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<VolumeUpIcon sx={{ fontSize: 18 }} />}
-              onClick={() => handleSpeak(text, 'context')}
-              sx={{
-                borderRadius: 2.5,
-                textTransform: 'none',
-                fontWeight: 800,
-                fontSize: '0.78rem',
-                borderColor: 'rgba(72, 199, 142, 0.4)',
-                color: '#48c78e',
-                bgcolor: playingIdx === 'context' ? 'rgba(72, 199, 142, 0.2)' : 'rgba(72, 199, 142, 0.05)',
-                '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72, 199, 142, 0.15)' }
-              }}
-            >
-              {playingIdx === 'context' ? 'Ouvindo...' : '🔊 Ouvir Texto (Prof. Vinicius)'}
-            </Button>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<VolumeUpIcon sx={{ fontSize: 16 }} />}
+                onClick={() => handleSpeak(text, 'context-normal', 0.8)}
+                sx={{
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  borderColor: 'rgba(72, 199, 142, 0.4)',
+                  color: '#48c78e',
+                  bgcolor: playingIdx === 'context-normal' ? 'rgba(72, 199, 142, 0.25)' : 'rgba(72, 199, 142, 0.05)',
+                  '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72, 199, 142, 0.15)' }
+                }}
+              >
+                {playingIdx === 'context-normal' ? '🔊 Ouvindo...' : '🔊 Ouvir Normal'}
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => handleSpeak(text, 'context-slow', 0.58)}
+                sx={{
+                  borderRadius: 2.5,
+                  textTransform: 'none',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  borderColor: 'rgba(72, 199, 142, 0.4)',
+                  color: '#48c78e',
+                  bgcolor: playingIdx === 'context-slow' ? 'rgba(72, 199, 142, 0.25)' : 'rgba(72, 199, 142, 0.05)',
+                  '&:hover': { borderColor: '#48c78e', bgcolor: 'rgba(72, 199, 142, 0.15)' }
+                }}
+              >
+                {playingIdx === 'context-slow' ? '🐢 Ouvindo Lento...' : '🐢 Ouvir Lento (0.6x)'}
+              </Button>
+            </Box>
           </Box>
           <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.8, color: '#f1f5f9', fontSize: '1.02rem' }}>
             {text}
